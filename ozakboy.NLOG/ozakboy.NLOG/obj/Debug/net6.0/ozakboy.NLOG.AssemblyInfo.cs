@@ -11,13 +11,14 @@
 using System;
 using System.Reflection;
 
-[assembly: System.Reflection.AssemblyCompanyAttribute("ozakboy.NLOG")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("ozakboy")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
 [assembly: System.Reflection.AssemblyProductAttribute("ozakboy.NLOG")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ozakboy.NLOG")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+[assembly: System.Reflection.AssemblyMetadataAttribute("RepositoryUrl", "https://github.com/ozakboy/ozakboy.NLOG")]
 
 // 由 MSBuild WriteCodeFragment 類別產生。
 

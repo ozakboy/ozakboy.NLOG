@@ -1,0 +1,12 @@
+C:\Users\WIN\source\repos\Ozakboy\ozakboy.NLOG\ozakboy.NLOG\ozakboy.NLOG\bin\Release\net6.0\ozakboy.NLOG.deps.json
+C:\Users\WIN\source\repos\Ozakboy\ozakboy.NLOG\ozakboy.NLOG\ozakboy.NLOG\bin\Release\net6.0\ozakboy.NLOG.dll
+C:\Users\WIN\source\repos\Ozakboy\ozakboy.NLOG\ozakboy.NLOG\ozakboy.NLOG\bin\Release\net6.0\ozakboy.NLOG.pdb
+C:\Users\WIN\source\repos\Ozakboy\ozakboy.NLOG\ozakboy.NLOG\ozakboy.NLOG\obj\Release\net6.0\ozakboy.NLOG.csproj.AssemblyReference.cache
+C:\Users\WIN\source\repos\Ozakboy\ozakboy.NLOG\ozakboy.NLOG\ozakboy.NLOG\obj\Release\net6.0\ozakboy.NLOG.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\WIN\source\repos\Ozakboy\ozakboy.NLOG\ozakboy.NLOG\ozakboy.NLOG\obj\Release\net6.0\ozakboy.NLOG.AssemblyInfoInputs.cache
+C:\Users\WIN\source\repos\Ozakboy\ozakboy.NLOG\ozakboy.NLOG\ozakboy.NLOG\obj\Release\net6.0\ozakboy.NLOG.AssemblyInfo.cs
+C:\Users\WIN\source\repos\Ozakboy\ozakboy.NLOG\ozakboy.NLOG\ozakboy.NLOG\obj\Release\net6.0\ozakboy.NLOG.csproj.CoreCompileInputs.cache
+C:\Users\WIN\source\repos\Ozakboy\ozakboy.NLOG\ozakboy.NLOG\ozakboy.NLOG\obj\Release\net6.0\ozakboy.NLOG.dll
+C:\Users\WIN\source\repos\Ozakboy\ozakboy.NLOG\ozakboy.NLOG\ozakboy.NLOG\obj\Release\net6.0\refint\ozakboy.NLOG.dll
+C:\Users\WIN\source\repos\Ozakboy\ozakboy.NLOG\ozakboy.NLOG\ozakboy.NLOG\obj\Release\net6.0\ozakboy.NLOG.pdb
+C:\Users\WIN\source\repos\Ozakboy\ozakboy.NLOG\ozakboy.NLOG\ozakboy.NLOG\obj\Release\net6.0\ref\ozakboy.NLOG.dll
