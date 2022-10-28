@@ -17,12 +17,14 @@ namespace ozakboy.NLOG
         /// 追蹤記錄檔
         /// </summary>
         /// <param name="Message"></param>
+        /// <param name="WriteTxt"></param>
         /// <param name="arg"></param>
-        public static void Trace_Log(string Message, string[] arg)
+        public static void Trace_Log(string Message, bool WriteTxt, string[] arg )
         {
             Message = $"{DateTime.Now.ToString("HH:mm:ss")}[{Thread.CurrentThread.ManagedThreadId}] {Message}";          
             Console.WriteLine(Message, arg);
-            LogText.Add_LogText("Trace", Message, arg);
+            if(WriteTxt)
+                LogText.Add_LogText("Trace", Message, arg);
         }
         /// <summary>
         /// 追蹤記錄檔
@@ -30,7 +32,17 @@ namespace ozakboy.NLOG
         /// <param name="Message"></param>       
         public static void Trace_Log(string Message)
         {
-            Trace_Log(Message, new string[0]);
+            Trace_Log(Message, true, new string[0]);
+        }
+
+        /// <summary>
+        /// 追蹤記錄檔
+        /// </summary>
+        /// <param name="Message"></param>       
+        /// <param name="WriteTxt"></param>       
+        public static void Trace_Log(string Message, bool WriteTxt)
+        {
+            Trace_Log(Message, WriteTxt, new string[0]);
         }
 
         #endregion
@@ -42,11 +54,12 @@ namespace ozakboy.NLOG
         /// </summary>
         /// <param name="Message">訊息</param>
         /// <param name="arg">正規化文字</param>
-        public static void Debug_Log(string Message, string[] arg)
+        public static void Debug_Log(string Message, bool WriteTxt, string[] arg)
         {
             Message = $"{DateTime.Now.ToString("HH:mm:ss")}[{Thread.CurrentThread.ManagedThreadId}] {Message}";
             Console.WriteLine(Message, arg);
-            LogText.Add_LogText("Debug", Message, arg);
+            if(WriteTxt)
+                LogText.Add_LogText("Debug", Message, arg);
         }
 
         /// <summary>
@@ -55,7 +68,15 @@ namespace ozakboy.NLOG
         /// <param name="Message">訊息</param>       
         public static void Debug_Log(string Message)
         {
-            Debug_Log(Message, new string[0]);
+            Debug_Log(Message , true, new string[0]);
+        }
+        /// <summary>
+        /// 測試記錄檔
+        /// </summary>
+        /// <param name="Message">訊息</param>       
+        public static void Debug_Log(string Message, bool WriteTxt)
+        {
+            Debug_Log(Message, WriteTxt, new string[0]);
         }
 
         #endregion
@@ -68,11 +89,12 @@ namespace ozakboy.NLOG
         /// </summary>
         /// <param name="Message">訊息</param>
         /// <param name="arg">正規化文字</param>
-        public static void Info_Log(string Message, string[] arg)
+        public static void Info_Log(string Message, bool WriteTxt, string[] arg)
         {
             Message = $"{DateTime.Now.ToString("HH:mm:ss")}[{Thread.CurrentThread.ManagedThreadId}] {Message}";
             Console.WriteLine(Message, arg);
-            LogText.Add_LogText("Info", Message, arg);
+            if(WriteTxt)
+                LogText.Add_LogText("Info", Message, arg);
         }
 
         /// <summary>
@@ -81,7 +103,16 @@ namespace ozakboy.NLOG
         /// <param name="Message">訊息</param>       
         public static void Info_Log(string Message)
         {
-            Info_Log(Message, new string[0]);
+            Info_Log(Message,true, new string[0]);
+        }
+
+        /// <summary>
+        /// 訊息記錄檔
+        /// </summary>
+        /// <param name="Message">訊息</param>       
+        public static void Info_Log(string Message, bool WriteTxt)
+        {
+            Info_Log(Message, WriteTxt, new string[0]);
         }
 
 
@@ -94,11 +125,12 @@ namespace ozakboy.NLOG
         /// </summary>
         /// <param name="Message">訊息</param>
         /// <param name="arg">正規化文字</param>
-        public static void Warn_Log(string Message, string[] arg)
+        public static void Warn_Log(string Message, bool WriteTxt, string[] arg)
         {
             Message = $"{DateTime.Now.ToString("HH:mm:ss")}[{Thread.CurrentThread.ManagedThreadId}] {Message}";
             Console.WriteLine(Message, arg);
-            LogText.Add_LogText("Warn", Message, arg);
+            if(WriteTxt)
+                LogText.Add_LogText("Warn", Message, arg);
         }
 
         /// <summary>
@@ -107,7 +139,16 @@ namespace ozakboy.NLOG
         /// <param name="Message">訊息</param>       
         public static void Warn_Log(string Message)
         {
-            Warn_Log(Message, new string[0]);
+            Warn_Log(Message, true, new string[0]);
+        }
+
+        /// <summary>
+        /// 警告記錄檔
+        /// </summary>
+        /// <param name="Message">訊息</param>       
+        public static void Warn_Log(string Message, bool WriteTxt)
+        {
+            Warn_Log(Message, WriteTxt, new string[0]);
         }
 
         /// <summary>
@@ -179,11 +220,12 @@ namespace ozakboy.NLOG
         /// </summary>
         /// <param name="Message">訊息</param>
         /// <param name="arg">正規化文字</param>
-        public static void Error_Log(string Message, string[] arg)
+        public static void Error_Log(string Message, bool WriteTxt, string[] arg)
         {
             Message = $"{DateTime.Now.ToString("HH:mm:ss")}[{Thread.CurrentThread.ManagedThreadId}] {Message}";
             Console.WriteLine(Message, arg);
-            LogText.Add_LogText("Error", Message, arg);
+            if(WriteTxt)
+                LogText.Add_LogText("Error", Message, arg);
         }
 
         /// <summary>
@@ -192,7 +234,16 @@ namespace ozakboy.NLOG
         /// <param name="Message">訊息</param>      
         public static void Error_Log(string Message)
         {
-            Error_Log(Message, new string[0]);
+            Error_Log(Message,true, new string[0]);
+        }
+
+        /// <summary>
+        /// 錯誤紀錄檔
+        /// </summary>
+        /// <param name="Message">訊息</param>      
+        public static void Error_Log(string Message, bool WriteTxt)
+        {
+            Error_Log(Message, WriteTxt, new string[0]);
         }
 
         #endregion
@@ -228,11 +279,12 @@ namespace ozakboy.NLOG
         /// <param name="Custom">自定義名稱</param>
         /// <param name="Message">訊息</param>
         /// <param name="arg">正規化文字</param>
-        public static void CostomName_Log(string Custom, string Message, string[] arg)
+        public static void CostomName_Log(string Custom, string Message, bool WriteTxt, string[] arg)
         {
             Message = $"{DateTime.Now.ToString("HH:mm:ss")}[{Thread.CurrentThread.ManagedThreadId}] {Message}";
             Console.WriteLine(Message, arg);
-            LogText.Add_LogText(Custom, Message, arg);
+            if(WriteTxt)
+                LogText.Add_LogText(Custom, Message, arg);
         }
 
         /// <summary>
@@ -242,7 +294,17 @@ namespace ozakboy.NLOG
         /// <param name="Message">訊息</param>
         public static void CostomName_Log(string Custom, string Message)
         {
-            CostomName_Log(Custom, Message, new string[0]);
+            CostomName_Log(Custom, Message , true, new string[0]);
+        }
+
+        /// <summary>
+        /// 自定義名稱Log記錄檔
+        /// </summary>
+        /// <param name="Custom">自定義名稱</param>
+        /// <param name="Message">訊息</param>
+        public static void CostomName_Log(string Custom, string Message, bool WriteTxt)
+        {
+            CostomName_Log(Custom, Message, WriteTxt, new string[0]);
         }
 
         /// <summary>
