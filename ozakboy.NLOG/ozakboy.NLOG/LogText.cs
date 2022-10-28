@@ -15,7 +15,10 @@ namespace ozakboy.NLOG
         /// 請設定天數為負數
         /// </summary>
         public static int LogKeepDay = -3;
-        public static int BigFilesByte = 1024;
+        /// <summary>
+        /// 預設最大檔案 50MB 超過自動分割檔案
+        /// </summary>
+        public static long BigFilesByte =50 * 1024 * 1024 ;
 
         /// <summary>
         /// 建立或是新增LOG紀錄
@@ -32,30 +35,12 @@ namespace ozakboy.NLOG
                 {                  
                     string LogPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\logs\\LogFiles\\";
 
-                    //判斷有無資料表 若沒有建立資料表
-                    if (!Directory.Exists(LogPath))
-                    {
-                        Directory.CreateDirectory(LogPath);
-                    }
+                    CheckDirectoryExistCreate(LogPath);
 
-                    var s_File_Path = $"{LogPath}{DateTime.Now.ToString("yyyyMMdd")}_{Type}_LOG.txt";
+                    var LogFilePath = CheckFileExistCreate(LogPath, Type);
 
-                    //判斷有無檔案，若沒有則建立檔案
-                    if (!File.Exists(s_File_Path))
-                    {
-                        using (FileStream fileStream = new FileStream(s_File_Path, FileMode.Create))
-                        {
-                            fileStream.Close();
-                        }
-                    }
+                    FIleWriteLine(arg, LogFilePath, Message);
 
-
-                    using (StreamWriter sw = new StreamWriter(s_File_Path, true, Encoding.UTF8))
-                    {
-                        sw.WriteLine(Message, arg);
-                        sw.Close();
-                    }
-                   
                     Remove_TimeOutLogText();
                 }
             }
@@ -66,23 +51,82 @@ namespace ozakboy.NLOG
         }
 
         /// <summary>
-        /// 刪除過久紀錄檔
+        /// 判斷有無資料表 若沒有建立資料表
         /// </summary>
-        /// <param name="Type"></param>
-        internal static void Remove_LogText(string Type)
+        /// <param name="LogPath"></param>
+        private static void CheckDirectoryExistCreate(string LogPath)
         {            
-            string LogPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\logs\\LogFiles\\";
-
-            var s_File_Path = $"{LogPath}{DateTime.Now.AddDays(LogKeepDay).ToString("yyyyMMdd")}_{Type}_LOG.txt";
-            //判斷有無檔案，若有則刪除檔案
-            if (File.Exists(s_File_Path))
+            if (!Directory.Exists(LogPath))
             {
-                File.Delete(s_File_Path);
+                Directory.CreateDirectory(LogPath);
+            }
+        }
+
+        /// <summary>
+        /// 判斷有無檔案或檔案過大，若沒有或檔案過大則建立新檔案
+        /// </summary>
+        /// <param name="_LogPath">檔案路徑</param>
+        /// <param name="_FileName">檔案名稱</param>
+        private static string CheckFileExistCreate(string _LogPath , string _FileName)
+        {
+            var LogFIleName = $"{DateTime.Now.ToString("yyyyMMdd")}_{_FileName}_Log.txt";
+            var SearchFIleName = $"{DateTime.Now.ToString("yyyyMMdd")}_{_FileName}*";
+            FileExistCreate(_LogPath + LogFIleName);
+
+            DirectoryInfo di = new DirectoryInfo(_LogPath);
+            var Files = di.GetFiles(SearchFIleName).OrderBy(x=>x.LastWriteTimeUtc).ToArray();
+            var NowWriteFile = Files[Files.Length -1];
+            if(NowWriteFile.Length > BigFilesByte)
+            {
+                var FileNameSplits = NowWriteFile.Name.Replace("_"+_FileName,"").Split("_");
+                if (!FileNameSplits[1].Contains("part"))
+                {
+                    LogFIleName = $"{DateTime.Now.ToString("yyyyMMdd")}_{_FileName}_part{1}_Log.txt";                    
+                }
+                else
+                {
+                    var Part = Convert.ToInt32(FileNameSplits[1].Replace("part",""));
+                    LogFIleName = $"{DateTime.Now.ToString("yyyyMMdd")}_{_FileName}_part{Part + 1}_Log.txt";
+                }
+                FileExistCreate(_LogPath + LogFIleName);
+            }
+            else
+            {
+                LogFIleName = NowWriteFile.Name;
+            }
+            return _LogPath + LogFIleName;
+        }
+
+        /// <summary>
+        /// 判斷有無檔案，若沒有則建立新檔案
+        /// </summary>
+        /// <param name="_LogFilePath"></param>
+        private static void FileExistCreate(string _LogFilePath)
+        {
+            if (!File.Exists(_LogFilePath))
+            {
+                using (FileStream fileStream = new FileStream(_LogFilePath, FileMode.Create))
+                {
+                    fileStream.Close();
+                }
+            }
+        }
+
+        private static void FIleWriteLine(object[] arg , string _filePath ,string _Message)
+        {
+            using (StreamWriter sw = new StreamWriter(_filePath, true, Encoding.UTF8))
+            {
+                sw.WriteLine(_Message, arg);
+                sw.Close();
             }
         }
 
 
-        internal static void Remove_TimeOutLogText()
+
+        /// <summary>
+        /// 刪除超時紀錄檔
+        /// </summary>
+        private static void Remove_TimeOutLogText()
         {
             string LogPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\logs\\LogFiles\\";
             DirectoryInfo di = new DirectoryInfo(LogPath);

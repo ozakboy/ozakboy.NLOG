@@ -275,5 +275,19 @@ namespace ozakboy.NLOG
 
         #endregion
 
+        #region 設定預設最大檔案限制
+
+        /// <summary>
+        /// 設定預設最大檔案限制
+        /// 預設最大檔限制 50MB
+        /// </summary>
+        /// <param name="_BigFilesByte">最大檔案位元組限制</param>
+        public static void SetBigFilesByte(long _BigFilesByte)
+        {
+            LogText.BigFilesByte = _BigFilesByte;
+        }
+
+        #endregion
+
     }
 }
