@@ -17,3 +17,4 @@ ASP.net Core 6
 * Fatal_Log
 * CostomName_Log
 * SetLogKeepDay
+* SetBigFilesByte
