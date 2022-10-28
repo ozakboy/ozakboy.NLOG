@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>ozakboy.NLOG</id>
+    <version>1.0.1</version>
+    <authors>ozakboy</authors>
+    <projectUrl>https://github.com/ozakboy/ozakboy.NLOG</projectUrl>
+    <description>Package Description</description>
+    <repository url="https://github.com/ozakboy/ozakboy.NLOG" />
+    <dependencies>
+      <group targetFramework="net6.0" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="C:\Users\WIN\source\repos\Ozakboy\ozakboy.NLOG\ozakboy.NLOG\ozakboy.NLOG\bin\Release\net6.0\ozakboy.NLOG.dll" target="lib\net6.0\ozakboy.NLOG.dll" />
+  </files>
+</package>

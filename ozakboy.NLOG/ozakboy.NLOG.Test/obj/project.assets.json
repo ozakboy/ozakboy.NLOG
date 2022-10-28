@@ -2,7 +2,7 @@
   "version": 3,
   "targets": {
     "net6.0": {
-      "ozakboy.NLOG/1.0.0": {
+      "ozakboy.NLOG/1.0.1": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v6.0",
         "compile": {
@@ -15,7 +15,7 @@
     }
   },
   "libraries": {
-    "ozakboy.NLOG/1.0.0": {
+    "ozakboy.NLOG/1.0.1": {
       "type": "project",
       "path": "../ozakboy.NLOG/ozakboy.NLOG.csproj",
       "msbuildProject": "../ozakboy.NLOG/ozakboy.NLOG.csproj"
@@ -23,7 +23,7 @@
   },
   "projectFileDependencyGroups": {
     "net6.0": [
-      "ozakboy.NLOG >= 1.0.0"
+      "ozakboy.NLOG >= 1.0.1"
     ]
   },
   "packageFolders": {
