@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
+using System.IO;
+using System;
 
 namespace ozakboy.NLOG
 {
@@ -17,6 +15,7 @@ namespace ozakboy.NLOG
         /// 請設定天數為負數
         /// </summary>
         public static int LogKeepDay = -3;
+        public static int BigFilesByte = 1024;
 
         /// <summary>
         /// 建立或是新增LOG紀錄
@@ -48,16 +47,16 @@ namespace ozakboy.NLOG
                         {
                             fileStream.Close();
                         }
-
                     }
+
 
                     using (StreamWriter sw = new StreamWriter(s_File_Path, true, Encoding.UTF8))
                     {
                         sw.WriteLine(Message, arg);
                         sw.Close();
                     }
-
-                    Remove_LogText(Type);
+                   
+                    Remove_TimeOutLogText();
                 }
             }
             catch (Exception ex)
@@ -79,6 +78,19 @@ namespace ozakboy.NLOG
             if (File.Exists(s_File_Path))
             {
                 File.Delete(s_File_Path);
+            }
+        }
+
+
+        internal static void Remove_TimeOutLogText()
+        {
+            string LogPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\logs\\LogFiles\\";
+            DirectoryInfo di = new DirectoryInfo(LogPath);
+            var LastKeepDate = DateTime.UtcNow.AddDays(LogKeepDay);
+            var PathFiles = di.GetFiles().Where(x => x.Extension == ".txt" && x.LastWriteTimeUtc < LastKeepDate);
+            foreach (var item in PathFiles)
+            {
+                item.Delete();
             }
         }
     }

@@ -12,6 +12,6 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="C:\Users\WIN\source\repos\Ozakboy\ozakboy.NLOG\ozakboy.NLOG\ozakboy.NLOG\bin\Release\net6.0\ozakboy.NLOG.dll" target="lib\net6.0\ozakboy.NLOG.dll" />
+    <file src="C:\Users\WIN\source\repos\Ozakboy\ozakboy.NLOG\ozakboy.NLOG\ozakboy.NLOG\bin\Debug\net6.0\ozakboy.NLOG.dll" target="lib\net6.0\ozakboy.NLOG.dll" />
   </files>
 </package>
