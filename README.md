@@ -8,7 +8,7 @@ ASP.net Core 6
 
 建立 Log.txt 在專案擋案內，方便快速紀錄LOG 不寫入資料庫
 
-## 可以使用的法方
+## 可以使用的方法
 
 * Trace_Log    
 * Debug_Log
