@@ -1,14 +1,34 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks>net6.0;net7.0;</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ozakboy.NLOG</RootNamespace>
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <PackageVersion>1.1.1</PackageVersion>
+    <PackageVersion>1.1.2</PackageVersion>
     <Authors>ozakboy</Authors>
+    <RepositoryType>github</RepositoryType>
     <RepositoryUrl>https://github.com/ozakboy/ozakboy.NLOG</RepositoryUrl>
     <PackageProjectUrl>https://github.com/ozakboy/ozakboy.NLOG</PackageProjectUrl>
+    <PackAsTool>True</PackAsTool>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <DocumentationFile>file.xml</DocumentationFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>license</PackageLicenseFile>
+    <Description>本地測試LOG</Description>
+    <PackageTags>local Log text test</PackageTags>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\license">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>

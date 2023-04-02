@@ -1,0 +1,233 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ozakboy.NLOG</name>
+    </assembly>
+    <members>
+        <member name="T:ozakboy.NLOG.LogText">
+            <summary>
+            建立 記錄檔
+            </summary>
+        </member>
+        <member name="F:ozakboy.NLOG.LogText.LogKeepDay">
+            <summary>
+            Log紀錄檔保存天數  預設3天(-3) 
+            請設定天數為負數
+            </summary>
+        </member>
+        <member name="F:ozakboy.NLOG.LogText.BigFilesByte">
+            <summary>
+            預設最大檔案 50MB 超過自動分割檔案
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LogText.Add_LogText(System.String,System.String,System.Object[])">
+            <summary>
+            建立或是新增LOG紀錄
+            </summary>
+            <param name="Type"></param>
+            <param name="Message"></param>
+            <param name="arg"></param>
+        </member>
+        <member name="M:ozakboy.NLOG.LogText.CheckDirectoryExistCreate(System.String)">
+            <summary>
+            判斷有無資料表 若沒有建立資料表
+            </summary>
+            <param name="LogPath"></param>
+        </member>
+        <member name="M:ozakboy.NLOG.LogText.CheckFileExistCreate(System.String,System.String)">
+            <summary>
+            判斷有無檔案或檔案過大，若沒有或檔案過大則建立新檔案
+            </summary>
+            <param name="_LogPath">檔案路徑</param>
+            <param name="_FileName">檔案名稱</param>
+        </member>
+        <member name="M:ozakboy.NLOG.LogText.FileExistCreate(System.String)">
+            <summary>
+            判斷有無檔案，若沒有則建立新檔案
+            </summary>
+            <param name="_LogFilePath"></param>
+        </member>
+        <member name="M:ozakboy.NLOG.LogText.Remove_TimeOutLogText">
+            <summary>
+            刪除超時紀錄檔
+            </summary>
+        </member>
+        <member name="T:ozakboy.NLOG.LOG">
+            <summary>
+            記錄檔
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Trace_Log(System.String,System.Boolean,System.String[])">
+            <summary>
+            追蹤記錄檔
+            </summary>
+            <param name="Message"></param>
+            <param name="WriteTxt"></param>
+            <param name="arg"></param>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Trace_Log(System.String)">
+            <summary>
+            追蹤記錄檔
+            </summary>
+            <param name="Message"></param>       
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Trace_Log(System.String,System.Boolean)">
+            <summary>
+            追蹤記錄檔
+            </summary>
+            <param name="Message"></param>       
+            <param name="WriteTxt"></param>       
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Debug_Log(System.String,System.Boolean,System.String[])">
+            <summary>
+            測試記錄檔
+            </summary>
+            <param name="Message">訊息</param>
+            <param name="arg">正規化文字</param>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Debug_Log(System.String)">
+            <summary>
+            測試記錄檔
+            </summary>
+            <param name="Message">訊息</param>       
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Debug_Log(System.String,System.Boolean)">
+            <summary>
+            測試記錄檔
+            </summary>
+            <param name="Message">訊息</param>       
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Info_Log(System.String,System.Boolean,System.String[])">
+            <summary>
+            訊息記錄檔
+            </summary>
+            <param name="Message">訊息</param>
+            <param name="arg">正規化文字</param>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Info_Log(System.String)">
+            <summary>
+            訊息記錄檔
+            </summary>
+            <param name="Message">訊息</param>       
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Info_Log(System.String,System.Boolean)">
+            <summary>
+            訊息記錄檔
+            </summary>
+            <param name="Message">訊息</param>       
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Warn_Log(System.String,System.Boolean,System.String[])">
+            <summary>
+            警告記錄檔
+            </summary>
+            <param name="Message">訊息</param>
+            <param name="arg">正規化文字</param>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Warn_Log(System.String)">
+            <summary>
+            警告記錄檔
+            </summary>
+            <param name="Message">訊息</param>       
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Warn_Log(System.String,System.Boolean)">
+            <summary>
+            警告記錄檔
+            </summary>
+            <param name="Message">訊息</param>       
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Warn_Log(System.Exception)">
+            <summary>
+            警告記錄檔
+            </summary>
+            <param name="ex">例外</param>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Warn_Log(ozakboy.NLOG.ErrorMessageException)">
+            <summary>
+            警告記錄檔
+            </summary>
+            <param name="ex">例外</param>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Warn_Log(System.String,System.Exception)">
+            <summary>
+            警告記錄檔
+            </summary>
+            <param name="Message">訊息</param>
+            <param name="ex">例外</param>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Error_Log(System.String,System.Boolean,System.String[])">
+            <summary>
+            錯誤紀錄檔
+            </summary>
+            <param name="Message">訊息</param>
+            <param name="arg">正規化文字</param>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Error_Log(System.String)">
+            <summary>
+            錯誤紀錄檔
+            </summary>
+            <param name="Message">訊息</param>      
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Error_Log(System.String,System.Boolean)">
+            <summary>
+            錯誤紀錄檔
+            </summary>
+            <param name="Message">訊息</param>      
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Fatal_Log(System.String,System.String[])">
+            <summary>
+            致命記錄檔
+            </summary>
+            <param name="Message">訊息</param>
+            <param name="arg">正規化文字</param>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Fatal_Log(System.String)">
+            <summary>
+            致命記錄檔
+            </summary>
+            <param name="Message">訊息</param>                     
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.CostomName_Log(System.String,System.String,System.Boolean,System.String[])">
+            <summary>
+            自定義名稱Log記錄檔
+            </summary>
+            <param name="Custom">自定義名稱</param>
+            <param name="Message">訊息</param>
+            <param name="arg">正規化文字</param>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.CostomName_Log(System.String,System.String)">
+            <summary>
+            自定義名稱Log記錄檔
+            </summary>
+            <param name="Custom">自定義名稱</param>
+            <param name="Message">訊息</param>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.CostomName_Log(System.String,System.String,System.Boolean)">
+            <summary>
+            自定義名稱Log記錄檔
+            </summary>
+            <param name="Custom">自定義名稱</param>
+            <param name="Message">訊息</param>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.CostomName_Log(System.String,System.Exception)">
+            <summary>
+            自定義名稱Log記錄檔
+            </summary>
+            <param name="Custom">自定義名稱</param>
+            <param name="ex">例外</param>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.SetLogKeepDay(System.Int32)">
+            <summary>
+            Log紀錄檔保存天數  預設3天(-3) 
+            請設定天數為負數
+            </summary>
+            <param name="KeepDay">保留天數</param>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.SetBigFilesByte(System.Int64)">
+            <summary>
+            設定預設最大檔案限制
+            預設最大檔限制 50MB
+            </summary>
+            <param name="_BigFilesByte">最大檔案位元組限制</param>
+        </member>
+    </members>
+</doc>
