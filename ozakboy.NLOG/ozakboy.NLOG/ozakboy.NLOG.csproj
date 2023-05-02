@@ -6,18 +6,29 @@
     <RootNamespace>ozakboy.NLOG</RootNamespace>
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <PackageVersion>1.1.2</PackageVersion>
+    <PackageVersion>1.1.3</PackageVersion>
     <Authors>ozakboy</Authors>
     <RepositoryType>github</RepositoryType>
     <RepositoryUrl>https://github.com/ozakboy/ozakboy.NLOG</RepositoryUrl>
     <PackageProjectUrl>https://github.com/ozakboy/ozakboy.NLOG</PackageProjectUrl>
-    <PackAsTool>True</PackAsTool>
+    <PackAsTool>False</PackAsTool>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <DocumentationFile>file.xml</DocumentationFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>license</PackageLicenseFile>
     <Description>本地測試LOG</Description>
     <PackageTags>local Log text test</PackageTags>
+    <IsPublishable>False</IsPublishable>
+    <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|AnyCPU'">
+    <WarningLevel>6</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.1|AnyCPU'">
+    <WarningLevel>6</WarningLevel>
   </PropertyGroup>
 
   <ItemGroup>

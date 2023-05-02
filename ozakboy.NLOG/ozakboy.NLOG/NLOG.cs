@@ -12,7 +12,7 @@ namespace ozakboy.NLOG
         /// 追蹤記錄檔
         /// </summary>
         /// <param name="Message"></param>
-        /// <param name="WriteTxt"></param>
+        /// <param name="WriteTxt">要不要寫Text</param>
         /// <param name="arg"></param>
         public static void Trace_Log(string Message, bool WriteTxt, string[] arg )
         {
@@ -34,7 +34,7 @@ namespace ozakboy.NLOG
         /// 追蹤記錄檔
         /// </summary>
         /// <param name="Message"></param>       
-        /// <param name="WriteTxt"></param>       
+        /// <param name="WriteTxt">要不要寫Text</param>
         public static void Trace_Log(string Message, bool WriteTxt)
         {
             Trace_Log(Message, WriteTxt, new string[0]);
@@ -48,6 +48,7 @@ namespace ozakboy.NLOG
         /// 測試記錄檔
         /// </summary>
         /// <param name="Message">訊息</param>
+        /// <param name="WriteTxt">要不要寫Text</param>
         /// <param name="arg">正規化文字</param>
         public static void Debug_Log(string Message, bool WriteTxt, string[] arg)
         {
@@ -69,6 +70,7 @@ namespace ozakboy.NLOG
         /// 測試記錄檔
         /// </summary>
         /// <param name="Message">訊息</param>       
+        /// <param name="WriteTxt">要不要寫Text</param>
         public static void Debug_Log(string Message, bool WriteTxt)
         {
             Debug_Log(Message, WriteTxt, new string[0]);
@@ -83,6 +85,7 @@ namespace ozakboy.NLOG
         /// 訊息記錄檔
         /// </summary>
         /// <param name="Message">訊息</param>
+        /// <param name="WriteTxt">要不要寫Text</param>
         /// <param name="arg">正規化文字</param>
         public static void Info_Log(string Message, bool WriteTxt, string[] arg)
         {
@@ -104,7 +107,8 @@ namespace ozakboy.NLOG
         /// <summary>
         /// 訊息記錄檔
         /// </summary>
-        /// <param name="Message">訊息</param>       
+        /// <param name="Message">訊息</param>         
+        /// <param name="WriteTxt">要不要寫Text</param>
         public static void Info_Log(string Message, bool WriteTxt)
         {
             Info_Log(Message, WriteTxt, new string[0]);
@@ -119,6 +123,7 @@ namespace ozakboy.NLOG
         /// 警告記錄檔
         /// </summary>
         /// <param name="Message">訊息</param>
+        /// <param name="WriteTxt">要不要寫Text</param>
         /// <param name="arg">正規化文字</param>
         public static void Warn_Log(string Message, bool WriteTxt, string[] arg)
         {
@@ -141,6 +146,7 @@ namespace ozakboy.NLOG
         /// 警告記錄檔
         /// </summary>
         /// <param name="Message">訊息</param>       
+        /// <param name="WriteTxt">要不要寫Text</param>
         public static void Warn_Log(string Message, bool WriteTxt)
         {
             Warn_Log(Message, WriteTxt, new string[0]);
@@ -214,6 +220,7 @@ namespace ozakboy.NLOG
         /// 錯誤紀錄檔
         /// </summary>
         /// <param name="Message">訊息</param>
+        /// <param name="WriteTxt">要不要寫Text</param>
         /// <param name="arg">正規化文字</param>
         public static void Error_Log(string Message, bool WriteTxt, string[] arg)
         {
@@ -236,6 +243,7 @@ namespace ozakboy.NLOG
         /// 錯誤紀錄檔
         /// </summary>
         /// <param name="Message">訊息</param>      
+        /// <param name="WriteTxt">要不要寫Text</param>
         public static void Error_Log(string Message, bool WriteTxt)
         {
             Error_Log(Message, WriteTxt, new string[0]);
@@ -273,6 +281,7 @@ namespace ozakboy.NLOG
         /// </summary>
         /// <param name="Custom">自定義名稱</param>
         /// <param name="Message">訊息</param>
+        /// <param name="WriteTxt">要不要寫Text</param>
         /// <param name="arg">正規化文字</param>
         public static void CostomName_Log(string Custom, string Message, bool WriteTxt, string[] arg)
         {
@@ -297,6 +306,7 @@ namespace ozakboy.NLOG
         /// </summary>
         /// <param name="Custom">自定義名稱</param>
         /// <param name="Message">訊息</param>
+        /// <param name="WriteTxt">要不要寫Text</param>
         public static void CostomName_Log(string Custom, string Message, bool WriteTxt)
         {
             CostomName_Log(Custom, Message, WriteTxt, new string[0]);

@@ -62,7 +62,7 @@
             追蹤記錄檔
             </summary>
             <param name="Message"></param>
-            <param name="WriteTxt"></param>
+            <param name="WriteTxt">要不要寫Text</param>
             <param name="arg"></param>
         </member>
         <member name="M:ozakboy.NLOG.LOG.Trace_Log(System.String)">
@@ -76,13 +76,14 @@
             追蹤記錄檔
             </summary>
             <param name="Message"></param>       
-            <param name="WriteTxt"></param>       
+            <param name="WriteTxt">要不要寫Text</param>
         </member>
         <member name="M:ozakboy.NLOG.LOG.Debug_Log(System.String,System.Boolean,System.String[])">
             <summary>
             測試記錄檔
             </summary>
             <param name="Message">訊息</param>
+            <param name="WriteTxt">要不要寫Text</param>
             <param name="arg">正規化文字</param>
         </member>
         <member name="M:ozakboy.NLOG.LOG.Debug_Log(System.String)">
@@ -96,12 +97,14 @@
             測試記錄檔
             </summary>
             <param name="Message">訊息</param>       
+            <param name="WriteTxt">要不要寫Text</param>
         </member>
         <member name="M:ozakboy.NLOG.LOG.Info_Log(System.String,System.Boolean,System.String[])">
             <summary>
             訊息記錄檔
             </summary>
             <param name="Message">訊息</param>
+            <param name="WriteTxt">要不要寫Text</param>
             <param name="arg">正規化文字</param>
         </member>
         <member name="M:ozakboy.NLOG.LOG.Info_Log(System.String)">
@@ -114,13 +117,15 @@
             <summary>
             訊息記錄檔
             </summary>
-            <param name="Message">訊息</param>       
+            <param name="Message">訊息</param>         
+            <param name="WriteTxt">要不要寫Text</param>
         </member>
         <member name="M:ozakboy.NLOG.LOG.Warn_Log(System.String,System.Boolean,System.String[])">
             <summary>
             警告記錄檔
             </summary>
             <param name="Message">訊息</param>
+            <param name="WriteTxt">要不要寫Text</param>
             <param name="arg">正規化文字</param>
         </member>
         <member name="M:ozakboy.NLOG.LOG.Warn_Log(System.String)">
@@ -134,6 +139,7 @@
             警告記錄檔
             </summary>
             <param name="Message">訊息</param>       
+            <param name="WriteTxt">要不要寫Text</param>
         </member>
         <member name="M:ozakboy.NLOG.LOG.Warn_Log(System.Exception)">
             <summary>
@@ -159,6 +165,7 @@
             錯誤紀錄檔
             </summary>
             <param name="Message">訊息</param>
+            <param name="WriteTxt">要不要寫Text</param>
             <param name="arg">正規化文字</param>
         </member>
         <member name="M:ozakboy.NLOG.LOG.Error_Log(System.String)">
@@ -172,6 +179,7 @@
             錯誤紀錄檔
             </summary>
             <param name="Message">訊息</param>      
+            <param name="WriteTxt">要不要寫Text</param>
         </member>
         <member name="M:ozakboy.NLOG.LOG.Fatal_Log(System.String,System.String[])">
             <summary>
@@ -192,6 +200,7 @@
             </summary>
             <param name="Custom">自定義名稱</param>
             <param name="Message">訊息</param>
+            <param name="WriteTxt">要不要寫Text</param>
             <param name="arg">正規化文字</param>
         </member>
         <member name="M:ozakboy.NLOG.LOG.CostomName_Log(System.String,System.String)">
@@ -207,6 +216,7 @@
             </summary>
             <param name="Custom">自定義名稱</param>
             <param name="Message">訊息</param>
+            <param name="WriteTxt">要不要寫Text</param>
         </member>
         <member name="M:ozakboy.NLOG.LOG.CostomName_Log(System.String,System.Exception)">
             <summary>
