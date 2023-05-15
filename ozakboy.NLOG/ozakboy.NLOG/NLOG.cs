@@ -1,4 +1,7 @@
 ﻿
+using System;
+using System.Threading;
+
 namespace ozakboy.NLOG
 {
     /// <summary>
