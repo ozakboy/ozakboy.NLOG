@@ -79,7 +79,7 @@ namespace ozakboy.NLOG
             var NowWriteFile = Files[Files.Length -1];
             if(NowWriteFile.Length > BigFilesByte)
             {
-                var FileNameSplits = NowWriteFile.Name.Replace("_"+_FileName,"").Split("_");
+                var FileNameSplits = NowWriteFile.Name.Replace("_"+_FileName,"").Split('_');
                 if (!FileNameSplits[1].Contains("part"))
                 {
                     LogFIleName = $"{DateTime.Now.ToString("yyyyMMdd")}_{_FileName}_part{1}_Log.txt";                    
