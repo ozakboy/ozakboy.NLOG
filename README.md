@@ -5,6 +5,7 @@
 1. .net core 3.1
 2. .net 6.0
 3. .net 7.0
+4. .NET Standard 2.0 2.1
 
 ## 功能簡介
 
