@@ -3,6 +3,7 @@ using System.Threading;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Collections.Generic;
+using System.Text;
 
 namespace ozakboy.NLOG
 {
@@ -482,13 +483,16 @@ namespace ozakboy.NLOG
 
         private static string FormatLogMessage(string message, string[] args)
         {
-            string timestamp = $"{DateTime.Now:HH:mm:ss}[{Thread.CurrentThread.ManagedThreadId}] ";
-            if (args != null && args.Length > 0)
-            {
-                // 先處理訊息的格式化
-                message = string.Format(message, args);
-            }
-            return timestamp + message;
+            var sb = new StringBuilder();
+            sb.Append(DateTime.Now.ToString("HH:mm:ss"));
+            sb.Append($"[{Thread.CurrentThread.ManagedThreadId}] ");
+
+            if (args != null && args.Length > 0)            
+                sb.AppendFormat(message, args);            
+            else            
+                sb.Append(message);            
+
+            return sb.ToString();
         }
 
         // 处理 JSON 字符串的帮助方法

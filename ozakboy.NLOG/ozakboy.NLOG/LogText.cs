@@ -6,18 +6,19 @@ using System.Text;
 namespace ozakboy.NLOG
 {
     /// <summary>
-    /// 建立 記錄檔
+    /// 日誌檔案處理類別，負責日誌檔案的建立、寫入和管理
     /// </summary>
     static class LogText
     {
         private static object lockMe = new object();
         /// <summary>
-        /// Log紀錄檔保存天數  預設3天(-3) 
-        /// 請設定天數為負數
+        /// 日誌檔案保存天數設定，預設為 -3 天（保存最近3天的日誌）
+        /// 請設定為負數，例如 -7 表示保存最近 7 天的日誌
         /// </summary>
         public static int LogKeepDay = -3;
         /// <summary>
-        /// 預設最大檔案 50MB 超過自動分割檔案
+        /// 單個日誌檔案的最大大小限制，超過此大小將自動分割檔案
+        /// 預設為 50MB (50 * 1024 * 1024 bytes)
         /// </summary>
         public static long BigFilesByte =50 * 1024 * 1024 ;
 
