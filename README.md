@@ -7,9 +7,10 @@
 
 ## 支援框架
 
-- .NET Core 3.1
+- .NET Framework 4.6.2
 - .NET 6.0
 - .NET 7.0
+- .NET 8.0
 - .NET Standard 2.0/2.1
 
 ## 特點
