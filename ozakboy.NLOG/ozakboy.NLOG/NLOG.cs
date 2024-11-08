@@ -19,10 +19,11 @@ namespace ozakboy.NLOG
         /// <param name="arg"></param>
         public static void Trace_Log(string Message, bool WriteTxt, string[] arg )
         {
-            Message = $"{DateTime.Now.ToString("HH:mm:ss")}[{Thread.CurrentThread.ManagedThreadId}] {Message}";          
-            Console.WriteLine(Message, arg);
-            if(WriteTxt)
-                LogText.Add_LogText("Trace", Message, arg);
+            var escapedMessage = EscapeMessageIfNeeded(Message);
+            var formattedMessage = FormatLogMessage(escapedMessage);
+            Console.WriteLine(formattedMessage, arg);
+            if (WriteTxt)
+                LogText.Add_LogText("Trace", formattedMessage, arg);
         }
         /// <summary>
         /// 追蹤記錄檔
@@ -55,10 +56,11 @@ namespace ozakboy.NLOG
         /// <param name="arg">正規化文字</param>
         public static void Debug_Log(string Message, bool WriteTxt, string[] arg)
         {
-            Message = $"{DateTime.Now.ToString("HH:mm:ss")}[{Thread.CurrentThread.ManagedThreadId}] {Message}";
-            Console.WriteLine(Message, arg);
-            if(WriteTxt)
-                LogText.Add_LogText("Debug", Message, arg);
+            var escapedMessage = EscapeMessageIfNeeded(Message);
+            var formattedMessage = FormatLogMessage(escapedMessage);
+            Console.WriteLine(formattedMessage, arg);
+            if (WriteTxt)
+                LogText.Add_LogText("Debug", formattedMessage, arg);            
         }
 
         /// <summary>
@@ -92,10 +94,11 @@ namespace ozakboy.NLOG
         /// <param name="arg">正規化文字</param>
         public static void Info_Log(string Message, bool WriteTxt, string[] arg)
         {
-            Message = $"{DateTime.Now.ToString("HH:mm:ss")}[{Thread.CurrentThread.ManagedThreadId}] {Message}";
-            Console.WriteLine(Message, arg);
-            if(WriteTxt)
-                LogText.Add_LogText("Info", Message, arg);
+            var escapedMessage = EscapeMessageIfNeeded(Message);
+            var formattedMessage = FormatLogMessage(escapedMessage);
+            Console.WriteLine(formattedMessage, arg);
+            if (WriteTxt)
+                LogText.Add_LogText("Info", formattedMessage, arg);           
         }
 
         /// <summary>
@@ -130,10 +133,11 @@ namespace ozakboy.NLOG
         /// <param name="arg">正規化文字</param>
         public static void Warn_Log(string Message, bool WriteTxt, string[] arg)
         {
-            Message = $"{DateTime.Now.ToString("HH:mm:ss")}[{Thread.CurrentThread.ManagedThreadId}] {Message}";
-            Console.WriteLine(Message, arg);
-            if(WriteTxt)
-                LogText.Add_LogText("Warn", Message, arg);
+            var escapedMessage = EscapeMessageIfNeeded(Message);
+            var formattedMessage = FormatLogMessage(escapedMessage);
+            Console.WriteLine(formattedMessage, arg);
+            if (WriteTxt)
+                LogText.Add_LogText("Warn", formattedMessage, arg);
         }
 
         /// <summary>
@@ -227,10 +231,11 @@ namespace ozakboy.NLOG
         /// <param name="arg">正規化文字</param>
         public static void Error_Log(string Message, bool WriteTxt, string[] arg)
         {
-            Message = $"{DateTime.Now.ToString("HH:mm:ss")}[{Thread.CurrentThread.ManagedThreadId}] {Message}";
-            Console.WriteLine(Message, arg);
-            if(WriteTxt)
-                LogText.Add_LogText("Error", Message, arg);
+            var escapedMessage = EscapeMessageIfNeeded(Message);
+            var formattedMessage = FormatLogMessage(escapedMessage);
+            Console.WriteLine(formattedMessage, arg);
+            if (WriteTxt)
+                LogText.Add_LogText("Error", formattedMessage, arg);
         }
 
         /// <summary>
@@ -263,9 +268,10 @@ namespace ozakboy.NLOG
         /// <param name="arg">正規化文字</param>
         public static void Fatal_Log(string Message, string[] arg)
         {
-            Message = $"{DateTime.Now.ToString("HH:mm:ss")}[{Thread.CurrentThread.ManagedThreadId}] {Message}";
-            Console.WriteLine(Message, arg);
-            LogText.Add_LogText("Fatal", Message, arg);
+            var escapedMessage = EscapeMessageIfNeeded(Message);
+            var formattedMessage = FormatLogMessage(escapedMessage);
+            Console.WriteLine(formattedMessage, arg);
+            LogText.Add_LogText("Fatal", formattedMessage, arg);
         }
         /// <summary>
         /// 致命記錄檔
@@ -288,10 +294,11 @@ namespace ozakboy.NLOG
         /// <param name="arg">正規化文字</param>
         public static void CostomName_Log(string Custom, string Message, bool WriteTxt, string[] arg)
         {
-            Message = $"{DateTime.Now.ToString("HH:mm:ss")}[{Thread.CurrentThread.ManagedThreadId}] {Message}";
-            Console.WriteLine(Message, arg);
-            if(WriteTxt)
-                LogText.Add_LogText(Custom, Message, arg);
+            var escapedMessage = EscapeMessageIfNeeded(Message);
+            var formattedMessage = FormatLogMessage(escapedMessage);
+            Console.WriteLine(formattedMessage, arg);
+            if (WriteTxt)
+                LogText.Add_LogText(Custom, formattedMessage, arg);
         }
 
         /// <summary>
@@ -355,6 +362,26 @@ namespace ozakboy.NLOG
         public static void SetBigFilesByte(long _BigFilesByte)
         {
             LogText.BigFilesByte = _BigFilesByte;
+        }
+
+        #endregion
+
+        #region 私用方法
+
+        private static string FormatLogMessage(string message)
+        {
+            return $"{DateTime.Now:HH:mm:ss}[{Thread.CurrentThread.ManagedThreadId}] {message}";
+        }
+
+        // 处理 JSON 字符串的帮助方法
+        private static string EscapeMessageIfNeeded(string message)
+        {
+            if (message.Contains("{") || message.Contains("}"))
+            {
+                // 将单个的 { 替换为 {{, 将单个的 } 替换为 }}
+                return message.Replace("{", "{{").Replace("}", "}}");
+            }
+            return message;
         }
 
         #endregion
