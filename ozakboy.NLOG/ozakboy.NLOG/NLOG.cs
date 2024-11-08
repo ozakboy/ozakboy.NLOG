@@ -20,7 +20,7 @@ namespace ozakboy.NLOG
         public static void Trace_Log(string Message, bool WriteTxt, string[] arg )
         {
             var escapedMessage = EscapeMessageIfNeeded(Message);
-            var formattedMessage = FormatLogMessage(escapedMessage);
+            var formattedMessage = FormatLogMessage(escapedMessage,arg);
             Console.WriteLine(formattedMessage, arg);
             if (WriteTxt)
                 LogText.Add_LogText("Trace", formattedMessage, arg);
@@ -57,7 +57,7 @@ namespace ozakboy.NLOG
         public static void Debug_Log(string Message, bool WriteTxt, string[] arg)
         {
             var escapedMessage = EscapeMessageIfNeeded(Message);
-            var formattedMessage = FormatLogMessage(escapedMessage);
+            var formattedMessage = FormatLogMessage(escapedMessage, arg);
             Console.WriteLine(formattedMessage, arg);
             if (WriteTxt)
                 LogText.Add_LogText("Debug", formattedMessage, arg);            
@@ -95,7 +95,7 @@ namespace ozakboy.NLOG
         public static void Info_Log(string Message, bool WriteTxt, string[] arg)
         {
             var escapedMessage = EscapeMessageIfNeeded(Message);
-            var formattedMessage = FormatLogMessage(escapedMessage);
+            var formattedMessage = FormatLogMessage(escapedMessage, arg);
             Console.WriteLine(formattedMessage, arg);
             if (WriteTxt)
                 LogText.Add_LogText("Info", formattedMessage, arg);           
@@ -134,7 +134,7 @@ namespace ozakboy.NLOG
         public static void Warn_Log(string Message, bool WriteTxt, string[] arg)
         {
             var escapedMessage = EscapeMessageIfNeeded(Message);
-            var formattedMessage = FormatLogMessage(escapedMessage);
+            var formattedMessage = FormatLogMessage(escapedMessage, arg);
             Console.WriteLine(formattedMessage, arg);
             if (WriteTxt)
                 LogText.Add_LogText("Warn", formattedMessage, arg);
@@ -232,7 +232,7 @@ namespace ozakboy.NLOG
         public static void Error_Log(string Message, bool WriteTxt, string[] arg)
         {
             var escapedMessage = EscapeMessageIfNeeded(Message);
-            var formattedMessage = FormatLogMessage(escapedMessage);
+            var formattedMessage = FormatLogMessage(escapedMessage, arg);
             Console.WriteLine(formattedMessage, arg);
             if (WriteTxt)
                 LogText.Add_LogText("Error", formattedMessage, arg);
@@ -269,7 +269,7 @@ namespace ozakboy.NLOG
         public static void Fatal_Log(string Message, string[] arg)
         {
             var escapedMessage = EscapeMessageIfNeeded(Message);
-            var formattedMessage = FormatLogMessage(escapedMessage);
+            var formattedMessage = FormatLogMessage(escapedMessage, arg);
             Console.WriteLine(formattedMessage, arg);
             LogText.Add_LogText("Fatal", formattedMessage, arg);
         }
@@ -295,7 +295,7 @@ namespace ozakboy.NLOG
         public static void CostomName_Log(string Custom, string Message, bool WriteTxt, string[] arg)
         {
             var escapedMessage = EscapeMessageIfNeeded(Message);
-            var formattedMessage = FormatLogMessage(escapedMessage);
+            var formattedMessage = FormatLogMessage(escapedMessage, arg);
             Console.WriteLine(formattedMessage, arg);
             if (WriteTxt)
                 LogText.Add_LogText(Custom, formattedMessage, arg);
@@ -368,9 +368,15 @@ namespace ozakboy.NLOG
 
         #region 私用方法
 
-        private static string FormatLogMessage(string message)
+        private static string FormatLogMessage(string message, string[] args)
         {
-            return $"{DateTime.Now:HH:mm:ss}[{Thread.CurrentThread.ManagedThreadId}] {message}";
+            string timestamp = $"{DateTime.Now:HH:mm:ss}[{Thread.CurrentThread.ManagedThreadId}] ";
+            if (args != null && args.Length > 0)
+            {
+                // 先處理訊息的格式化
+                message = string.Format(message, args);
+            }
+            return timestamp + message;
         }
 
         // 处理 JSON 字符串的帮助方法
@@ -378,11 +384,17 @@ namespace ozakboy.NLOG
         {
             if (message.Contains("{") || message.Contains("}"))
             {
-                // 将单个的 { 替换为 {{, 将单个的 } 替换为 }}
-                return message.Replace("{", "{{").Replace("}", "}}");
+                // 檢查是否包含格式化佔位符 {0}, {1} 等
+                bool containsFormatting = System.Text.RegularExpressions.Regex.IsMatch(message, @"\{[0-9]+\}");
+                if (!containsFormatting)
+                {
+                    // 如果不是格式化字串，則進行 JSON 轉義
+                    return message.Replace("{", "{{").Replace("}", "}}");
+                }
             }
             return message;
         }
+
 
         #endregion
 
