@@ -4,7 +4,7 @@
     <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net7.0;netcoreapp3.1;</TargetFrameworks>
     <RootNamespace>ozakboy.NLOG</RootNamespace>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <PackageVersion>1.1.6</PackageVersion>
+    <PackageVersion>1.2.1</PackageVersion>
     <Authors>ozakboy</Authors>
     <RepositoryType>github</RepositoryType>
     <RepositoryUrl>https://github.com/ozakboy/ozakboy.NLOG</RepositoryUrl>
