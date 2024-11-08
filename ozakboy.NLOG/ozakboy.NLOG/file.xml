@@ -57,6 +57,11 @@
             記錄檔
             </summary>
         </member>
+        <member name="M:ozakboy.NLOG.LOG.Trace_Log``1(``0,System.Boolean)">
+            <summary>
+            記錄任意物件的擴充方法
+            </summary>
+        </member>
         <member name="M:ozakboy.NLOG.LOG.Trace_Log(System.String,System.Boolean,System.String[])">
             <summary>
             追蹤記錄檔
@@ -77,6 +82,11 @@
             </summary>
             <param name="Message"></param>       
             <param name="WriteTxt">要不要寫Text</param>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Debug_Log``1(``0,System.Boolean)">
+            <summary>
+            記錄任意物件的擴充方法
+            </summary>
         </member>
         <member name="M:ozakboy.NLOG.LOG.Debug_Log(System.String,System.Boolean,System.String[])">
             <summary>
@@ -99,6 +109,11 @@
             <param name="Message">訊息</param>       
             <param name="WriteTxt">要不要寫Text</param>
         </member>
+        <member name="M:ozakboy.NLOG.LOG.Info_Log``1(``0,System.Boolean)">
+            <summary>
+            記錄任意物件的擴充方法
+            </summary>
+        </member>
         <member name="M:ozakboy.NLOG.LOG.Info_Log(System.String,System.Boolean,System.String[])">
             <summary>
             訊息記錄檔
@@ -119,6 +134,11 @@
             </summary>
             <param name="Message">訊息</param>         
             <param name="WriteTxt">要不要寫Text</param>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Warn_Log``1(``0,System.Boolean)">
+            <summary>
+            記錄任意物件的擴充方法
+            </summary>
         </member>
         <member name="M:ozakboy.NLOG.LOG.Warn_Log(System.String,System.Boolean,System.String[])">
             <summary>
@@ -141,24 +161,10 @@
             <param name="Message">訊息</param>       
             <param name="WriteTxt">要不要寫Text</param>
         </member>
-        <member name="M:ozakboy.NLOG.LOG.Warn_Log(System.Exception)">
+        <member name="M:ozakboy.NLOG.LOG.Error_Log``1(``0,System.Boolean)">
             <summary>
-            警告記錄檔
+            記錄任意物件的擴充方法
             </summary>
-            <param name="ex">例外</param>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Warn_Log(ozakboy.NLOG.ErrorMessageException)">
-            <summary>
-            警告記錄檔
-            </summary>
-            <param name="ex">例外</param>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Warn_Log(System.String,System.Exception)">
-            <summary>
-            警告記錄檔
-            </summary>
-            <param name="Message">訊息</param>
-            <param name="ex">例外</param>
         </member>
         <member name="M:ozakboy.NLOG.LOG.Error_Log(System.String,System.Boolean,System.String[])">
             <summary>
@@ -181,6 +187,14 @@
             <param name="Message">訊息</param>      
             <param name="WriteTxt">要不要寫Text</param>
         </member>
+        <member name="M:ozakboy.NLOG.LOG.Fatal_Log``1(``0,System.Boolean)">
+            <summary>
+            致命記錄檔 記錄任意物件的擴充方法
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="writeTxt">是否寫LOG</param>
+            <param name="obj">物件</param>
+        </member>
         <member name="M:ozakboy.NLOG.LOG.Fatal_Log(System.String,System.String[])">
             <summary>
             致命記錄檔
@@ -193,6 +207,11 @@
             致命記錄檔
             </summary>
             <param name="Message">訊息</param>                     
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.CostomName_Log``1(System.String,``0,System.Boolean)">
+            <summary>
+            記錄任意物件的擴充方法
+            </summary>
         </member>
         <member name="M:ozakboy.NLOG.LOG.CostomName_Log(System.String,System.String,System.Boolean,System.String[])">
             <summary>
@@ -238,6 +257,11 @@
             預設最大檔限制 50MB
             </summary>
             <param name="_BigFilesByte">最大檔案位元組限制</param>
+        </member>
+        <member name="T:ozakboy.NLOG.SerializableExceptionInfo">
+            <summary>
+            用於序列化的異常資料類別
+            </summary>
         </member>
     </members>
 </doc>

@@ -1,6 +1,8 @@
-﻿
-using System;
+﻿using System;
 using System.Threading;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Collections.Generic;
 
 namespace ozakboy.NLOG
 {
@@ -10,6 +12,23 @@ namespace ozakboy.NLOG
     public static class LOG
     {
         #region 追蹤記錄檔
+
+        /// <summary>
+        /// 記錄任意物件的擴充方法
+        /// </summary>
+        public static void Trace_Log<T>(T obj, bool writeTxt = true) where T : class
+        {
+            if (obj == null) return;
+            try
+            {
+                string jsonString = JsonSerializer.Serialize(obj, _defaultJsonOptions);
+                Trace_Log(jsonString, writeTxt);
+            }
+            catch (Exception ex)
+            {
+                Error_Log($"JSON序列化失敗: {ex.Message}");
+            }
+        }
 
         /// <summary>
         /// 追蹤記錄檔
@@ -47,6 +66,24 @@ namespace ozakboy.NLOG
         #endregion
 
         #region 測試記錄檔
+
+
+        /// <summary>
+        /// 記錄任意物件的擴充方法
+        /// </summary>
+        public static void Debug_Log<T>(T obj, bool writeTxt = true) where T : class
+        {
+            if (obj == null) return;
+            try
+            {
+                string jsonString = JsonSerializer.Serialize(obj, _defaultJsonOptions);
+                Debug_Log(jsonString, writeTxt);
+            }
+            catch (Exception ex)
+            {
+                Error_Log($"JSON序列化失敗: {ex.Message}");
+            }
+        }
 
         /// <summary>
         /// 測試記錄檔
@@ -87,6 +124,23 @@ namespace ozakboy.NLOG
         #region 訊息記錄檔
 
         /// <summary>
+        /// 記錄任意物件的擴充方法
+        /// </summary>
+        public static void Info_Log<T>(T obj, bool writeTxt = true) where T : class
+        {
+            if (obj == null) return;
+            try
+            {
+                string jsonString = JsonSerializer.Serialize(obj, _defaultJsonOptions);
+                Info_Log(jsonString, writeTxt);
+            }
+            catch (Exception ex)
+            {
+                Error_Log($"JSON序列化失敗: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// 訊息記錄檔
         /// </summary>
         /// <param name="Message">訊息</param>
@@ -124,6 +178,32 @@ namespace ozakboy.NLOG
         #endregion 訊息記錄檔
 
         #region 警告記錄檔
+        /// <summary>
+        /// 記錄任意物件的擴充方法
+        /// </summary>
+        public static void Warn_Log<T>(T obj, bool writeTxt = true) where T : class
+        {
+            if (obj == null) return;
+            try
+            {
+                if (obj is Exception ex)
+                {
+                    var serializableEx = SerializableExceptionInfo.FromException(ex);
+                    string jsonString = JsonSerializer.Serialize(serializableEx, _exceptionJsonOptions);
+                    Warn_Log(jsonString, writeTxt);
+                }
+                else
+                {
+                    string jsonString = JsonSerializer.Serialize(obj, _defaultJsonOptions);
+                    Warn_Log(jsonString, writeTxt);
+                }                
+            }
+            catch (Exception ex)
+            {
+                Error_Log($"JSON序列化失敗: {ex.Message}");
+            }
+        }
+
 
         /// <summary>
         /// 警告記錄檔
@@ -157,72 +237,38 @@ namespace ozakboy.NLOG
         public static void Warn_Log(string Message, bool WriteTxt)
         {
             Warn_Log(Message, WriteTxt, new string[0]);
-        }
-
-        /// <summary>
-        /// 警告記錄檔
-        /// </summary>
-        /// <param name="ex">例外</param>
-        public static void Warn_Log(Exception ex)
-        {
-            string Message = string.Empty;
-            if (ex != null) 
-            {                
-                GetExceptionMessage(ex, ref  Message);
-                Warn_Log(Message);
-            }
-            else
-            {
-                Warn_Log(Message);
-            }
-        }
-
-        /// <summary>
-        /// 警告記錄檔
-        /// </summary>
-        /// <param name="ex">例外</param>
-        public static void Warn_Log(ErrorMessageException ex)
-        {
-            string Message = string.Empty;
-            if (ex != null)
-            {
-                Message = ex.Message;
-                Warn_Log(Message);
-            }
-            else
-            {
-                Warn_Log(Message);
-            }
-        }
-
-        /// <summary>
-        /// 警告記錄檔
-        /// </summary>
-        /// <param name="Message">訊息</param>
-        /// <param name="ex">例外</param>
-        public static void Warn_Log(string Message, Exception ex)
-        {
-            if (ex != null)
-            {
-                GetExceptionMessage(ex, ref Message);
-            }
-            Warn_Log(Message);
-        }
-
-        private static void GetExceptionMessage(Exception ex, ref String Message)
-        {
-            if (ex.InnerException != null && !String.IsNullOrEmpty(ex.InnerException.StackTrace))
-            {
-                GetExceptionMessage(ex.InnerException, ref Message);
-            }
-            Message += "\n" + ex.Message;
-            Message += "\n" + ex.StackTrace;
-        }
+        }     
 
         #endregion
 
         #region 錯誤記錄檔
 
+        /// <summary>
+        /// 記錄任意物件的擴充方法
+        /// </summary>
+        public static void Error_Log<T>(T obj, bool writeTxt = true) where T : class
+        {
+            if (obj == null) return;
+            try
+            {
+                if (obj is Exception ex)
+                {
+                    var serializableEx = SerializableExceptionInfo.FromException(ex);
+                    string jsonString = JsonSerializer.Serialize(serializableEx, _exceptionJsonOptions);
+                    Error_Log(jsonString, writeTxt);
+                }
+                else
+                {
+                    string jsonString = JsonSerializer.Serialize(obj, _defaultJsonOptions);
+                    Error_Log(jsonString, writeTxt);
+                }
+             
+            }
+            catch (Exception ex)
+            {
+                Error_Log($"JSON序列化失敗: {ex.Message}");
+            }
+        }
         /// <summary>
         /// 錯誤紀錄檔
         /// </summary>
@@ -262,6 +308,46 @@ namespace ozakboy.NLOG
         #region 致命記錄檔
 
         /// <summary>
+        /// 致命記錄檔 記錄任意物件的擴充方法
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="writeTxt">是否寫LOG</param>
+        /// <param name="obj">物件</param>
+        public static void Fatal_Log<T>(T obj, bool writeTxt = true) where T : class
+        {
+            if (obj == null) return;
+
+            try
+            {
+                if (obj is Exception ex)
+                {
+                    var serializableEx = SerializableExceptionInfo.FromException(ex);
+                    string jsonString = JsonSerializer.Serialize(serializableEx, _exceptionJsonOptions);
+                    Fatal_Log(jsonString, writeTxt);
+                }
+                else
+                {
+                    string jsonString = JsonSerializer.Serialize(obj, _defaultJsonOptions);
+                    Fatal_Log(jsonString , writeTxt);
+                }
+            }
+            catch (Exception ex)
+            {
+                // 如果是異常物件且序列化失敗，使用基本異常格式
+                if (obj is Exception exception)
+                {
+                    string message = string.Empty;
+                    GetExceptionMessage(exception, ref message);
+                    Fatal_Log(message);
+                }
+                else
+                {
+                    Error_Log($"JSON序列化失敗: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
         /// 致命記錄檔
         /// </summary>
         /// <param name="Message">訊息</param>
@@ -285,6 +371,22 @@ namespace ozakboy.NLOG
         #endregion
 
         #region 自定義名稱Log記錄檔
+        /// <summary>
+        /// 記錄任意物件的擴充方法
+        /// </summary>
+        public static void CostomName_Log<T>(string custom, T obj, bool writeTxt = true) where T : class
+        {
+            if (obj == null) return;
+            try
+            {
+                string jsonString = JsonSerializer.Serialize(obj, _defaultJsonOptions);
+                CostomName_Log(custom, jsonString, writeTxt);
+            }
+            catch (Exception ex)
+            {
+                Error_Log($"JSON序列化失敗: {ex.Message}");
+            }
+        }
         /// <summary>
         /// 自定義名稱Log記錄檔
         /// </summary>
@@ -368,6 +470,16 @@ namespace ozakboy.NLOG
 
         #region 私用方法
 
+        private static void GetExceptionMessage(Exception ex, ref String Message)
+        {
+            if (ex.InnerException != null && !String.IsNullOrEmpty(ex.InnerException.StackTrace))
+            {
+                GetExceptionMessage(ex.InnerException, ref Message);
+            }
+            Message += "\n" + ex.Message;
+            Message += "\n" + ex.StackTrace;
+        }
+
         private static string FormatLogMessage(string message, string[] args)
         {
             string timestamp = $"{DateTime.Now:HH:mm:ss}[{Thread.CurrentThread.ManagedThreadId}] ";
@@ -395,6 +507,49 @@ namespace ozakboy.NLOG
             return message;
         }
 
+        private static readonly JsonSerializerOptions _defaultJsonOptions = new JsonSerializerOptions
+        {
+            WriteIndented = false,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+
+        private static readonly JsonSerializerOptions _exceptionJsonOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+
+        private static Dictionary<string, object> GetAdditionalExceptionProperties(Exception ex)
+        {
+            var properties = new Dictionary<string, object>();
+
+            // 使用反射獲取額外的公開屬性
+            var type = ex.GetType();
+            var standardProperties = new HashSet<string> { "Message", "StackTrace", "Source", "HelpLink", "InnerException" };
+
+            foreach (var prop in type.GetProperties())
+            {
+                if (!standardProperties.Contains(prop.Name))
+                {
+                    try
+                    {
+                        var value = prop.GetValue(ex);
+                        if (value != null)
+                        {
+                            properties[prop.Name] = value;
+                        }
+                    }
+                    catch
+                    {
+                        // 忽略無法獲取的屬性
+                    }
+                }
+            }
+
+            return properties;
+        }
 
         #endregion
 

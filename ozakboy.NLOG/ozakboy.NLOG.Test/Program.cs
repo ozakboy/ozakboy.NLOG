@@ -54,7 +54,61 @@ var jsonData = new
     }
 };
 
+LOG.Info_Log(jsonData);
 LOG.Info_Log(JsonSerializer.Serialize(jsonData));
+
+
+string jsonString = @"{""name"": ""test""}";
+LOG.Info_Log(jsonString, true);
+
+
+// 基本異常
+try
+{
+    // 某些操作
+    throw new Exception("一般異常");
+}
+catch (Exception ex)
+{
+    LOG.Error_Log(ex);
+}
+
+// 自定義異常
+try
+{
+    throw new ErrorMessageException("自定義異常訊息");
+}
+catch (ErrorMessageException ex)
+{
+    LOG.Warn_Log(ex);
+}
+
+// 其他類型異常
+try
+{
+    throw new ArgumentNullException("parameter", "參數空值異常");
+}
+catch (ArgumentNullException ex)
+{
+    LOG.Fatal_Log(ex);
+}
+
+// 巢狀異常
+try
+{
+    try
+    {
+        throw new Exception("內部異常");
+    }
+    catch (Exception ex)
+    {
+        throw new ErrorMessageException("外部異常", ex);
+    }
+}
+catch (ErrorMessageException ex)
+{
+    LOG.Error_Log(ex);
+}
 
 //for (int i = 0; i < 1000000; i++)
 //{
