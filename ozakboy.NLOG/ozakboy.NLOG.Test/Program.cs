@@ -4,7 +4,31 @@ using System.Xml;
 using System.Xml.Linq;
 Console.WriteLine("Hello, World!");
 
+LOG.Configure(configure =>
+{
+    configure.KeepDays = -1;
+    configure.SetFileSizeInMB(10);
+    configure.EnableAsyncLogging = true;
+    configure.EnableConsoleOutput = false;
+    configure.ConfigureAsync(asyncConfig =>
+    {
+        asyncConfig.FlushIntervalMs = 5000;
+    });
+});
 
+var i = 6;
+for (int i2 = 0; i2 < i; i2++)
+{
+    var g = i2;
+    _ = Task.Run(async () =>
+    {    
+        for (int o = 0; o < 1000000; o++)
+        {
+            LOG.Debug_Log($"i2:{g}_LOG_TEST_for_o:{o}");
+            Thread.Sleep(10 * g);
+        }
+    });
+}
 
 
 
@@ -119,7 +143,4 @@ catch (ErrorMessageException ex)
     LOG.Error_Log(ex);
 }
 
-for (int i = 0; i < 1000000; i++)
-{
-    LOG.CustomName_Log("BigFile", "LOG_TEST");
-}
+Thread.Sleep(-1);

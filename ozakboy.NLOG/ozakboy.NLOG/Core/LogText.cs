@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -7,113 +8,150 @@ namespace ozakboy.NLOG.Core
 {
     /// <summary>
     /// 日誌檔案處理類別，負責日誌檔案的建立、寫入和管理
+    ///  支援單次寫入和批次寫入
     /// </summary>
     static class LogText
     {
         private static object lockMe = new object();
 
         /// <summary>
-        /// 建立或是新增LOG紀錄
+        /// 建立或是新增單條LOG紀錄
         /// </summary>
-        /// <param name="level"></param>
-        /// <param name="name"></param>
-        /// <param name="Message"></param>
-        /// <param name="arg"></param>
-        internal static void Add_LogText(LogLevel level, string name, string Message, object[] arg)
+        internal static void Add_LogText(LogLevel level, string name, string message, object[] args)
+        {
+            var logItem = new LogItem
+            {
+                Level = level,
+                Name = name,
+                Message = message,
+                Args = args
+            };
+
+            Add_BatchLogText(new[] { logItem });
+        }
+
+
+        /// <summary>
+        /// 批次寫入多條日誌
+        /// </summary>
+        internal static void Add_BatchLogText(IEnumerable<LogItem> logItems)
         {
             try
             {
-                // 使用 lock 避免多執行敘執行時 檔案被佔用問題
                 lock (lockMe)
                 {
+                    // 按日誌級別和名稱分組
+                    var groupedLogs = logItems.GroupBy(item => new { item.Level, item.Name });
 
-                    string LogPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\{LogConfiguration.Current.LogPath}\\{DateTime.Now.ToString("yyyyMMdd")}\\{LogConfiguration.Current.TypeDirectories.GetPathForType(level)}\\";
+                    foreach (var group in groupedLogs)
+                    {
+                        var level = group.Key.Level;
+                        var name = string.IsNullOrEmpty(group.Key.Name) ? level.ToString() : group.Key.Name;
 
-                    CheckDirectoryExistCreate(LogPath);
+                        // 獲取日誌檔案資訊
+                        var fileInfo = GetLogFileInfo(level, name);
 
-                    if (string.IsNullOrEmpty(name)) name = level.ToString();
+                        // 批次寫入檔案
+                        WriteLogsToFile(fileInfo, group);
+                    }
 
-                    var LogFilePath = CheckFileExistCreate(LogPath, name);
-
-                    FIleWriteLine(arg, LogFilePath, Message);
-
+                    // 清理過期日誌（只在批次處理完成後執行一次）
                     Remove_TimeOutLogText();
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}>>LogText Add_LogText Error:{ex.Message}");
+                Console.WriteLine($"{DateTime.Now:yyyy/MM/dd HH:mm:ss}>>LogText Add_BatchLogText Error:{ex.Message}");
             }
         }
 
+
         /// <summary>
-        /// 判斷有無資料表 若沒有建立資料表
+        /// 獲取日誌檔案資訊
         /// </summary>
-        /// <param name="LogPath"></param>
-        private static void CheckDirectoryExistCreate(string LogPath)
+        private static LogFileInfo GetLogFileInfo(LogLevel level, string name)
         {
-            if (!Directory.Exists(LogPath))
+            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            var logPath = Path.Combine(baseDir, LogConfiguration.Current.LogPath,
+                                     DateTime.Now.ToString("yyyyMMdd"),
+                                     LogConfiguration.Current.TypeDirectories.GetPathForType(level));
+
+            var fileInfo = new LogFileInfo
             {
-                Directory.CreateDirectory(LogPath);
+                DirectoryPath = logPath
+            };
+
+            // 確保目錄存在
+            if (!Directory.Exists(logPath))
+            {
+                Directory.CreateDirectory(logPath);
             }
+
+            // 確定檔案路徑和是否需要新檔案
+            DetermineLogFile(fileInfo, name);
+
+            return fileInfo;
         }
 
         /// <summary>
-        /// 判斷有無檔案或檔案過大，若沒有或檔案過大則建立新檔案
+        /// 確定日誌檔案路徑和狀態
         /// </summary>
-        /// <param name="_LogPath">檔案路徑</param>
-        /// <param name="_FileName">檔案名稱</param>
-        private static string CheckFileExistCreate(string _LogPath, string _FileName)
+        private static void DetermineLogFile(LogFileInfo fileInfo, string name)
         {
-            var LogFIleName = $"{_FileName}_Log.txt";
-            var SearchFIleName = $"{_FileName}*";
-            FileExistCreate(_LogPath + LogFIleName);
+            var logFileName = $"{name}_Log.txt";
+            var searchPattern = $"{name}*";
+            var di = new DirectoryInfo(fileInfo.DirectoryPath);
+            var files = di.GetFiles(searchPattern).OrderBy(x => x.LastWriteTimeUtc).ToArray();
 
-            DirectoryInfo di = new DirectoryInfo(_LogPath);
-            var Files = di.GetFiles(SearchFIleName).OrderBy(x => x.LastWriteTimeUtc).ToArray();
-            var NowWriteFile = Files[Files.Length - 1];
-            if (NowWriteFile.Length > LogConfiguration.Current.MaxFileSize)
+            if (files.Length == 0)
             {
-                var FileNameSplits = NowWriteFile.Name.Replace("_" + _FileName, "").Split('_');
-                if (!FileNameSplits[1].Contains("part"))
+                fileInfo.FilePath = Path.Combine(fileInfo.DirectoryPath, logFileName);
+                fileInfo.RequiresNewFile = true;
+                return;
+            }
+
+            var currentFile = files.Last();
+            if (currentFile.Length > LogConfiguration.Current.MaxFileSize)
+            {
+                var splits = currentFile.Name.Replace("_" + name, "").Split('_');
+                int nextPart = 1;
+
+                if (splits.Length > 1 && splits[1].StartsWith("part"))
                 {
-                    LogFIleName = $"{_FileName}_part{1}_Log.txt";
+                    nextPart = int.Parse(splits[1].Replace("part", "")) + 1;
                 }
-                else
-                {
-                    var Part = Convert.ToInt32(FileNameSplits[1].Replace("part", ""));
-                    LogFIleName = $"{_FileName}_part{Part + 1}_Log.txt";
-                }
-                FileExistCreate(_LogPath + LogFIleName);
+
+                logFileName = $"{name}_part{nextPart}_Log.txt";
+                fileInfo.RequiresNewFile = true;
             }
             else
             {
-                LogFIleName = NowWriteFile.Name;
+                logFileName = currentFile.Name;
+                fileInfo.RequiresNewFile = false;
             }
-            return _LogPath + LogFIleName;
+
+            fileInfo.FilePath = Path.Combine(fileInfo.DirectoryPath, logFileName);
         }
+
 
         /// <summary>
-        /// 判斷有無檔案，若沒有則建立新檔案
+        /// 批次寫入日誌到檔案
         /// </summary>
-        /// <param name="_LogFilePath"></param>
-        private static void FileExistCreate(string _LogFilePath)
+        private static void WriteLogsToFile(LogFileInfo fileInfo, IEnumerable<LogItem> logs)
         {
-            if (!File.Exists(_LogFilePath))
+            // 如果需要新檔案，先創建
+            if (fileInfo.RequiresNewFile)
             {
-                using (FileStream fileStream = new FileStream(_LogFilePath, FileMode.Create))
-                {
-                    fileStream.Close();
-                }
+                using (File.Create(fileInfo.FilePath)) { }
             }
-        }
 
-        private static void FIleWriteLine(object[] arg, string _filePath, string _Message)
-        {
-            using (StreamWriter sw = new StreamWriter(_filePath, true, Encoding.UTF8))
+            // 批次寫入所有日誌
+            using (var writer = new StreamWriter(fileInfo.FilePath, true, Encoding.UTF8))
             {
-                sw.WriteLine(_Message, arg);
-                sw.Close();
+                foreach (var log in logs)
+                {
+                    writer.WriteLine(string.Format(log.Message, log.Args));
+                }
             }
         }
 
@@ -124,7 +162,7 @@ namespace ozakboy.NLOG.Core
         {
             try
             {
-                string logBasePath = $"{AppDomain.CurrentDomain.BaseDirectory}\\{LogConfiguration.Current.LogPath}\\";
+                string logBasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, LogConfiguration.Current.LogPath);      
                 // 確保目錄存在
                 if (!Directory.Exists(logBasePath))
                     return;
@@ -150,5 +188,21 @@ namespace ozakboy.NLOG.Core
 
             }
         }
+
+
+        #region Class
+
+        /// <summary>
+        /// 日誌檔案資訊類
+        /// </summary>
+        private class LogFileInfo
+        {
+            public string DirectoryPath { get; set; }
+            public string FilePath { get; set; }
+            public bool RequiresNewFile { get; set; }
+        }
+
+
+        #endregion
     }
 }

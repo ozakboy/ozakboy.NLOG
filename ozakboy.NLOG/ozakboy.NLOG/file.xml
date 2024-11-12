@@ -230,36 +230,6 @@
             上次寫入的時間
             </summary>
         </member>
-        <member name="T:ozakboy.NLOG.Core.AsyncLogHandler.LogItem">
-            <summary>
-            日誌項目類，表示單個待處理的日誌條目
-            </summary>
-        </member>
-        <member name="P:ozakboy.NLOG.Core.AsyncLogHandler.LogItem.Level">
-            <summary>
-            日誌級別
-            </summary>
-        </member>
-        <member name="P:ozakboy.NLOG.Core.AsyncLogHandler.LogItem.Name">
-            <summary>
-            日誌名稱
-            </summary>
-        </member>
-        <member name="P:ozakboy.NLOG.Core.AsyncLogHandler.LogItem.Message">
-            <summary>
-            日誌消息
-            </summary>
-        </member>
-        <member name="P:ozakboy.NLOG.Core.AsyncLogHandler.LogItem.Args">
-            <summary>
-            日誌參數
-            </summary>
-        </member>
-        <member name="P:ozakboy.NLOG.Core.AsyncLogHandler.LogItem.RequireImmediateFlush">
-            <summary>
-            是否需要立即寫入
-            </summary>
-        </member>
         <member name="M:ozakboy.NLOG.Core.AsyncLogHandler.Initialize">
             <summary>
             初始化異步日誌處理器
@@ -378,6 +348,36 @@
             處理訊息中的特殊字符
             </summary>
         </member>
+        <member name="T:ozakboy.NLOG.Core.LogItem">
+            <summary>
+            日誌項目類別，用於在不同組件間傳遞日誌資訊
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.Core.LogItem.Level">
+            <summary>
+            日誌級別
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.Core.LogItem.Name">
+            <summary>
+            日誌名稱
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.Core.LogItem.Message">
+            <summary>
+            日誌訊息
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.Core.LogItem.Args">
+            <summary>
+            日誌參數
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.Core.LogItem.RequireImmediateFlush">
+            <summary>
+            是否需要立即寫入
+            </summary>
+        </member>
         <member name="T:ozakboy.NLOG.Core.LogLevel">
             <summary>
             日誌級別
@@ -436,39 +436,42 @@
         <member name="T:ozakboy.NLOG.Core.LogText">
             <summary>
             日誌檔案處理類別，負責日誌檔案的建立、寫入和管理
+             支援單次寫入和批次寫入
             </summary>
         </member>
         <member name="M:ozakboy.NLOG.Core.LogText.Add_LogText(ozakboy.NLOG.Core.LogLevel,System.String,System.String,System.Object[])">
             <summary>
-            建立或是新增LOG紀錄
+            建立或是新增單條LOG紀錄
             </summary>
-            <param name="level"></param>
-            <param name="name"></param>
-            <param name="Message"></param>
-            <param name="arg"></param>
         </member>
-        <member name="M:ozakboy.NLOG.Core.LogText.CheckDirectoryExistCreate(System.String)">
+        <member name="M:ozakboy.NLOG.Core.LogText.Add_BatchLogText(System.Collections.Generic.IEnumerable{ozakboy.NLOG.Core.LogItem})">
             <summary>
-            判斷有無資料表 若沒有建立資料表
+            批次寫入多條日誌
             </summary>
-            <param name="LogPath"></param>
         </member>
-        <member name="M:ozakboy.NLOG.Core.LogText.CheckFileExistCreate(System.String,System.String)">
+        <member name="M:ozakboy.NLOG.Core.LogText.GetLogFileInfo(ozakboy.NLOG.Core.LogLevel,System.String)">
             <summary>
-            判斷有無檔案或檔案過大，若沒有或檔案過大則建立新檔案
+            獲取日誌檔案資訊
             </summary>
-            <param name="_LogPath">檔案路徑</param>
-            <param name="_FileName">檔案名稱</param>
         </member>
-        <member name="M:ozakboy.NLOG.Core.LogText.FileExistCreate(System.String)">
+        <member name="M:ozakboy.NLOG.Core.LogText.DetermineLogFile(ozakboy.NLOG.Core.LogText.LogFileInfo,System.String)">
             <summary>
-            判斷有無檔案，若沒有則建立新檔案
+            確定日誌檔案路徑和狀態
             </summary>
-            <param name="_LogFilePath"></param>
+        </member>
+        <member name="M:ozakboy.NLOG.Core.LogText.WriteLogsToFile(ozakboy.NLOG.Core.LogText.LogFileInfo,System.Collections.Generic.IEnumerable{ozakboy.NLOG.Core.LogItem})">
+            <summary>
+            批次寫入日誌到檔案
+            </summary>
         </member>
         <member name="M:ozakboy.NLOG.Core.LogText.Remove_TimeOutLogText">
             <summary>
             刪除超時紀錄檔
+            </summary>
+        </member>
+        <member name="T:ozakboy.NLOG.Core.LogText.LogFileInfo">
+            <summary>
+            日誌檔案資訊類
             </summary>
         </member>
         <member name="T:ozakboy.NLOG.LOG">

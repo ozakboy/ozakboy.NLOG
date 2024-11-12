@@ -56,36 +56,6 @@ namespace ozakboy.NLOG.Core
         private static DateTime _lastFlushTime = DateTime.Now;
 
         /// <summary>
-        /// 日誌項目類，表示單個待處理的日誌條目
-        /// </summary>
-        private class LogItem
-        {
-            /// <summary>
-            /// 日誌級別
-            /// </summary>
-            public LogLevel Level { get; set; }
-
-            /// <summary>
-            /// 日誌名稱
-            /// </summary>
-            public string Name { get; set; }
-
-            /// <summary>
-            /// 日誌消息
-            /// </summary>
-            public string Message { get; set; }
-
-            /// <summary>
-            /// 日誌參數
-            /// </summary>
-            public object[] Args { get; set; }
-            /// <summary>
-            /// 是否需要立即寫入
-            /// </summary>
-            public bool RequireImmediateFlush { get; set; }
-        }
-
-        /// <summary>
         /// 初始化異步日誌處理器
         /// 確保處理線程只被創建一次
         /// </summary>
