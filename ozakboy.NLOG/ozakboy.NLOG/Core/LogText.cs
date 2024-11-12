@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace ozakboy.NLOG
+namespace ozakboy.NLOG.Core
 {
     /// <summary>
     /// 日誌檔案處理類別，負責日誌檔案的建立、寫入和管理
@@ -11,16 +11,6 @@ namespace ozakboy.NLOG
     static class LogText
     {
         private static object lockMe = new object();
-        /// <summary>
-        /// 日誌檔案保存天數設定，預設為 -3 天（保存最近3天的日誌）
-        /// 請設定為負數，例如 -7 表示保存最近 7 天的日誌
-        /// </summary>
-        public static int LogKeepDay = -3;
-        /// <summary>
-        /// 單個日誌檔案的最大大小限制，超過此大小將自動分割檔案
-        /// 預設為 50MB (50 * 1024 * 1024 bytes)
-        /// </summary>
-        public static long BigFilesByte =50 * 1024 * 1024 ;
 
         /// <summary>
         /// 建立或是新增LOG紀錄
@@ -28,18 +18,21 @@ namespace ozakboy.NLOG
         /// <param name="Type"></param>
         /// <param name="Message"></param>
         /// <param name="arg"></param>
-        internal static void Add_LogText(string Type, string Message, object[] arg)
+        internal static void Add_LogText(LogLevel level, string name, string Message, object[] arg)
         {
             try
             {
                 // 使用 lock 避免多執行敘執行時 檔案被佔用問題
                 lock (lockMe)
-                {                  
-                    string LogPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\logs\\LogFiles\\";
+                {
+
+                    string LogPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\{LogConfiguration.Current.LogPath}\\{DateTime.Now.ToString("yyyyMMdd")}\\{LogConfiguration.Current.TypeDirectories.GetPathForType(level)}\\";
 
                     CheckDirectoryExistCreate(LogPath);
 
-                    var LogFilePath = CheckFileExistCreate(LogPath, Type);
+                    if (string.IsNullOrEmpty(name)) name = level.ToString();
+
+                    var LogFilePath = CheckFileExistCreate(LogPath, name);
 
                     FIleWriteLine(arg, LogFilePath, Message);
 
@@ -57,7 +50,7 @@ namespace ozakboy.NLOG
         /// </summary>
         /// <param name="LogPath"></param>
         private static void CheckDirectoryExistCreate(string LogPath)
-        {            
+        {
             if (!Directory.Exists(LogPath))
             {
                 Directory.CreateDirectory(LogPath);
@@ -69,26 +62,26 @@ namespace ozakboy.NLOG
         /// </summary>
         /// <param name="_LogPath">檔案路徑</param>
         /// <param name="_FileName">檔案名稱</param>
-        private static string CheckFileExistCreate(string _LogPath , string _FileName)
+        private static string CheckFileExistCreate(string _LogPath, string _FileName)
         {
-            var LogFIleName = $"{DateTime.Now.ToString("yyyyMMdd")}_{_FileName}_Log.txt";
-            var SearchFIleName = $"{DateTime.Now.ToString("yyyyMMdd")}_{_FileName}*";
+            var LogFIleName = $"{_FileName}_Log.txt";
+            var SearchFIleName = $"{_FileName}*";
             FileExistCreate(_LogPath + LogFIleName);
 
             DirectoryInfo di = new DirectoryInfo(_LogPath);
-            var Files = di.GetFiles(SearchFIleName).OrderBy(x=>x.LastWriteTimeUtc).ToArray();
-            var NowWriteFile = Files[Files.Length -1];
-            if(NowWriteFile.Length > BigFilesByte)
+            var Files = di.GetFiles(SearchFIleName).OrderBy(x => x.LastWriteTimeUtc).ToArray();
+            var NowWriteFile = Files[Files.Length - 1];
+            if (NowWriteFile.Length > LogConfiguration.Current.MaxFileSize)
             {
-                var FileNameSplits = NowWriteFile.Name.Replace("_"+_FileName,"").Split('_');
+                var FileNameSplits = NowWriteFile.Name.Replace("_" + _FileName, "").Split('_');
                 if (!FileNameSplits[1].Contains("part"))
                 {
-                    LogFIleName = $"{DateTime.Now.ToString("yyyyMMdd")}_{_FileName}_part{1}_Log.txt";                    
+                    LogFIleName = $"{_FileName}_part{1}_Log.txt";
                 }
                 else
                 {
-                    var Part = Convert.ToInt32(FileNameSplits[1].Replace("part",""));
-                    LogFIleName = $"{DateTime.Now.ToString("yyyyMMdd")}_{_FileName}_part{Part + 1}_Log.txt";
+                    var Part = Convert.ToInt32(FileNameSplits[1].Replace("part", ""));
+                    LogFIleName = $"{_FileName}_part{Part + 1}_Log.txt";
                 }
                 FileExistCreate(_LogPath + LogFIleName);
             }
@@ -114,7 +107,7 @@ namespace ozakboy.NLOG
             }
         }
 
-        private static void FIleWriteLine(object[] arg , string _filePath ,string _Message)
+        private static void FIleWriteLine(object[] arg, string _filePath, string _Message)
         {
             using (StreamWriter sw = new StreamWriter(_filePath, true, Encoding.UTF8))
             {
@@ -123,20 +116,37 @@ namespace ozakboy.NLOG
             }
         }
 
-
-
         /// <summary>
         /// 刪除超時紀錄檔
         /// </summary>
         private static void Remove_TimeOutLogText()
         {
-            string LogPath = $"{AppDomain.CurrentDomain.BaseDirectory}\\logs\\LogFiles\\";
-            DirectoryInfo di = new DirectoryInfo(LogPath);
-            var LastKeepDate = DateTime.UtcNow.AddDays(LogKeepDay);
-            var PathFiles = di.GetFiles().Where(x => x.Extension == ".txt" && x.LastWriteTimeUtc < LastKeepDate);
-            foreach (var item in PathFiles)
+            try
             {
-                item.Delete();
+                string logBasePath = $"{AppDomain.CurrentDomain.BaseDirectory}\\{LogConfiguration.Current.LogPath}\\";
+                // 確保目錄存在
+                if (!Directory.Exists(logBasePath))
+                    return;
+                var directories = Directory.GetDirectories(logBasePath);
+                int cutoffDate = int.Parse(DateTime.Now.AddDays(LogConfiguration.Current.KeepDays).ToString("yyyyMMdd"));
+                foreach (string dir in directories)
+                {
+                    string folderName = Path.GetFileName(dir);
+
+                    // 判斷是否為8位數的日期格式
+                    if (folderName.Length == 8 && int.TryParse(folderName, out int folderDate))
+                    {
+                        // 數字直接比較，小於截止日期就刪除
+                        if (folderDate < cutoffDate)
+                        {                         
+                            Directory.Delete(dir, true);                           
+                        }
+                    }
+                }
+            }
+            catch 
+            {
+
             }
         }
     }

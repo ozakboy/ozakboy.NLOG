@@ -3,14 +3,21 @@ using System.Text.Json;
 using System.Xml;
 using System.Xml.Linq;
 Console.WriteLine("Hello, World!");
-LOG.SetLogKeepDay(-7);
+
+
+//LOG.Configure(config =>
+//{
+//    config.SetFileSizeInMB(1);
+//});
+
+
 LOG.Trace_Log("LOG_TEST");
 LOG.Info_Log("LOG_TEST", false);
 LOG.Debug_Log("LOG_TEST");
 LOG.Error_Log("LOG_TEST");
 LOG.Warn_Log("LOG_TEST");
 LOG.Fatal_Log("LOG_TEST");
-LOG.CostomName_Log("ABC", "LOG_TEST");
+LOG.CustomName_Log("ABC", "LOG_TEST");
 
 
 
@@ -71,6 +78,7 @@ try
 catch (Exception ex)
 {
     LOG.Error_Log(ex);
+    LOG.Error_Log($"妳好",ex);
 }
 
 // 自定義異常
@@ -80,6 +88,7 @@ try
 }
 catch (ErrorMessageException ex)
 {
+    LOG.Error_Log($"妳好", ex);
     LOG.Warn_Log(ex);
 }
 
@@ -90,6 +99,7 @@ try
 }
 catch (ArgumentNullException ex)
 {
+    LOG.Error_Log($"妳好", ex);
     LOG.Fatal_Log(ex);
 }
 
@@ -102,15 +112,17 @@ try
     }
     catch (Exception ex)
     {
+        LOG.Error_Log($"妳好", ex);
         throw new ErrorMessageException("外部異常", ex);
     }
 }
 catch (ErrorMessageException ex)
 {
+    LOG.Error_Log($"妳好", ex);
     LOG.Error_Log(ex);
 }
 
-//for (int i = 0; i < 1000000; i++)
-//{
-//    LOG.CostomName_Log("BigFile_1", "LOG_TEST");
-//}
+for (int i = 0; i < 1000000; i++)
+{
+    LOG.CustomName_Log("BigFile", "LOG_TEST");
+}

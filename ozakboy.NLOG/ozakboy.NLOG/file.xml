@@ -4,24 +4,273 @@
         <name>ozakboy.NLOG</name>
     </assembly>
     <members>
-        <member name="T:ozakboy.NLOG.LogText">
+        <member name="T:ozakboy.NLOG.LogConfiguration">
             <summary>
-            日誌檔案處理類別，負責日誌檔案的建立、寫入和管理
+            LOG配置類別
             </summary>
         </member>
-        <member name="F:ozakboy.NLOG.LogText.LogKeepDay">
+        <member name="M:ozakboy.NLOG.LogConfiguration.ReadOnlyLogTypeDirectories.GetPathForType(ozakboy.NLOG.Core.LogLevel)">
+            <summary>
+            取得指定日誌類型的目錄路徑
+            </summary>
+            <param name="logLevel">日誌類型</param>
+            <returns>目錄路徑</returns>
+        </member>
+        <member name="T:ozakboy.NLOG.LogConfiguration.LogOptions">
+            <summary>
+            日誌配置選項
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.LogOptions.KeepDays">
             <summary>
             日誌檔案保存天數設定，預設為 -3 天（保存最近3天的日誌）
             請設定為負數，例如 -7 表示保存最近 7 天的日誌
+            （請使用負數）
             </summary>
         </member>
-        <member name="F:ozakboy.NLOG.LogText.BigFilesByte">
+        <member name="P:ozakboy.NLOG.LogConfiguration.LogOptions.MaxFileSize">
             <summary>
             單個日誌檔案的最大大小限制，超過此大小將自動分割檔案
             預設為 50MB (50 * 1024 * 1024 bytes)
             </summary>
         </member>
-        <member name="M:ozakboy.NLOG.LogText.Add_LogText(System.String,System.String,System.Object[])">
+        <member name="P:ozakboy.NLOG.LogConfiguration.LogOptions.LogPath">
+            <summary>
+            日誌檔案根目錄
+            默認為 logs
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.LogOptions.TypeDirectories">
+            <summary>
+            日誌類型目錄設定
+            可為每種日誌類型配置不同的子目錄
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.LogOptions.EnableAsyncLogging">
+            <summary>
+            是否啟用異步寫入
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.LogOptions.EnableCompression">
+            <summary>
+            是否啟用檔案壓縮
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.LogOptions.EnableConsoleOutput">
+            <summary>
+            是否在控制台輸出
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LogConfiguration.LogOptions.SetFileSizeInMB(System.Int32)">
+            <summary>
+            設定檔案大小的便捷方法（以 MB 為單位）
+            </summary>
+            <param name="megabytes">檔案大小（MB）</param>
+        </member>
+        <member name="T:ozakboy.NLOG.LogConfiguration.LogTypeDirectories">
+            <summary>
+            日誌類型目錄配置
+            用於配置不同類型日誌的存放目錄
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.LogTypeDirectories.DirectoryPath">
+            <summary>
+            所有日誌類型的預設目錄
+            預設為 LogFiles
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.LogTypeDirectories.TracePath">
+            <summary>
+            追蹤日誌目錄，若為空則使用 DirectoryPath
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.LogTypeDirectories.DebugPath">
+            <summary>
+            除錯日誌目錄，若為空則使用 DirectoryPath
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.LogTypeDirectories.InfoPath">
+            <summary>
+            一般資訊日誌目錄，若為空則使用 DirectoryPath
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.LogTypeDirectories.WarnPath">
+            <summary>
+            警告日誌目錄，若為空則使用 DirectoryPath
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.LogTypeDirectories.ErrorPath">
+            <summary>
+            錯誤日誌目錄，若為空則使用 DirectoryPath
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.LogTypeDirectories.FatalPath">
+            <summary>
+            致命錯誤日誌目錄，若為空則使用 DirectoryPath
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.LogTypeDirectories.CustomPath">
+            <summary>
+            自定義日誌目錄，若為空則使用 DirectoryPath
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LogConfiguration.Initialize(System.Action{ozakboy.NLOG.LogConfiguration.LogOptions})">
+            <summary>
+            配置日誌系統
+            </summary>
+            <param name="configure">配置動作</param>
+        </member>
+        <member name="M:ozakboy.NLOG.LogConfiguration.GetCurrentOptions">
+            <summary>
+            取得當前配置
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LogConfiguration.EnsureInitialized">
+            <summary>
+            確保配置已初始化
+            </summary>
+        </member>
+        <member name="T:ozakboy.NLOG.Core.ExceptionHandler">
+            <summary>
+            異常處理器，負責異常資訊的收集和序列化
+            </summary>
+        </member>
+        <member name="T:ozakboy.NLOG.Core.ExceptionHandler.SerializableExceptionInfo">
+            <summary>
+            用於序列化的異常資訊類別，提供異常資訊的結構化存儲
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.Core.ExceptionHandler.SerializableExceptionInfo.Type">
+            <summary>
+            異常類型的完整名稱
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.Core.ExceptionHandler.SerializableExceptionInfo.Message">
+            <summary>
+            異常的錯誤訊息
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.Core.ExceptionHandler.SerializableExceptionInfo.Source">
+            <summary>
+            異常來源
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.Core.ExceptionHandler.SerializableExceptionInfo.HelpLink">
+            <summary>
+            異常的幫助連結
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.Core.ExceptionHandler.SerializableExceptionInfo.StackTrace">
+            <summary>
+            異常的堆疊追蹤
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.Core.ExceptionHandler.SerializableExceptionInfo.Data">
+            <summary>
+            異常的額外資料字典
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.Core.ExceptionHandler.SerializableExceptionInfo.InnerException">
+            <summary>
+            內部異常資訊
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.Core.ExceptionHandler.SerializableExceptionInfo.AdditionalProperties">
+            <summary>
+            額外的異常屬性
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.Core.ExceptionHandler.GetFullExceptionMessage(System.Exception)">
+            <summary>
+            獲取完整的異常訊息文字，包含內部異常
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.Core.ExceptionHandler.CreateSerializableException(System.Exception)">
+            <summary>
+            將異常轉換為可序列化的格式
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.Core.ExceptionHandler.HandleSerializationException(System.Exception)">
+            <summary>
+            處理序列化異常的錯誤訊息
+            </summary>
+        </member>
+        <member name="T:ozakboy.NLOG.Core.LogFormatter">
+            <summary>
+            日誌格式化處理器
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.Core.LogFormatter.FormatMessage(System.String,System.String[])">
+            <summary>
+            格式化日誌訊息
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.Core.LogFormatter.EscapeMessage(System.String)">
+            <summary>
+            處理訊息中的特殊字符
+            </summary>
+        </member>
+        <member name="T:ozakboy.NLOG.Core.LogLevel">
+            <summary>
+            日誌級別
+            </summary>
+        </member>
+        <member name="F:ozakboy.NLOG.Core.LogLevel.Trace">
+            <summary>
+            追蹤記錄檔
+            </summary>
+        </member>
+        <member name="F:ozakboy.NLOG.Core.LogLevel.Debug">
+            <summary>
+            測試記錄檔
+            </summary>
+        </member>
+        <member name="F:ozakboy.NLOG.Core.LogLevel.Info">
+            <summary>
+            訊息記錄檔
+            </summary>
+        </member>
+        <member name="F:ozakboy.NLOG.Core.LogLevel.Warn">
+            <summary>
+            警告記錄檔
+            </summary>
+        </member>
+        <member name="F:ozakboy.NLOG.Core.LogLevel.Error">
+            <summary>
+            錯誤記錄檔
+            </summary>
+        </member>
+        <member name="F:ozakboy.NLOG.Core.LogLevel.Fatal">
+            <summary>
+            致命記錄檔
+            </summary>
+        </member>
+        <member name="F:ozakboy.NLOG.Core.LogLevel.CostomName">
+            <summary>
+            自定義名稱Log記錄檔
+            </summary>
+        </member>
+        <member name="T:ozakboy.NLOG.Core.LogSerializer">
+            <summary>
+            日誌序列化處理器
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.Core.LogSerializer.SerializeObject``1(``0)">
+            <summary>
+            序列化一般物件
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.Core.LogSerializer.SerializeException(System.Exception)">
+            <summary>
+            序列化異常物件
+            </summary>
+        </member>
+        <member name="T:ozakboy.NLOG.Core.LogText">
+            <summary>
+            日誌檔案處理類別，負責日誌檔案的建立、寫入和管理
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.Core.LogText.Add_LogText(ozakboy.NLOG.Core.LogLevel,System.String,System.String,System.Object[])">
             <summary>
             建立或是新增LOG紀錄
             </summary>
@@ -29,26 +278,26 @@
             <param name="Message"></param>
             <param name="arg"></param>
         </member>
-        <member name="M:ozakboy.NLOG.LogText.CheckDirectoryExistCreate(System.String)">
+        <member name="M:ozakboy.NLOG.Core.LogText.CheckDirectoryExistCreate(System.String)">
             <summary>
             判斷有無資料表 若沒有建立資料表
             </summary>
             <param name="LogPath"></param>
         </member>
-        <member name="M:ozakboy.NLOG.LogText.CheckFileExistCreate(System.String,System.String)">
+        <member name="M:ozakboy.NLOG.Core.LogText.CheckFileExistCreate(System.String,System.String)">
             <summary>
             判斷有無檔案或檔案過大，若沒有或檔案過大則建立新檔案
             </summary>
             <param name="_LogPath">檔案路徑</param>
             <param name="_FileName">檔案名稱</param>
         </member>
-        <member name="M:ozakboy.NLOG.LogText.FileExistCreate(System.String)">
+        <member name="M:ozakboy.NLOG.Core.LogText.FileExistCreate(System.String)">
             <summary>
             判斷有無檔案，若沒有則建立新檔案
             </summary>
             <param name="_LogFilePath"></param>
         </member>
-        <member name="M:ozakboy.NLOG.LogText.Remove_TimeOutLogText">
+        <member name="M:ozakboy.NLOG.Core.LogText.Remove_TimeOutLogText">
             <summary>
             刪除超時紀錄檔
             </summary>
@@ -58,258 +307,16 @@
             記錄檔
             </summary>
         </member>
-        <member name="M:ozakboy.NLOG.LOG.Trace_Log``1(``0,System.Boolean)">
+        <member name="M:ozakboy.NLOG.LOG.Configure(System.Action{ozakboy.NLOG.LogConfiguration.LogOptions})">
             <summary>
-            記錄任意物件的擴充方法
+            配置日誌系統
             </summary>
+            <param name="configure">配置動作</param>
         </member>
-        <member name="M:ozakboy.NLOG.LOG.Trace_Log(System.String,System.Boolean,System.String[])">
+        <member name="M:ozakboy.NLOG.LOG.GetCurrentOptions">
             <summary>
-            追蹤記錄檔
+            取得當前日誌配置
             </summary>
-            <param name="Message"></param>
-            <param name="WriteTxt">要不要寫Text</param>
-            <param name="arg"></param>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Trace_Log(System.String)">
-            <summary>
-            追蹤記錄檔
-            </summary>
-            <param name="Message"></param>       
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Trace_Log(System.String,System.Boolean)">
-            <summary>
-            追蹤記錄檔
-            </summary>
-            <param name="Message"></param>       
-            <param name="WriteTxt">要不要寫Text</param>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Debug_Log``1(``0,System.Boolean)">
-            <summary>
-            記錄任意物件的擴充方法
-            </summary>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Debug_Log(System.String,System.Boolean,System.String[])">
-            <summary>
-            測試記錄檔
-            </summary>
-            <param name="Message">訊息</param>
-            <param name="WriteTxt">要不要寫Text</param>
-            <param name="arg">正規化文字</param>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Debug_Log(System.String)">
-            <summary>
-            測試記錄檔
-            </summary>
-            <param name="Message">訊息</param>       
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Debug_Log(System.String,System.Boolean)">
-            <summary>
-            測試記錄檔
-            </summary>
-            <param name="Message">訊息</param>       
-            <param name="WriteTxt">要不要寫Text</param>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Info_Log``1(``0,System.Boolean)">
-            <summary>
-            記錄任意物件的擴充方法
-            </summary>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Info_Log(System.String,System.Boolean,System.String[])">
-            <summary>
-            訊息記錄檔
-            </summary>
-            <param name="Message">訊息</param>
-            <param name="WriteTxt">要不要寫Text</param>
-            <param name="arg">正規化文字</param>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Info_Log(System.String)">
-            <summary>
-            訊息記錄檔
-            </summary>
-            <param name="Message">訊息</param>       
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Info_Log(System.String,System.Boolean)">
-            <summary>
-            訊息記錄檔
-            </summary>
-            <param name="Message">訊息</param>         
-            <param name="WriteTxt">要不要寫Text</param>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Warn_Log``1(``0,System.Boolean)">
-            <summary>
-            記錄任意物件的擴充方法
-            </summary>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Warn_Log(System.String,System.Boolean,System.String[])">
-            <summary>
-            警告記錄檔
-            </summary>
-            <param name="Message">訊息</param>
-            <param name="WriteTxt">要不要寫Text</param>
-            <param name="arg">正規化文字</param>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Warn_Log(System.String)">
-            <summary>
-            警告記錄檔
-            </summary>
-            <param name="Message">訊息</param>       
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Warn_Log(System.String,System.Boolean)">
-            <summary>
-            警告記錄檔
-            </summary>
-            <param name="Message">訊息</param>       
-            <param name="WriteTxt">要不要寫Text</param>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Error_Log``1(``0,System.Boolean)">
-            <summary>
-            記錄任意物件的擴充方法
-            </summary>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Error_Log(System.String,System.Boolean,System.String[])">
-            <summary>
-            錯誤紀錄檔
-            </summary>
-            <param name="Message">訊息</param>
-            <param name="WriteTxt">要不要寫Text</param>
-            <param name="arg">正規化文字</param>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Error_Log(System.String)">
-            <summary>
-            錯誤紀錄檔
-            </summary>
-            <param name="Message">訊息</param>      
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Error_Log(System.String,System.Boolean)">
-            <summary>
-            錯誤紀錄檔
-            </summary>
-            <param name="Message">訊息</param>      
-            <param name="WriteTxt">要不要寫Text</param>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Fatal_Log``1(``0,System.Boolean)">
-            <summary>
-            致命記錄檔 記錄任意物件的擴充方法
-            </summary>
-            <typeparam name="T"></typeparam>
-            <param name="writeTxt">是否寫LOG</param>
-            <param name="obj">物件</param>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Fatal_Log(System.String,System.String[])">
-            <summary>
-            致命記錄檔
-            </summary>
-            <param name="Message">訊息</param>
-            <param name="arg">正規化文字</param>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.Fatal_Log(System.String)">
-            <summary>
-            致命記錄檔
-            </summary>
-            <param name="Message">訊息</param>                     
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.CostomName_Log``1(System.String,``0,System.Boolean)">
-            <summary>
-            記錄任意物件的擴充方法
-            </summary>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.CostomName_Log(System.String,System.String,System.Boolean,System.String[])">
-            <summary>
-            自定義名稱Log記錄檔
-            </summary>
-            <param name="Custom">自定義名稱</param>
-            <param name="Message">訊息</param>
-            <param name="WriteTxt">要不要寫Text</param>
-            <param name="arg">正規化文字</param>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.CostomName_Log(System.String,System.String)">
-            <summary>
-            自定義名稱Log記錄檔
-            </summary>
-            <param name="Custom">自定義名稱</param>
-            <param name="Message">訊息</param>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.CostomName_Log(System.String,System.String,System.Boolean)">
-            <summary>
-            自定義名稱Log記錄檔
-            </summary>
-            <param name="Custom">自定義名稱</param>
-            <param name="Message">訊息</param>
-            <param name="WriteTxt">要不要寫Text</param>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.CostomName_Log(System.String,System.Exception)">
-            <summary>
-            自定義名稱Log記錄檔
-            </summary>
-            <param name="Custom">自定義名稱</param>
-            <param name="ex">例外</param>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.SetLogKeepDay(System.Int32)">
-            <summary>
-            Log紀錄檔保存天數  預設3天(-3) 
-            請設定天數為負數
-            </summary>
-            <param name="KeepDay">保留天數</param>
-        </member>
-        <member name="M:ozakboy.NLOG.LOG.SetBigFilesByte(System.Int64)">
-            <summary>
-            設定預設最大檔案限制
-            預設最大檔限制 50MB
-            </summary>
-            <param name="_BigFilesByte">最大檔案位元組限制</param>
-        </member>
-        <member name="T:ozakboy.NLOG.SerializableExceptionInfo">
-            <summary>
-            用於序列化的異常資料類別，提供異常資訊的結構化存儲
-            </summary>
-        </member>
-        <member name="P:ozakboy.NLOG.SerializableExceptionInfo.Type">
-            <summary>
-            異常類型的完整名稱
-            </summary>
-        </member>
-        <member name="P:ozakboy.NLOG.SerializableExceptionInfo.Message">
-            <summary>
-            異常的錯誤訊息
-            </summary>
-        </member>
-        <member name="P:ozakboy.NLOG.SerializableExceptionInfo.Source">
-            <summary>
-            異常來源
-            </summary>
-        </member>
-        <member name="P:ozakboy.NLOG.SerializableExceptionInfo.HelpLink">
-            <summary>
-            異常的幫助連結
-            </summary>
-        </member>
-        <member name="P:ozakboy.NLOG.SerializableExceptionInfo.StackTrace">
-            <summary>
-            異常的堆疊追蹤
-            </summary>
-        </member>
-        <member name="P:ozakboy.NLOG.SerializableExceptionInfo.Data">
-            <summary>
-            異常的額外資料字典
-            </summary>
-        </member>
-        <member name="P:ozakboy.NLOG.SerializableExceptionInfo.InnerException">
-            <summary>
-            內部異常資訊
-            </summary>
-        </member>
-        <member name="P:ozakboy.NLOG.SerializableExceptionInfo.AdditionalProperties">
-            <summary>
-            額外的異常屬性
-            </summary>
-        </member>
-        <member name="M:ozakboy.NLOG.SerializableExceptionInfo.FromException(System.Exception)">
-            <summary>
-            將 Exception 物件轉換為可序列化的異常資訊
-            </summary>
-            <param name="ex">要轉換的異常物件</param>
-            <returns>可序列化的異常資訊物件</returns>
         </member>
     </members>
 </doc>

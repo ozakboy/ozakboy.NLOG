@@ -4,555 +4,126 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Collections.Generic;
 using System.Text;
+using ozakboy.NLOG.Core;
+using System.Xml.Linq;
 
 namespace ozakboy.NLOG
 {
     /// <summary>
     /// 記錄檔
     /// </summary>
-    public static class LOG
+    public static partial class LOG
     {
-        #region 追蹤記錄檔
+        #region 核心日誌方法
 
-        /// <summary>
-        /// 記錄任意物件的擴充方法
-        /// </summary>
-        public static void Trace_Log<T>(T obj, bool writeTxt = true) where T : class
+        private static void Log(LogLevel level, string name = "", string message = "", bool writeTxt = true, string[] args = null)
+        {
+            var escapedMessage = LogFormatter.EscapeMessage(message);
+            var formattedMessage = LogFormatter.FormatMessage(escapedMessage, args ?? Array.Empty<string>());
+
+            if(LogConfiguration.Current.EnableConsoleOutput)
+                Console.WriteLine(formattedMessage, args);
+            if (writeTxt)            
+                 LogText.Add_LogText(level, name, formattedMessage, args ?? Array.Empty<string>());            
+
+        }
+
+        private static void LogObject<T>(LogLevel level, T obj, string name = "", string message = "", bool writeTxt = true, string[] args = null) where T : class
         {
             if (obj == null) return;
+
             try
             {
-                string jsonString = JsonSerializer.Serialize(obj, _defaultJsonOptions);
-                Trace_Log(jsonString, writeTxt);
-            }
-            catch (Exception ex)
-            {
-                Error_Log($"JSON序列化失敗: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 追蹤記錄檔
-        /// </summary>
-        /// <param name="Message"></param>
-        /// <param name="WriteTxt">要不要寫Text</param>
-        /// <param name="arg"></param>
-        public static void Trace_Log(string Message, bool WriteTxt, string[] arg )
-        {
-            var escapedMessage = EscapeMessageIfNeeded(Message);
-            var formattedMessage = FormatLogMessage(escapedMessage,arg);
-            Console.WriteLine(formattedMessage, arg);
-            if (WriteTxt)
-                LogText.Add_LogText("Trace", formattedMessage, arg);
-        }
-        /// <summary>
-        /// 追蹤記錄檔
-        /// </summary>
-        /// <param name="Message"></param>       
-        public static void Trace_Log(string Message)
-        {
-            Trace_Log(Message, true, new string[0]);
-        }
-
-        /// <summary>
-        /// 追蹤記錄檔
-        /// </summary>
-        /// <param name="Message"></param>       
-        /// <param name="WriteTxt">要不要寫Text</param>
-        public static void Trace_Log(string Message, bool WriteTxt)
-        {
-            Trace_Log(Message, WriteTxt, new string[0]);
-        }
-
-        #endregion
-
-        #region 測試記錄檔
-
-
-        /// <summary>
-        /// 記錄任意物件的擴充方法
-        /// </summary>
-        public static void Debug_Log<T>(T obj, bool writeTxt = true) where T : class
-        {
-            if (obj == null) return;
-            try
-            {
-                string jsonString = JsonSerializer.Serialize(obj, _defaultJsonOptions);
-                Debug_Log(jsonString, writeTxt);
-            }
-            catch (Exception ex)
-            {
-                Error_Log($"JSON序列化失敗: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 測試記錄檔
-        /// </summary>
-        /// <param name="Message">訊息</param>
-        /// <param name="WriteTxt">要不要寫Text</param>
-        /// <param name="arg">正規化文字</param>
-        public static void Debug_Log(string Message, bool WriteTxt, string[] arg)
-        {
-            var escapedMessage = EscapeMessageIfNeeded(Message);
-            var formattedMessage = FormatLogMessage(escapedMessage, arg);
-            Console.WriteLine(formattedMessage, arg);
-            if (WriteTxt)
-                LogText.Add_LogText("Debug", formattedMessage, arg);            
-        }
-
-        /// <summary>
-        /// 測試記錄檔
-        /// </summary>
-        /// <param name="Message">訊息</param>       
-        public static void Debug_Log(string Message)
-        {
-            Debug_Log(Message , true, new string[0]);
-        }
-        /// <summary>
-        /// 測試記錄檔
-        /// </summary>
-        /// <param name="Message">訊息</param>       
-        /// <param name="WriteTxt">要不要寫Text</param>
-        public static void Debug_Log(string Message, bool WriteTxt)
-        {
-            Debug_Log(Message, WriteTxt, new string[0]);
-        }
-
-        #endregion
-
-
-        #region 訊息記錄檔
-
-        /// <summary>
-        /// 記錄任意物件的擴充方法
-        /// </summary>
-        public static void Info_Log<T>(T obj, bool writeTxt = true) where T : class
-        {
-            if (obj == null) return;
-            try
-            {
-                string jsonString = JsonSerializer.Serialize(obj, _defaultJsonOptions);
-                Info_Log(jsonString, writeTxt);
-            }
-            catch (Exception ex)
-            {
-                Error_Log($"JSON序列化失敗: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 訊息記錄檔
-        /// </summary>
-        /// <param name="Message">訊息</param>
-        /// <param name="WriteTxt">要不要寫Text</param>
-        /// <param name="arg">正規化文字</param>
-        public static void Info_Log(string Message, bool WriteTxt, string[] arg)
-        {
-            var escapedMessage = EscapeMessageIfNeeded(Message);
-            var formattedMessage = FormatLogMessage(escapedMessage, arg);
-            Console.WriteLine(formattedMessage, arg);
-            if (WriteTxt)
-                LogText.Add_LogText("Info", formattedMessage, arg);           
-        }
-
-        /// <summary>
-        /// 訊息記錄檔
-        /// </summary>
-        /// <param name="Message">訊息</param>       
-        public static void Info_Log(string Message)
-        {
-            Info_Log(Message,true, new string[0]);
-        }
-
-        /// <summary>
-        /// 訊息記錄檔
-        /// </summary>
-        /// <param name="Message">訊息</param>         
-        /// <param name="WriteTxt">要不要寫Text</param>
-        public static void Info_Log(string Message, bool WriteTxt)
-        {
-            Info_Log(Message, WriteTxt, new string[0]);
-        }
-
-
-        #endregion 訊息記錄檔
-
-        #region 警告記錄檔
-        /// <summary>
-        /// 記錄任意物件的擴充方法
-        /// </summary>
-        public static void Warn_Log<T>(T obj, bool writeTxt = true) where T : class
-        {
-            if (obj == null) return;
-            try
-            {
-                if (obj is Exception ex)
+                string jsonString = message + "\n";
+                if (level >= LogLevel.Warn && obj is Exception ex)
                 {
-                    var serializableEx = SerializableExceptionInfo.FromException(ex);
-                    string jsonString = JsonSerializer.Serialize(serializableEx, _exceptionJsonOptions);
-                    Warn_Log(jsonString, writeTxt);
+                    jsonString += LogSerializer.SerializeException(ex);
                 }
                 else
                 {
-                    string jsonString = JsonSerializer.Serialize(obj, _defaultJsonOptions);
-                    Warn_Log(jsonString, writeTxt);
-                }                
+                    jsonString += LogSerializer.SerializeObject(obj);
+                }
+                Log(level, name, jsonString, writeTxt);
             }
             catch (Exception ex)
             {
-                Error_Log($"JSON序列化失敗: {ex.Message}");
+                Log(LogLevel.Error, name, ExceptionHandler.HandleSerializationException(ex));
             }
         }
+        #endregion
 
+        #region 公開方法 - 各種日誌級別
 
-        /// <summary>
-        /// 警告記錄檔
-        /// </summary>
-        /// <param name="Message">訊息</param>
-        /// <param name="WriteTxt">要不要寫Text</param>
-        /// <param name="arg">正規化文字</param>
-        public static void Warn_Log(string Message, bool WriteTxt, string[] arg)
-        {
-            var escapedMessage = EscapeMessageIfNeeded(Message);
-            var formattedMessage = FormatLogMessage(escapedMessage, arg);
-            Console.WriteLine(formattedMessage, arg);
-            if (WriteTxt)
-                LogText.Add_LogText("Warn", formattedMessage, arg);
-        }
+        // Trace
+        public static void Trace_Log(string message) => Log(LogLevel.Trace,string.Empty, message);
+        public static void Trace_Log(string message, bool writeTxt) => Log(LogLevel.Trace,string.Empty, message, writeTxt);
+        public static void Trace_Log(string message, bool writeTxt, string[] args) => Log(LogLevel.Trace,string.Empty, message, writeTxt, args);
+        public static void Trace_Log<T>(T obj, bool writeTxt = true) where T : class => LogObject(LogLevel.Trace, obj, string.Empty, string.Empty, writeTxt);
+        public static void Trace_Log<T>(string message, T obj, bool writeTxt = true) where T : class => LogObject(LogLevel.Trace, obj, string.Empty, message, writeTxt);
 
-        /// <summary>
-        /// 警告記錄檔
-        /// </summary>
-        /// <param name="Message">訊息</param>       
-        public static void Warn_Log(string Message)
-        {
-            Warn_Log(Message, true, new string[0]);
-        }
+        // Debug
+        public static void Debug_Log(string message) => Log(LogLevel.Debug, message);
+        public static void Debug_Log(string message, bool writeTxt) => Log(LogLevel.Debug, string.Empty, message, writeTxt);
+        public static void Debug_Log(string message, bool writeTxt, string[] args) => Log(LogLevel.Debug, string.Empty, message, writeTxt, args);
+        public static void Debug_Log<T>(T obj, bool writeTxt = true) where T : class => LogObject(LogLevel.Debug, obj, string.Empty, string.Empty , writeTxt);
+        public static void Debug_Log<T>(string message, T obj, bool writeTxt = true) where T : class => LogObject(LogLevel.Debug, obj, string.Empty, message, writeTxt);
 
-        /// <summary>
-        /// 警告記錄檔
-        /// </summary>
-        /// <param name="Message">訊息</param>       
-        /// <param name="WriteTxt">要不要寫Text</param>
-        public static void Warn_Log(string Message, bool WriteTxt)
-        {
-            Warn_Log(Message, WriteTxt, new string[0]);
-        }     
+        // Info
+        public static void Info_Log(string message) => Log(LogLevel.Info, message);
+        public static void Info_Log(string message, bool writeTxt) => Log(LogLevel.Info, string.Empty, message, writeTxt);
+        public static void Info_Log(string message, bool writeTxt, string[] args) => Log(LogLevel.Info, string.Empty, message, writeTxt, args);
+        public static void Info_Log<T>(T obj, bool writeTxt = true) where T : class => LogObject(LogLevel.Info, obj, string.Empty, string.Empty,  writeTxt);
+        public static void Info_Log<T>(string message, T obj, bool writeTxt = true) where T : class => LogObject(LogLevel.Info, obj, string.Empty, message, writeTxt);
+
+        // Warn
+        public static void Warn_Log(string message) => Log(LogLevel.Warn, message);
+        public static void Warn_Log(string message, bool writeTxt) => Log(LogLevel.Warn, string.Empty, message, writeTxt);
+        public static void Warn_Log(string message, bool writeTxt, string[] args) => Log(LogLevel.Warn, string.Empty, message, writeTxt, args);
+        public static void Warn_Log<T>(T obj, bool writeTxt = true) where T : class => LogObject(LogLevel.Warn, obj, string.Empty, string.Empty,  writeTxt);
+        public static void Warn_Log<T>(string message, T obj, bool writeTxt = true) where T : class => LogObject(LogLevel.Warn, obj, string.Empty, message, writeTxt);
+
+        // Error
+        public static void Error_Log(string message) => Log(LogLevel.Error, message);
+        public static void Error_Log(string message, bool writeTxt) => Log(LogLevel.Error, string.Empty, message, writeTxt);
+        public static void Error_Log(string message, bool writeTxt, string[] args) => Log(LogLevel.Error, string.Empty, message, writeTxt, args);
+        public static void Error_Log<T>(T obj, bool writeTxt = true) where T : class => LogObject(LogLevel.Error, obj, string.Empty, string.Empty,  writeTxt);
+        public static void Error_Log<T>(string message, T obj, bool writeTxt = true) where T : class => LogObject(LogLevel.Error, obj, string.Empty, message, writeTxt);
+
+        // Fatal
+        public static void Fatal_Log(string message) => Log(LogLevel.Fatal, message);
+        public static void Fatal_Log(string message, bool writeTxt) => Log(LogLevel.Fatal, string.Empty, message, writeTxt);
+        public static void Fatal_Log(string message, bool writeTxt, string[] args) => Log(LogLevel.Fatal, string.Empty, message, writeTxt, args);
+        public static void Fatal_Log<T>(T obj, bool writeTxt = true) where T : class => LogObject(LogLevel.Fatal, obj, string.Empty, string.Empty, writeTxt);
+        public static void Fatal_Log<T>(string message, T obj, bool writeTxt = true) where T : class => LogObject(LogLevel.Fatal, obj, string.Empty, message, writeTxt);
+
+        //CustomName
+        public static void CustomName_Log(string name ,string message) => Log(LogLevel.CostomName , name, message);
+        public static void CustomName_Log(string name, string message, bool writeTxt) => Log(LogLevel.CostomName, name, message, writeTxt);
+        public static void CustomName_Log(string name, string message, bool writeTxt, string[] args) => Log(LogLevel.CostomName, name, message, writeTxt, args);
+        public static void CustomName_Log<T>(string name, T obj, bool writeTxt = true) where T : class => LogObject(LogLevel.CostomName, obj, name, string.Empty,  writeTxt);
+        public static void CustomName_Log<T>(string name, string message, T obj, bool writeTxt = true) where T : class => LogObject(LogLevel.CostomName, obj, name, message, writeTxt);
+
 
         #endregion
 
-        #region 錯誤記錄檔
+
+        #region  LOG預設檔案配置
 
         /// <summary>
-        /// 記錄任意物件的擴充方法
+        /// 配置日誌系統
         /// </summary>
-        public static void Error_Log<T>(T obj, bool writeTxt = true) where T : class
+        /// <param name="configure">配置動作</param>
+        public static void Configure(Action<LogConfiguration.LogOptions> configure)
         {
-            if (obj == null) return;
-            try
-            {
-                if (obj is Exception ex)
-                {
-                    var serializableEx = SerializableExceptionInfo.FromException(ex);
-                    string jsonString = JsonSerializer.Serialize(serializableEx, _exceptionJsonOptions);
-                    Error_Log(jsonString, writeTxt);
-                }
-                else
-                {
-                    string jsonString = JsonSerializer.Serialize(obj, _defaultJsonOptions);
-                    Error_Log(jsonString, writeTxt);
-                }
-             
-            }
-            catch (Exception ex)
-            {
-                Error_Log($"JSON序列化失敗: {ex.Message}");
-            }
-        }
-        /// <summary>
-        /// 錯誤紀錄檔
-        /// </summary>
-        /// <param name="Message">訊息</param>
-        /// <param name="WriteTxt">要不要寫Text</param>
-        /// <param name="arg">正規化文字</param>
-        public static void Error_Log(string Message, bool WriteTxt, string[] arg)
-        {
-            var escapedMessage = EscapeMessageIfNeeded(Message);
-            var formattedMessage = FormatLogMessage(escapedMessage, arg);
-            Console.WriteLine(formattedMessage, arg);
-            if (WriteTxt)
-                LogText.Add_LogText("Error", formattedMessage, arg);
+            LogConfiguration.Initialize(configure);
         }
 
         /// <summary>
-        /// 錯誤紀錄檔
+        /// 取得當前日誌配置
         /// </summary>
-        /// <param name="Message">訊息</param>      
-        public static void Error_Log(string Message)
+        public static LogConfiguration.ILogOptions GetCurrentOptions()
         {
-            Error_Log(Message,true, new string[0]);
-        }
-
-        /// <summary>
-        /// 錯誤紀錄檔
-        /// </summary>
-        /// <param name="Message">訊息</param>      
-        /// <param name="WriteTxt">要不要寫Text</param>
-        public static void Error_Log(string Message, bool WriteTxt)
-        {
-            Error_Log(Message, WriteTxt, new string[0]);
-        }
-
-        #endregion
-
-        #region 致命記錄檔
-
-        /// <summary>
-        /// 致命記錄檔 記錄任意物件的擴充方法
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="writeTxt">是否寫LOG</param>
-        /// <param name="obj">物件</param>
-        public static void Fatal_Log<T>(T obj, bool writeTxt = true) where T : class
-        {
-            if (obj == null) return;
-
-            try
-            {
-                if (obj is Exception ex)
-                {
-                    var serializableEx = SerializableExceptionInfo.FromException(ex);
-                    string jsonString = JsonSerializer.Serialize(serializableEx, _exceptionJsonOptions);
-                    Fatal_Log(jsonString, writeTxt);
-                }
-                else
-                {
-                    string jsonString = JsonSerializer.Serialize(obj, _defaultJsonOptions);
-                    Fatal_Log(jsonString , writeTxt);
-                }
-            }
-            catch (Exception ex)
-            {
-                // 如果是異常物件且序列化失敗，使用基本異常格式
-                if (obj is Exception exception)
-                {
-                    string message = string.Empty;
-                    GetExceptionMessage(exception, ref message);
-                    Fatal_Log(message);
-                }
-                else
-                {
-                    Error_Log($"JSON序列化失敗: {ex.Message}");
-                }
-            }
-        }
-
-        /// <summary>
-        /// 致命記錄檔
-        /// </summary>
-        /// <param name="Message">訊息</param>
-        /// <param name="arg">正規化文字</param>
-        public static void Fatal_Log(string Message, string[] arg)
-        {
-            var escapedMessage = EscapeMessageIfNeeded(Message);
-            var formattedMessage = FormatLogMessage(escapedMessage, arg);
-            Console.WriteLine(formattedMessage, arg);
-            LogText.Add_LogText("Fatal", formattedMessage, arg);
-        }
-        /// <summary>
-        /// 致命記錄檔
-        /// </summary>
-        /// <param name="Message">訊息</param>                     
-        public static void Fatal_Log(string Message)
-        {
-            Fatal_Log(Message, new string[0]);
-        }
-
-        #endregion
-
-        #region 自定義名稱Log記錄檔
-        /// <summary>
-        /// 記錄任意物件的擴充方法
-        /// </summary>
-        public static void CostomName_Log<T>(string custom, T obj, bool writeTxt = true) where T : class
-        {
-            if (obj == null) return;
-            try
-            {
-                string jsonString = JsonSerializer.Serialize(obj, _defaultJsonOptions);
-                CostomName_Log(custom, jsonString, writeTxt);
-            }
-            catch (Exception ex)
-            {
-                Error_Log($"JSON序列化失敗: {ex.Message}");
-            }
-        }
-        /// <summary>
-        /// 自定義名稱Log記錄檔
-        /// </summary>
-        /// <param name="Custom">自定義名稱</param>
-        /// <param name="Message">訊息</param>
-        /// <param name="WriteTxt">要不要寫Text</param>
-        /// <param name="arg">正規化文字</param>
-        public static void CostomName_Log(string Custom, string Message, bool WriteTxt, string[] arg)
-        {
-            var escapedMessage = EscapeMessageIfNeeded(Message);
-            var formattedMessage = FormatLogMessage(escapedMessage, arg);
-            Console.WriteLine(formattedMessage, arg);
-            if (WriteTxt)
-                LogText.Add_LogText(Custom, formattedMessage, arg);
-        }
-
-        /// <summary>
-        /// 自定義名稱Log記錄檔
-        /// </summary>
-        /// <param name="Custom">自定義名稱</param>
-        /// <param name="Message">訊息</param>
-        public static void CostomName_Log(string Custom, string Message)
-        {
-            CostomName_Log(Custom, Message , true, new string[0]);
-        }
-
-        /// <summary>
-        /// 自定義名稱Log記錄檔
-        /// </summary>
-        /// <param name="Custom">自定義名稱</param>
-        /// <param name="Message">訊息</param>
-        /// <param name="WriteTxt">要不要寫Text</param>
-        public static void CostomName_Log(string Custom, string Message, bool WriteTxt)
-        {
-            CostomName_Log(Custom, Message, WriteTxt, new string[0]);
-        }
-
-        /// <summary>
-        /// 自定義名稱Log記錄檔
-        /// </summary>
-        /// <param name="Custom">自定義名稱</param>
-        /// <param name="ex">例外</param>
-        public static void CostomName_Log(string Custom, Exception ex)
-        {
-            string Message = string.Empty;
-            GetExceptionMessage(ex, ref Message);
-            CostomName_Log(Custom, Message);
-        }
-
-        #endregion
-
-        #region 設定Log紀錄保存天數
-
-        /// <summary>
-        /// Log紀錄檔保存天數  預設3天(-3) 
-        /// 請設定天數為負數
-        /// </summary>
-        /// <param name="KeepDay">保留天數</param>
-        public static void SetLogKeepDay(int KeepDay)
-        {
-            if (KeepDay > 0)
-                KeepDay = Math.Abs(KeepDay) * -1;
-            LogText.LogKeepDay = KeepDay;
-        }
-
-        #endregion
-
-        #region 設定預設最大檔案限制
-
-        /// <summary>
-        /// 設定預設最大檔案限制
-        /// 預設最大檔限制 50MB
-        /// </summary>
-        /// <param name="_BigFilesByte">最大檔案位元組限制</param>
-        public static void SetBigFilesByte(long _BigFilesByte)
-        {
-            LogText.BigFilesByte = _BigFilesByte;
-        }
-
-        #endregion
-
-        #region 私用方法
-
-        private static void GetExceptionMessage(Exception ex, ref String Message)
-        {
-            if (ex.InnerException != null && !String.IsNullOrEmpty(ex.InnerException.StackTrace))
-            {
-                GetExceptionMessage(ex.InnerException, ref Message);
-            }
-            Message += "\n" + ex.Message;
-            Message += "\n" + ex.StackTrace;
-        }
-
-        private static string FormatLogMessage(string message, string[] args)
-        {
-            var sb = new StringBuilder();
-            sb.Append(DateTime.Now.ToString("HH:mm:ss"));
-            sb.Append($"[{Thread.CurrentThread.ManagedThreadId}] ");
-
-            if (args != null && args.Length > 0)            
-                sb.AppendFormat(message, args);            
-            else            
-                sb.Append(message);            
-
-            return sb.ToString();
-        }
-
-        // 处理 JSON 字符串的帮助方法
-        private static string EscapeMessageIfNeeded(string message)
-        {
-            if (message.Contains("{") || message.Contains("}"))
-            {
-                // 檢查是否包含格式化佔位符 {0}, {1} 等
-                bool containsFormatting = System.Text.RegularExpressions.Regex.IsMatch(message, @"\{[0-9]+\}");
-                if (!containsFormatting)
-                {
-                    // 如果不是格式化字串，則進行 JSON 轉義
-                    return message.Replace("{", "{{").Replace("}", "}}");
-                }
-            }
-            return message;
-        }
-
-        private static readonly JsonSerializerOptions _defaultJsonOptions = new JsonSerializerOptions
-        {
-            WriteIndented = false,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-        };
-
-        private static readonly JsonSerializerOptions _exceptionJsonOptions = new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-        };
-
-        private static Dictionary<string, object> GetAdditionalExceptionProperties(Exception ex)
-        {
-            var properties = new Dictionary<string, object>();
-
-            // 使用反射獲取額外的公開屬性
-            var type = ex.GetType();
-            var standardProperties = new HashSet<string> { "Message", "StackTrace", "Source", "HelpLink", "InnerException" };
-
-            foreach (var prop in type.GetProperties())
-            {
-                if (!standardProperties.Contains(prop.Name))
-                {
-                    try
-                    {
-                        var value = prop.GetValue(ex);
-                        if (value != null)
-                        {
-                            properties[prop.Name] = value;
-                        }
-                    }
-                    catch
-                    {
-                        // 忽略無法獲取的屬性
-                    }
-                }
-            }
-
-            return properties;
+            return LogConfiguration.GetCurrentOptions();
         }
 
         #endregion
