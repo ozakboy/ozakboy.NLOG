@@ -97,11 +97,6 @@
             是否啟用異步寫入
             </summary>
         </member>
-        <member name="P:ozakboy.NLOG.LogConfiguration.LogOptions.EnableCompression">
-            <summary>
-            是否啟用檔案壓縮
-            </summary>
-        </member>
         <member name="P:ozakboy.NLOG.LogConfiguration.LogOptions.EnableConsoleOutput">
             <summary>
             是否在控制台輸出
@@ -447,7 +442,8 @@
             <summary>
             建立或是新增LOG紀錄
             </summary>
-            <param name="Type"></param>
+            <param name="level"></param>
+            <param name="name"></param>
             <param name="Message"></param>
             <param name="arg"></param>
         </member>

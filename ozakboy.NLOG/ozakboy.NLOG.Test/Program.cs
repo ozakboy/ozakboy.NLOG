@@ -5,7 +5,6 @@ using System.Xml.Linq;
 Console.WriteLine("Hello, World!");
 
 
-LOG.Trace_Log("A",)
 
 
 
@@ -47,7 +46,7 @@ catch (Exception ex)
 }
 
 string[] argsb = new[] { "參數1", "參數2" };
-LOG.Info_Log("格式化訊息: {0}, {1}", true, argsb);
+LOG.Info_Log("格式化訊息: {0}, {1}", argsb, true);
 var jsonData = new
 {
     abc = "abc",

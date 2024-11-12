@@ -20,7 +20,6 @@ namespace ozakboy.NLOG
             string LogPath { get; }
             ILogTypeDirectories TypeDirectories { get; }
             bool EnableAsyncLogging { get; }
-            bool EnableCompression { get; }
             bool EnableConsoleOutput { get; }
             IAsyncLogOptions AsyncOptions { get; }
         }
