@@ -15,7 +15,8 @@ namespace ozakboy.NLOG.Core
         /// <summary>
         /// 建立或是新增LOG紀錄
         /// </summary>
-        /// <param name="Type"></param>
+        /// <param name="level"></param>
+        /// <param name="name"></param>
         /// <param name="Message"></param>
         /// <param name="arg"></param>
         internal static void Add_LogText(LogLevel level, string name, string Message, object[] arg)
