@@ -4,7 +4,7 @@
     <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net7.0;net8.0;net462</TargetFrameworks>
     <RootNamespace>ozakboy.NLOG</RootNamespace>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <PackageVersion>1.2.1</PackageVersion>
+    <PackageVersion>2.0.0</PackageVersion>
     <Authors>ozakboy</Authors>
     <RepositoryType>github</RepositoryType>
     <RepositoryUrl>https://github.com/ozakboy/ozakboy.NLOG</RepositoryUrl>
@@ -14,8 +14,8 @@
     <DocumentationFile>file.xml</DocumentationFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>license</PackageLicenseFile>
-    <Description>本地測試LOG</Description>
-    <PackageTags>local Log text test</PackageTags>
+    <Description>輕量級且高效能的日誌記錄工具，提供異步寫入、智能檔案管理和豐富的配置選項。專為 .NET 應用程式設計的本地日誌解決方案。</Description>
+    <PackageTags>logging;log;logger;dotnet;dotnetcore;csharp;async-logging;file-logger;diagnostic;debugging;trace;error-logging;structured-logging;log-management;performance-logging;exception-handling;dotnet-logging;logging-framework;net-framework;net-standard;log-rotation;thread-safe</PackageTags>
     <IsPublishable>False</IsPublishable>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
