@@ -3,7 +3,7 @@
 [![nuget](https://img.shields.io/badge/nuget-ozakboy.NLOG-blue)](https://www.nuget.org/packages/Ozakboy.NLOG/) 
 [![github](https://img.shields.io/badge/github-ozakboy.NLOG-blue)](https://github.com/ozakboy/ozakboy.NLOG/)
 
-簡單易用的日誌記錄工具，支援文字檔案日誌記錄，無需資料庫配置。適合快速整合到專案中使用。
+輕量級且高效能的日誌記錄工具，提供異步寫入、智能檔案管理和豐富的配置選項。專為 .NET 應用程式設計的本地日誌解決方案。
 
 ## 支援框架
 
@@ -13,197 +13,317 @@
 - .NET 8.0
 - .NET Standard 2.0/2.1
 
-## 特點
+## 主要特點
 
+### 核心功能
 - 📝 自動建立日誌檔案和目錄結構
-- 🔄 智能檔案管理，自動分割大型日誌檔案
-- ⏰ 彈性的日誌保留期限設定
-- 🎯 多層級日誌支援（Trace、Debug、Info、Warn、Error、Fatal）
-- 💡 支援自定義日誌類型
-- 🔒 執行緒安全設計
-- ✨ 內建 JSON 序列化支援
-- 📊 完整的例外資訊記錄
-- 🛡️ 防止格式化字串錯誤
-- 🔍 詳細的執行緒資訊追蹤
+- 🔄 支援異步日誌寫入，提升應用程式效能
+- ⚡ 智能批次處理和隊列管理
+- 🔍 詳細的異常資訊記錄和序列化
+- 📊 多層級日誌支援
+- 🛡️ 執行緒安全設計
+
+### 進階特性
+- ⚙️ 靈活的配置系統
+- 📂 自定義日誌目錄結構
+- 🔄 自動檔案分割和管理
+- ⏰ 可配置的日誌保留期限
+- 💾 智能檔案大小管理
+- 🎯 支援自定義日誌類型
+- 🖥️ 可選的控制台輸出
 
 ## 安裝
 
-透過 NuGet Package Manager 安裝：
-
+透過 NuGet Package Manager：
 ```bash
 Install-Package Ozakboy.NLOG
 ```
 
-或透過 .NET CLI：
-
+或使用 .NET CLI：
 ```bash
 dotnet add package Ozakboy.NLOG
 ```
 
-## 詳細功能說明
+## 快速入門
 
-### 1. 基本日誌記錄
-
-支援六種標準日誌層級：
-
+### 基本配置
 ```csharp
-using ozakboy.NLOG;
-
-// 追蹤日誌 - 用於詳細追蹤程式執行流程
-LOG.Trace_Log("API 請求開始處理");
-
-// 調試日誌 - 用於開發階段的調試資訊
-LOG.Debug_Log("變數值: " + value);
-
-// 訊息日誌 - 用於記錄一般操作資訊
-LOG.Info_Log("使用者登入成功");
-
-// 警告日誌 - 用於記錄潛在問題
-LOG.Warn_Log("API 響應時間超過預期");
-
-// 錯誤日誌 - 用於記錄錯誤但不影響系統運行
-LOG.Error_Log("資料驗證失敗");
-
-// 致命日誌 - 用於記錄嚴重錯誤
-LOG.Fatal_Log("資料庫連線中斷");
+LOG.Configure(options => {
+    options.KeepDays = -7;                    // 保留最近 7 天的日誌
+    options.SetFileSizeInMB(50);              // 設定單個檔案大小上限為 50MB
+    options.EnableAsyncLogging = true;         // 啟用異步寫入
+    options.EnableConsoleOutput = true;        // 啟用控制台輸出
+    
+    // 配置異步選項
+    options.ConfigureAsync(async => {
+        async.MaxBatchSize = 100;              // 每批次最多處理 100 條日誌
+        async.MaxQueueSize = 10000;            // 隊列最大容量
+        async.FlushIntervalMs = 1000;          // 每秒寫入一次
+    });
+});
 ```
 
-### 2. 物件序列化記錄
-
-支援自動序列化物件為 JSON 格式：
+### 基本用法
 
 ```csharp
-// 記錄自定義類別
-var user = new User { Id = 1, Name = "Test User" };
-LOG.Info_Log(user);
+// 記錄不同級別的日誌
+LOG.Trace_Log("詳細追蹤資訊");
+LOG.Debug_Log("除錯資訊");
+LOG.Info_Log("一般資訊");
+LOG.Warn_Log("警告訊息");
+LOG.Error_Log("錯誤資訊");
+LOG.Fatal_Log("致命錯誤");
 
-// 記錄異常物件
+// 記錄帶有參數的日誌
+LOG.Info_Log("使用者 {0} 執行了 {1} 操作", new string[] { "admin", "login" });
+
+// 記錄物件
+var data = new { Id = 1, Name = "Test" };
+LOG.Info_Log("數據記錄", data);
+
+// 記錄異常
 try {
     // 程式碼
+} catch (Exception ex) {
+    LOG.Error_Log(ex);
 }
-catch (Exception ex) {
-    LOG.Error_Log(ex);  // 自動序列化異常資訊
-}
+
+// 自定義日誌類型
+LOG.CustomName_Log("API", "外部服務呼叫");
 ```
 
-### 3. 格式化字串支援
+## 日誌檔案管理
+## 日誌檔案管理
+
+### 預設目錄結構
+```
+應用程式根目錄/
+└── logs/                          # 預設根目錄（可通過 LogPath 修改）
+    └── yyyyMMdd/                  # 日期目錄
+        └── LogFiles/              # 預設日誌檔案目錄（可通過 TypeDirectories.DirectoryPath 修改）
+            └── [LogType]_Log.txt  # 日誌檔案
+```
+
+### 自定義目錄結構
+可以通過配置為不同級別的日誌指定獨立的目錄：
 
 ```csharp
-// 基本格式化
-LOG.Info_Log("使用者 {0} 執行了 {1} 操作", true, new string[] { "admin", "delete" });
-
-// JSON 字串自動處理
-var jsonString = "{\"key\": \"value\"}";
-LOG.Info_Log(jsonString);  // 自動處理 JSON 字串中的大括號
+LOG.Configure(options => {
+    // 修改根目錄
+    options.LogPath = "CustomLogs";  // 預設是 "logs"
+    
+    // 為不同級別的日誌配置獨立目錄
+    options.TypeDirectories.DirectoryPath = "AllLogs";     // 預設目錄，如未指定特定級別則使用此目錄
+    options.TypeDirectories.ErrorPath = "ErrorLogs";       // 錯誤日誌專用目錄
+    options.TypeDirectories.InfoPath = "InfoLogs";         // 信息日誌專用目錄
+    options.TypeDirectories.WarnPath = "WarningLogs";      // 警告日誌專用目錄
+    options.TypeDirectories.DebugPath = "DebugLogs";       // 調試日誌專用目錄
+    options.TypeDirectories.TracePath = "TraceLogs";       // 追蹤日誌專用目錄
+    options.TypeDirectories.FatalPath = "FatalLogs";       // 致命錯誤日誌專用目錄
+    options.TypeDirectories.CustomPath = "CustomLogs";     // 自定義類型日誌專用目錄
+});
 ```
 
-### 4. 自定義日誌類型
+配置後的目錄結構示例：
+```
+應用程式根目錄/
+└── CustomLogs/                    # 自定義根目錄
+    └── yyyyMMdd/                  # 日期目錄
+        ├── ErrorLogs/             # 錯誤日誌目錄
+        │   └── Error_Log.txt
+        ├── InfoLogs/              # 信息日誌目錄
+        │   └── Info_Log.txt
+        ├── WarningLogs/           # 警告日誌目錄
+        │   └── Warn_Log.txt
+        └── AllLogs/               # 預設目錄（未特別指定的日誌類型）
+            └── [LogType]_Log.txt
+```
 
-支援自定義日誌類型，方便分類管理：
+### 檔案命名規則
+- 基本格式：`[LogType]_Log.txt`
+- 分割檔案：`[LogType]_part[N]_Log.txt`
+- 自定義日誌：`[CustomName]_Log.txt`
 
+### 檔案大小管理
 ```csharp
-// 記錄 API 相關日誌
-LOG.CostomName_Log("API", "外部 API 呼叫開始");
-
-// 記錄資料庫操作
-LOG.CostomName_Log("Database", "執行資料庫備份");
-
-// 記錄安全相關資訊
-LOG.CostomName_Log("Security", "偵測到異常登入嘗試");
-
-// 自定義類型也支援物件序列化
-var apiResponse = new ApiResponse { Status = 200 };
-LOG.CostomName_Log("API", apiResponse);
+LOG.Configure(options => {
+    // 設定單個檔案大小上限（以 MB 為單位）
+    options.SetFileSizeInMB(50);  // 檔案達到 50MB 時自動分割
+});
 ```
 
-### 5. 進階配置選項
+當檔案超過設定的大小限制時，會自動建立新的分割檔案：
+- 第一個分割檔案：`[LogType]_part1_Log.txt`
+- 第二個分割檔案：`[LogType]_part2_Log.txt`
+- 以此類推...
 
+### 範例使用場景
+
+1. 所有日誌統一管理：
 ```csharp
-// 設定日誌保留天數（使用負數）
-LOG.SetLogKeepDay(-7);  // 保留最近 7 天的日誌
-
-// 設定單個日誌檔案大小上限
-LOG.SetBigFilesByte(100 * 1024 * 1024);  // 設定為 100MB
-
-// 控制是否寫入檔案
-LOG.Info_Log("僅控制台輸出", false);  // 第二個參數設為 false 則只輸出到控制台
+LOG.Configure(options => {
+    options.LogPath = "logs";
+    options.TypeDirectories.DirectoryPath = "LogFiles";
+});
 ```
 
-### 6. 日誌檔案管理
-
-#### 檔案位置
-- 根目錄：`[應用程式根目錄]\logs\LogFiles\`
-- 檔案命名：`yyyyMMdd_[LogType]_Log.txt`
-- 分割檔案：`yyyyMMdd_[LogType]_part[n]_Log.txt`
-
-#### 檔案格式
-每行日誌包含以下資訊：
-```
-HH:mm:ss[ThreadId] 日誌內容
+2. 錯誤日誌獨立存放：
+```csharp
+LOG.Configure(options => {
+    options.LogPath = "logs";
+    options.TypeDirectories.ErrorPath = "CriticalErrors";
+    options.TypeDirectories.FatalPath = "CriticalErrors";
+});
 ```
 
-### 7. 異常處理功能
+3. 完全分離的日誌系統：
+```csharp
+LOG.Configure(options => {
+    options.LogPath = "SystemLogs";
+    options.TypeDirectories.ErrorPath = "Errors";
+    options.TypeDirectories.InfoPath = "Information";
+    options.TypeDirectories.WarnPath = "Warnings";
+    options.TypeDirectories.DebugPath = "Debugging";
+    options.TypeDirectories.TracePath = "Traces";
+    options.TypeDirectories.FatalPath = "Critical";
+    options.TypeDirectories.CustomPath = "Custom";
+});
+```
 
-完整的異常資訊記錄：
+### 自動清理機制
+```csharp
+// 設定日誌保留天數
+LOG.Configure(options => {
+    options.KeepDays = -30; // 保留最近 30 天的日誌
+});
+```
 
+## 異常處理功能
+
+### 詳細的異常記錄
 ```csharp
 try {
-    // 程式碼
-}
-catch (Exception ex) {
-    // 記錄完整異常資訊，包括：
-    // - 異常類型
-    // - 異常訊息
+    // 您的程式碼
+} catch (Exception ex) {
+    // 記錄完整的異常資訊，包括：
+    // - 異常類型和訊息
     // - 堆疊追蹤
     // - 內部異常
-    // - 自定義資料
+    // - 額外屬性
     LOG.Error_Log(ex);
 }
 ```
 
-## 效能考量
+### 自定義異常資訊
+```csharp
+try {
+    // 您的程式碼
+} catch (Exception ex) {
+    // 添加自定義訊息
+    LOG.Error_Log("資料處理失敗", ex);
+    
+    // 同時記錄相關資料
+    var contextData = new { UserId = "123", Operation = "DataProcess" };
+    LOG.Error_Log("操作上下文", contextData);
+}
+```
 
-- 使用 lock 機制確保執行緒安全
-- 智能檔案分割避免單個檔案過大
-- 自動清理過期日誌節省磁碟空間
-- 優化的字串處理和格式化邏輯
+### 異常序列化
+```csharp
+try {
+    // 您的程式碼
+} catch (Exception ex) {
+    // 異常會被自動序列化為結構化的 JSON 格式
+    LOG.Error_Log(ex);
+    
+    // 或者與其他資訊一起序列化
+    var errorContext = new {
+        Exception = ex,
+        TimeStamp = DateTime.Now,
+        Environment = "Production"
+    };
+    LOG.Error_Log(errorContext);
+}
+```
+
+## 即時寫入模式
+
+### 同步即時寫入
+```csharp
+// 使用 immediateFlush 參數強制即時寫入
+LOG.Error_Log("重要錯誤", new string[] { "error_details" }, true, true);
+
+// 用於自定義日誌
+LOG.CustomName_Log("Critical", "系統異常", new string[] { "error_code" }, true, true);
+```
+
+### 異步即時寫入配置
+```csharp
+LOG.Configure(options => {
+    options.EnableAsyncLogging = true;
+    options.ConfigureAsync(async => {
+        async.FlushIntervalMs = 100;     // 縮短寫入間隔
+        async.MaxBatchSize = 1;          // 設定最小批次大小
+        async.MaxQueueSize = 1000;       // 設定適當的隊列大小
+    });
+});
+
+// Error 和 Fatal 級別的日誌會自動觸發即時寫入
+LOG.Error_Log("嚴重錯誤");
+LOG.Fatal_Log("系統崩潰");
+```
+
+### 條件式即時寫入
+```csharp
+// 根據條件決定是否即時寫入
+void LogMessage(string message, bool isCritical) {
+    if (isCritical) {
+        LOG.Error_Log(message, new string[] { }, true, true);  // 即時寫入
+    } else {
+        LOG.Info_Log(message);  // 一般寫入
+    }
+}
+```
+
+## 效能優化
+
+- 異步寫入避免 I/O 阻塞
+- 智能批次處理減少磁碟操作
+- 優化的序列化機制
+- 執行緒安全的隊列管理
+- 自動檔案管理避免過大檔案
 
 ## 最佳實踐
 
-1. 適當設定日誌保留時間，避免佔用過多磁碟空間
-2. 根據專案需求合理使用不同日誌層級
-3. 善用自定義日誌類型進行日誌分類
-4. 使用物件序列化功能記錄結構化資料
-5. 在關鍵操作點加入適當的日誌記錄
+1. 根據應用程式需求選擇同步或異步模式
+2. 適當配置批次大小和寫入間隔
+3. 根據日誌量調整檔案大小限制
+4. 設定合理的日誌保留期限
+5. 利用自定義類型分類管理日誌
+6. 在關鍵節點記錄必要的異常資訊
 
 ## 疑難排解
 
-常見問題：
+常見問題處理：
 
 1. 檔案存取權限問題
-   - 確保應用程式對日誌目錄具有寫入權限
-   
-2. 日誌檔案鎖定
-   - 使用 `WriteTxt` 參數控制檔案寫入
-   
-3. 格式化字串問題
-   - 使用陣列傳遞格式化參數
-   - 注意 JSON 字串中的大括號處理
+   - 確保應用程式具有寫入權限
+   - 檢查資料夾存取權限設定
+
+2. 效能問題
+   - 調整異步配置參數
+   - 檢查日誌檔案大小設定
+   - 優化寫入頻率
+
+3. 檔案管理
+   - 定期檢查日誌清理狀況
+   - 監控磁碟空間使用
 
 ## 授權條款
 
 MIT License
 
-## 貢獻指南
+## 支援與回報
 
-歡迎透過以下方式貢獻：
- 
-1. 提交 Issue 回報問題
-2. 提交 Pull Request 改進程式碼
-3. 完善文件說明
-4. 分享使用經驗
-
-## 支援與聯繫
-
-- GitHub Issues: [提交問題](https://github.com/ozakboy/ozakboy.NLOG/issues)
-- Pull Requests: [提交改進](https://github.com/ozakboy/ozakboy.NLOG/pulls)
+- GitHub Issues: [回報問題](https://github.com/ozakboy/ozakboy.NLOG/issues)
+- Pull Requests: [貢獻代碼](https://github.com/ozakboy/ozakboy.NLOG/pulls)
