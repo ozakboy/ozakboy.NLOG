@@ -1,5 +1,6 @@
 ﻿using ozakboy.NLOG.Core;
 using System;
+using static ozakboy.NLOG.LogConfiguration;
 
 namespace ozakboy.NLOG
 {
@@ -21,6 +22,7 @@ namespace ozakboy.NLOG
             bool EnableAsyncLogging { get; }
             bool EnableCompression { get; }
             bool EnableConsoleOutput { get; }
+            IAsyncLogOptions AsyncOptions { get; }
         }
 
         private class ReadOnlyLogOptions : ILogOptions
@@ -36,9 +38,9 @@ namespace ozakboy.NLOG
             public long MaxFileSize => _options.MaxFileSize;
             public string LogPath => _options.LogPath;
             public bool EnableAsyncLogging => _options.EnableAsyncLogging;
-            public bool EnableCompression => _options.EnableCompression;
             public bool EnableConsoleOutput => _options.EnableConsoleOutput;
             public ILogTypeDirectories TypeDirectories =>new ReadOnlyLogTypeDirectories(_options.TypeDirectories);
+            public IAsyncLogOptions AsyncOptions => new ReadOnlyAsyncLogOptions(_options.AsyncOptions);
         }
 
         public interface ILogTypeDirectories
@@ -101,6 +103,85 @@ namespace ozakboy.NLOG
         }
 
         /// <summary>
+        /// 異步日誌配置接口
+        /// </summary>
+        public interface IAsyncLogOptions
+        {
+            /// <summary>
+            /// 批次處理的最大日誌數量
+            /// </summary>
+            int MaxBatchSize { get; }
+
+            /// <summary>
+            /// 隊列的最大容量
+            /// </summary>
+            int MaxQueueSize { get; }
+
+            /// <summary>
+            /// 定期寫入的時間間隔（毫秒）
+            /// </summary>
+            int FlushIntervalMs { get; }
+        }
+
+        private class ReadOnlyAsyncLogOptions : IAsyncLogOptions
+        {
+            private readonly AsyncLogOptions _options;
+
+            public ReadOnlyAsyncLogOptions(AsyncLogOptions options)
+            {
+                _options = options;
+            }
+
+            public int MaxBatchSize => _options.MaxBatchSize;
+            public int MaxQueueSize => _options.MaxQueueSize;
+            public int FlushIntervalMs => _options.FlushIntervalMs;
+        }
+
+        /// <summary>
+        /// 異步日誌配置選項
+        /// </summary>
+        public class AsyncLogOptions
+        {
+            private int _maxBatchSize = 100;
+            private int _maxQueueSize = 10000;
+            private int _flushIntervalMs = 1000;
+
+            /// <summary>
+            /// 批次處理的最大日誌數量
+            /// 默認值：100
+            /// 最小值：1，最大值：1000
+            /// </summary>
+            public int MaxBatchSize
+            {
+                get => _maxBatchSize;
+                set => _maxBatchSize = Math.Max(1, Math.Min(1000, value));
+            }
+
+            /// <summary>
+            /// 隊列的最大容量
+            /// 默認值：10000
+            /// 最小值：1000，最大值：100000
+            /// </summary>
+            public int MaxQueueSize
+            {
+                get => _maxQueueSize;
+                set => _maxQueueSize = Math.Max(1000, Math.Min(100000, value));
+            }
+
+            /// <summary>
+            /// 定期寫入的時間間隔（毫秒）
+            /// 默認值：1000ms
+            /// 最小值：100ms，最大值：10000ms
+            /// </summary>
+            public int FlushIntervalMs
+            {
+                get => _flushIntervalMs;
+                set => _flushIntervalMs = Math.Max(100, Math.Min(10000, value));
+            }
+        }
+
+
+        /// <summary>
         /// 日誌配置選項
         /// </summary>
         public class LogOptions
@@ -136,11 +217,6 @@ namespace ozakboy.NLOG
             public bool EnableAsyncLogging { get; set; } = true;
 
             /// <summary>
-            /// 是否啟用檔案壓縮
-            /// </summary>
-            public bool EnableCompression { get; set; } = false;
-
-            /// <summary>
             /// 是否在控制台輸出
             /// </summary>
             public bool EnableConsoleOutput { get; set; } = true;
@@ -152,6 +228,20 @@ namespace ozakboy.NLOG
             public void SetFileSizeInMB(int megabytes)
             {
                 MaxFileSize = megabytes * 1024L * 1024L;
+            }
+
+            /// <summary>
+            /// 異步日誌配置
+            /// </summary>
+            public AsyncLogOptions AsyncOptions { get; set; } = new AsyncLogOptions();
+
+            /// <summary>
+            /// 設定異步日誌配置
+            /// </summary>
+            /// <param name="configure">配置動作</param>
+            public void ConfigureAsync(Action<AsyncLogOptions> configure)
+            {
+                configure?.Invoke(AsyncOptions);
             }
         }
 

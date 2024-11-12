@@ -5,10 +5,8 @@ using System.Xml.Linq;
 Console.WriteLine("Hello, World!");
 
 
-//LOG.Configure(config =>
-//{
-//    config.SetFileSizeInMB(1);
-//});
+LOG.Trace_Log("A",)
+
 
 
 LOG.Trace_Log("LOG_TEST");

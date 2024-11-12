@@ -16,6 +16,52 @@
             <param name="logLevel">日誌類型</param>
             <returns>目錄路徑</returns>
         </member>
+        <member name="T:ozakboy.NLOG.LogConfiguration.IAsyncLogOptions">
+            <summary>
+            異步日誌配置接口
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.IAsyncLogOptions.MaxBatchSize">
+            <summary>
+            批次處理的最大日誌數量
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.IAsyncLogOptions.MaxQueueSize">
+            <summary>
+            隊列的最大容量
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.IAsyncLogOptions.FlushIntervalMs">
+            <summary>
+            定期寫入的時間間隔（毫秒）
+            </summary>
+        </member>
+        <member name="T:ozakboy.NLOG.LogConfiguration.AsyncLogOptions">
+            <summary>
+            異步日誌配置選項
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.AsyncLogOptions.MaxBatchSize">
+            <summary>
+            批次處理的最大日誌數量
+            默認值：100
+            最小值：1，最大值：1000
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.AsyncLogOptions.MaxQueueSize">
+            <summary>
+            隊列的最大容量
+            默認值：10000
+            最小值：1000，最大值：100000
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.AsyncLogOptions.FlushIntervalMs">
+            <summary>
+            定期寫入的時間間隔（毫秒）
+            默認值：1000ms
+            最小值：100ms，最大值：10000ms
+            </summary>
+        </member>
         <member name="T:ozakboy.NLOG.LogConfiguration.LogOptions">
             <summary>
             日誌配置選項
@@ -66,6 +112,17 @@
             設定檔案大小的便捷方法（以 MB 為單位）
             </summary>
             <param name="megabytes">檔案大小（MB）</param>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.LogOptions.AsyncOptions">
+            <summary>
+            異步日誌配置
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LogConfiguration.LogOptions.ConfigureAsync(System.Action{ozakboy.NLOG.LogConfiguration.AsyncLogOptions})">
+            <summary>
+            設定異步日誌配置
+            </summary>
+            <param name="configure">配置動作</param>
         </member>
         <member name="T:ozakboy.NLOG.LogConfiguration.LogTypeDirectories">
             <summary>
@@ -128,6 +185,122 @@
         <member name="M:ozakboy.NLOG.LogConfiguration.EnsureInitialized">
             <summary>
             確保配置已初始化
+            </summary>
+        </member>
+        <member name="T:ozakboy.NLOG.Core.AsyncLogHandler">
+            <summary>
+            異步日誌處理器，負責管理日誌的異步寫入操作
+            </summary>
+        </member>
+        <member name="F:ozakboy.NLOG.Core.AsyncLogHandler._logQueue">
+            <summary>
+            日誌隊列，用於存儲待處理的日誌項目
+            使用 ConcurrentQueue 確保線程安全的入隊和出隊操作
+            </summary>
+        </member>
+        <member name="F:ozakboy.NLOG.Core.AsyncLogHandler._signal">
+            <summary>
+            信號量，用於通知處理線程有新的日誌需要處理
+            初始計數為0，每當有新日誌加入時會釋放一個信號
+            </summary>
+        </member>
+        <member name="F:ozakboy.NLOG.Core.AsyncLogHandler._cancellationTokenSource">
+            <summary>
+            取消令牌源，用於控制處理線程的生命週期
+            當需要停止處理線程時，可以通過此令牌發出取消信號
+            </summary>
+        </member>
+        <member name="F:ozakboy.NLOG.Core.AsyncLogHandler._processTask">
+            <summary>
+            日誌處理任務，負責實際的日誌寫入操作
+            </summary>
+        </member>
+        <member name="F:ozakboy.NLOG.Core.AsyncLogHandler._isInitialized">
+            <summary>
+            標記處理器是否已初始化
+            </summary>
+        </member>
+        <member name="F:ozakboy.NLOG.Core.AsyncLogHandler._lockObj">
+            <summary>
+            用於初始化同步的鎖對象
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.Core.AsyncLogHandler.CurrentAsyncOptions">
+            <summary>
+            獲取當前的異步配置
+            </summary>
+        </member>
+        <member name="F:ozakboy.NLOG.Core.AsyncLogHandler._lastFlushTime">
+            <summary>
+            上次寫入的時間
+            </summary>
+        </member>
+        <member name="T:ozakboy.NLOG.Core.AsyncLogHandler.LogItem">
+            <summary>
+            日誌項目類，表示單個待處理的日誌條目
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.Core.AsyncLogHandler.LogItem.Level">
+            <summary>
+            日誌級別
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.Core.AsyncLogHandler.LogItem.Name">
+            <summary>
+            日誌名稱
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.Core.AsyncLogHandler.LogItem.Message">
+            <summary>
+            日誌消息
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.Core.AsyncLogHandler.LogItem.Args">
+            <summary>
+            日誌參數
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.Core.AsyncLogHandler.LogItem.RequireImmediateFlush">
+            <summary>
+            是否需要立即寫入
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.Core.AsyncLogHandler.Initialize">
+            <summary>
+            初始化異步日誌處理器
+            確保處理線程只被創建一次
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.Core.AsyncLogHandler.EnqueueLog(ozakboy.NLOG.Core.LogLevel,System.String,System.String,System.Object[],System.Boolean)">
+            <summary>
+            將日誌項目加入處理隊列
+            </summary>
+            <param name="level">日誌級別</param>
+            <param name="name">日誌名稱</param>
+            <param name="message">日誌消息</param>
+            <param name="args">日誌參數</param>
+            <param name="immediateFlush">是否需要立即寫入</param>
+        </member>
+        <member name="M:ozakboy.NLOG.Core.AsyncLogHandler.ProcessLogQueueAsync">
+            <summary>
+            異步處理日誌隊列中的項目
+            這是處理線程的主要邏輯
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.Core.AsyncLogHandler.ProcessSingleLog">
+            <summary>
+            處理單個日誌項
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.Core.AsyncLogHandler.FlushAll">
+            <summary>
+            強制寫入所有待處理的日誌
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.Core.AsyncLogHandler.ShutdownAsync">
+            <summary>
+            關閉異步日誌處理器
+            確保所有待處理的日誌都被寫入
             </summary>
         </member>
         <member name="T:ozakboy.NLOG.Core.ExceptionHandler">
@@ -305,6 +478,181 @@
         <member name="T:ozakboy.NLOG.LOG">
             <summary>
             記錄檔
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Trace_Log(System.String)">
+            <summary>
+            記錄追蹤日誌
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Trace_Log(System.String,System.Boolean)">
+            <summary>
+            記錄追蹤日誌，可控制是否寫入檔案
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Trace_Log(System.String,System.String[],System.Boolean,System.Boolean)">
+            <summary>
+            記錄格式化的追蹤日誌，可控制寫入選項
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Trace_Log``1(``0,System.Boolean,System.Boolean)">
+            <summary>
+            記錄物件形式的追蹤日誌
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Trace_Log``1(System.String,``0,System.Boolean,System.Boolean)">
+            <summary>
+            記錄帶有訊息的物件形式追蹤日誌
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Debug_Log(System.String)">
+            <summary>
+            記錄調試日誌
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Debug_Log(System.String,System.Boolean)">
+            <summary>
+            記錄調試日誌，可控制是否寫入檔案
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Debug_Log(System.String,System.String[],System.Boolean,System.Boolean)">
+            <summary>
+            記錄格式化的調試日誌，可控制寫入選項
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Debug_Log``1(``0,System.Boolean,System.Boolean)">
+            <summary>
+            記錄物件形式的調試日誌
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Debug_Log``1(System.String,``0,System.Boolean,System.Boolean)">
+            <summary>
+            記錄帶有訊息的物件形式調試日誌
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Info_Log(System.String)">
+            <summary>
+            記錄資訊日誌
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Info_Log(System.String,System.Boolean)">
+            <summary>
+            記錄資訊日誌，可控制是否寫入檔案
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Info_Log(System.String,System.String[],System.Boolean,System.Boolean)">
+            <summary>
+            記錄格式化的資訊日誌，可控制寫入選項
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Info_Log``1(``0,System.Boolean,System.Boolean)">
+            <summary>
+            記錄物件形式的資訊日誌
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Info_Log``1(System.String,``0,System.Boolean,System.Boolean)">
+            <summary>
+            記錄帶有訊息的物件形式資訊日誌
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Warn_Log(System.String)">
+            <summary>
+            記錄警告日誌
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Warn_Log(System.String,System.Boolean)">
+            <summary>
+            記錄警告日誌，可控制是否寫入檔案
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Warn_Log(System.String,System.String[],System.Boolean,System.Boolean)">
+            <summary>
+            記錄格式化的警告日誌，可控制寫入選項
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Warn_Log``1(``0,System.Boolean,System.Boolean)">
+            <summary>
+            記錄物件形式的警告日誌
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Warn_Log``1(System.String,``0,System.Boolean,System.Boolean)">
+            <summary>
+            記錄帶有訊息的物件形式警告日誌
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Error_Log(System.String)">
+            <summary>
+            記錄錯誤日誌
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Error_Log(System.String,System.Boolean)">
+            <summary>
+            記錄錯誤日誌，可控制是否寫入檔案
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Error_Log(System.String,System.String[],System.Boolean,System.Boolean)">
+            <summary>
+            記錄格式化的錯誤日誌，可控制寫入選項
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Error_Log``1(``0,System.Boolean,System.Boolean)">
+            <summary>
+            記錄物件形式的錯誤日誌
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Error_Log``1(System.String,``0,System.Boolean,System.Boolean)">
+            <summary>
+            記錄帶有訊息的物件形式錯誤日誌
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Fatal_Log(System.String)">
+            <summary>
+            記錄致命錯誤日誌
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Fatal_Log(System.String,System.Boolean)">
+            <summary>
+            記錄致命錯誤日誌，可控制是否寫入檔案
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Fatal_Log(System.String,System.String[],System.Boolean,System.Boolean)">
+            <summary>
+            記錄格式化的致命錯誤日誌，可控制寫入選項
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Fatal_Log``1(``0,System.Boolean,System.Boolean)">
+            <summary>
+            記錄物件形式的致命錯誤日誌
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.Fatal_Log``1(System.String,``0,System.Boolean,System.Boolean)">
+            <summary>
+            記錄帶有訊息的物件形式致命錯誤日誌
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.CustomName_Log(System.String,System.String)">
+            <summary>
+            記錄自定義類型日誌
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.CustomName_Log(System.String,System.String,System.Boolean)">
+            <summary>
+            記錄自定義類型日誌，可控制是否寫入檔案
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.CustomName_Log(System.String,System.String,System.String[],System.Boolean,System.Boolean)">
+            <summary>
+            記錄格式化的自定義類型日誌，可控制寫入選項
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.CustomName_Log``1(System.String,``0,System.Boolean,System.Boolean)">
+            <summary>
+            記錄物件形式的自定義類型日誌
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.LOG.CustomName_Log``1(System.String,System.String,``0,System.Boolean,System.Boolean)">
+            <summary>
+            記錄帶有訊息的物件形式自定義類型日誌
             </summary>
         </member>
         <member name="M:ozakboy.NLOG.LOG.Configure(System.Action{ozakboy.NLOG.LogConfiguration.LogOptions})">
