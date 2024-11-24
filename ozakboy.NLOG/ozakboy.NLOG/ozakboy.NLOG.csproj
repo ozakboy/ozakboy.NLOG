@@ -1,11 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    
+
     <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net7.0;net8.0;net462</TargetFrameworks>
-    <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <PackageVersion>2.0.0</PackageVersion>
+    <PackageVersion>2.1.0</PackageVersion>
     <RootNamespace>ozakboy.NLOG</RootNamespace>
 
 
@@ -22,18 +21,29 @@
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 
+    <Description>A lightweight, high-performance logging library for .NET applications featuring asynchronous writing, intelligent file management, and rich configuration options. This local logging solution offers thread-safe operations, multiple log levels, customizable directory structures, and automatic log rotation, making it ideal for both development and production environments.</Description>
+    <PackageTags>logging;log;logger;dotnet;dotnetcore;csharp;async-logging;file-logger;diagnostic;debugging;trace;error-logging;structured-logging;log-management;performance-logging;exception-handling;dotnet-logging;logging-framework;net-framework;net-standard;log-rotation;thread-safe;multi-level-logging;configurable-logging;file-management;log-archival;async-io;batch-processing;queue-management;exception-tracking;log-serialization</PackageTags>
 
-    <Description>輕量級且高效能的日誌記錄工具，提供異步寫入、智能檔案管理和豐富的配置選項。專為 .NET 應用程式設計的本地日誌解決方案。</Description>
-    <PackageTags>logging;log;logger;dotnet;dotnetcore;csharp;async-logging;file-logger;diagnostic;debugging;trace;error-logging;structured-logging;log-management;performance-logging;exception-handling;dotnet-logging;logging-framework;net-framework;net-standard;log-rotation;thread-safe</PackageTags>
-
-    <Title></Title>
+    <Title>Ozakboy.NLOG - Advanced .NET Logging Framework</Title>
     <PackageReleaseNotes>
+      Version 2.1.0 (2024):
+      - Added support for .NET 8.0
+      - Introduced async logging with configurable batch processing
+      - Enhanced file management with automatic log rotation
+      - Improved thread safety and performance
+      - Added customizable directory structure for different log levels
+      - Implemented intelligent file size management
+      - Enhanced exception handling and serialization
+      - Added support for custom log types
+      - Improved configuration system with more options
+      - Added console output support
+      - Better handling of file paths across operating systems
     </PackageReleaseNotes>
+
 
 
     <!-- 版權宣告 -->
     <Authors>ozakboy</Authors>
-    <Copyright>Copyright (c) 2024 ozakboy</Copyright>
 
     <!-- 專案連結 -->
     <PackageProjectUrl>https://github.com/ozakboy/ozakboy.NLOG</PackageProjectUrl>
@@ -45,13 +55,10 @@
     <DocumentationFile>file.xml</DocumentationFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
+
     <!-- 授權設定 -->
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-
-    
-   
-   
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|AnyCPU'">
@@ -63,7 +70,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\license">
+    <None Include="..\..\LICENSE">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
@@ -79,7 +86,7 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1' ">
-    <PackageReference Include="System.Text.Json" Version="6.0.10" />
+    <PackageReference Include="System.Text.Json" Version="6.0.11" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net8.0' ">

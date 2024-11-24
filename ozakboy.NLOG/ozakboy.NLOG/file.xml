@@ -6,7 +6,38 @@
     <members>
         <member name="T:ozakboy.NLOG.LogConfiguration">
             <summary>
-            LOG配置類別
+            LOG配置類別 - 提供日誌系統的全局配置管理
+            Log Configuration Class - Provides global configuration management for the logging system
+            </summary>
+        </member>
+        <member name="F:ozakboy.NLOG.LogConfiguration._currentOptions">
+            <summary>
+            儲存當前的日誌配置選項
+            Stores the current logging configuration options
+            </summary>
+        </member>
+        <member name="F:ozakboy.NLOG.LogConfiguration._isInitialized">
+            <summary>
+            標記日誌系統是否已經初始化
+            Flag indicating whether the logging system has been initialized
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.Current">
+            <summary>
+            取得日誌系統當前的配置
+            Gets the current configuration of the logging system
+            </summary>
+        </member>
+        <member name="T:ozakboy.NLOG.LogConfiguration.ILogOptions">
+            <summary>
+            日誌配置選項介面 - 定義可供外部讀取的配置項目
+            Log Options Interface - Defines configuration items available for external reading
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.ILogOptions.KeepDays">
+            <summary>
+            日誌保留天數 - 定義日誌檔案的保存期限
+            Log Retention Days - Defines how long log files are kept
             </summary>
         </member>
         <member name="M:ozakboy.NLOG.LogConfiguration.ReadOnlyLogTypeDirectories.GetPathForType(ozakboy.NLOG.Core.LogLevel)">
@@ -184,25 +215,32 @@
         </member>
         <member name="T:ozakboy.NLOG.Core.AsyncLogHandler">
             <summary>
-            異步日誌處理器，負責管理日誌的異步寫入操作
+            異步日誌處理器 - 負責管理日誌的異步寫入操作，提供高效能的日誌處理機制
+            Asynchronous Log Handler - Manages asynchronous log writing operations, providing high-performance logging mechanism
             </summary>
         </member>
         <member name="F:ozakboy.NLOG.Core.AsyncLogHandler._logQueue">
             <summary>
-            日誌隊列，用於存儲待處理的日誌項目
-            使用 ConcurrentQueue 確保線程安全的入隊和出隊操作
+            日誌隊列 - 用於存儲待處理的日誌項目
+            Log Queue - Stores pending log items for processing
             </summary>
+            <remarks>
+            使用 ConcurrentQueue 確保線程安全的入隊和出隊操作
+            Uses ConcurrentQueue to ensure thread-safe enqueue and dequeue operations
+            </remarks>
         </member>
         <member name="F:ozakboy.NLOG.Core.AsyncLogHandler._signal">
             <summary>
-            信號量，用於通知處理線程有新的日誌需要處理
+            信號量，用於通知處理執行緒有新的日誌需要處理
             初始計數為0，每當有新日誌加入時會釋放一個信號
+            Semaphore for notifying the processing thread of new logs
+            Initial count is 0, releases a signal when new logs are added
             </summary>
         </member>
         <member name="F:ozakboy.NLOG.Core.AsyncLogHandler._cancellationTokenSource">
             <summary>
-            取消令牌源，用於控制處理線程的生命週期
-            當需要停止處理線程時，可以通過此令牌發出取消信號
+            取消權杖來源，用於控制處理程序的生命週期
+            Cancellation token source for controlling the processor lifecycle
             </summary>
         </member>
         <member name="F:ozakboy.NLOG.Core.AsyncLogHandler._processTask">
@@ -217,7 +255,8 @@
         </member>
         <member name="F:ozakboy.NLOG.Core.AsyncLogHandler._lockObj">
             <summary>
-            用於初始化同步的鎖對象
+            用於初始化同步的鎖定物件
+            Lock object for initialization synchronization
             </summary>
         </member>
         <member name="P:ozakboy.NLOG.Core.AsyncLogHandler.CurrentAsyncOptions">
@@ -227,7 +266,8 @@
         </member>
         <member name="F:ozakboy.NLOG.Core.AsyncLogHandler._lastFlushTime">
             <summary>
-            上次寫入的時間
+            最後一次寫入的時間戳記
+            Last write timestamp
             </summary>
         </member>
         <member name="M:ozakboy.NLOG.Core.AsyncLogHandler.Initialize">
@@ -270,22 +310,26 @@
         </member>
         <member name="T:ozakboy.NLOG.Core.ExceptionHandler">
             <summary>
-            異常處理器，負責異常資訊的收集和序列化
+            異常處理器 - 負責收集和序列化異常資訊
+            Exception Handler - Responsible for collecting and serializing exception information
             </summary>
         </member>
         <member name="T:ozakboy.NLOG.Core.ExceptionHandler.SerializableExceptionInfo">
             <summary>
-            用於序列化的異常資訊類別，提供異常資訊的結構化存儲
+            用於序列化的異常資訊類別 - 提供異常資訊的結構化存儲
+            Serializable Exception Info Class - Provides structured storage for exception information
             </summary>
         </member>
         <member name="P:ozakboy.NLOG.Core.ExceptionHandler.SerializableExceptionInfo.Type">
             <summary>
-            異常類型的完整名稱
+            異常類型的完整名稱 - 包含命名空間的類型名稱
+            Full Exception Type Name - Type name with namespace
             </summary>
         </member>
         <member name="P:ozakboy.NLOG.Core.ExceptionHandler.SerializableExceptionInfo.Message">
             <summary>
-            異常的錯誤訊息
+            異常的錯誤訊息 - 描述錯誤的具體內容
+            Exception Message - Detailed description of the error
             </summary>
         </member>
         <member name="P:ozakboy.NLOG.Core.ExceptionHandler.SerializableExceptionInfo.Source">
@@ -335,92 +379,126 @@
         </member>
         <member name="T:ozakboy.NLOG.Core.LogFormatter">
             <summary>
-            日誌格式化處理器
+            日誌格式化處理器 - 負責將日誌內容轉換為標準格式
+            Log Formatter - Responsible for converting log content into standardized format
             </summary>
         </member>
         <member name="M:ozakboy.NLOG.Core.LogFormatter.FormatMessage(System.String,System.String[])">
             <summary>
-            格式化日誌訊息
+            格式化日誌訊息 - 將原始訊息轉換為包含時間戳記和執行緒 ID 的格式化訊息
+            Format Log Message - Converts raw message into formatted message with timestamp and thread ID
             </summary>
+            <param name="message">要格式化的訊息 / Message to format</param>
+            <param name="args">格式化參數 / Formatting parameters</param>
+            <returns>格式化後的訊息 / Formatted message</returns>
         </member>
         <member name="M:ozakboy.NLOG.Core.LogFormatter.EscapeMessage(System.String)">
             <summary>
-            處理訊息中的特殊字符
+            處理訊息中的特殊字符 - 確保訊息中的格式化字符被正確處理
+            Handle Special Characters - Ensures format characters in messages are properly handled
             </summary>
+            <param name="message">原始訊息 / Original message</param>
+            <returns>處理後的訊息 / Processed message</returns>
         </member>
         <member name="T:ozakboy.NLOG.Core.LogItem">
             <summary>
-            日誌項目類別，用於在不同組件間傳遞日誌資訊
+            日誌項目類別 - 用於在不同組件間傳遞日誌資訊
+            Log Item Class - Used for transferring log information between different components
             </summary>
         </member>
         <member name="P:ozakboy.NLOG.Core.LogItem.Level">
             <summary>
-            日誌級別
+            日誌級別 - 定義日誌的重要程度
+            Log Level - Defines the severity of the log entry
             </summary>
         </member>
         <member name="P:ozakboy.NLOG.Core.LogItem.Name">
             <summary>
-            日誌名稱
+            日誌名稱 - 用於識別日誌來源或類型
+            Log Name - Used to identify the source or type of log
             </summary>
         </member>
         <member name="P:ozakboy.NLOG.Core.LogItem.Message">
             <summary>
-            日誌訊息
+            日誌訊息 - 記錄的實際內容
+            Log Message - The actual content of the log entry
             </summary>
         </member>
         <member name="P:ozakboy.NLOG.Core.LogItem.Args">
             <summary>
-            日誌參數
+            日誌參數 - 用於格式化日誌訊息的參數陣列
+            Log Parameters - Array of parameters used for formatting log messages
             </summary>
         </member>
         <member name="P:ozakboy.NLOG.Core.LogItem.RequireImmediateFlush">
             <summary>
-            是否需要立即寫入
+            是否需要立即寫入 - 控制日誌的即時性
+            Immediate Flush Required - Controls whether the log needs immediate writing
             </summary>
         </member>
         <member name="T:ozakboy.NLOG.Core.LogLevel">
             <summary>
             日誌級別
+            Log Levels
             </summary>
         </member>
         <member name="F:ozakboy.NLOG.Core.LogLevel.Trace">
             <summary>
-            追蹤記錄檔
+            追蹤記錄檔 - 用於追蹤程式執行的詳細流程
+            Trace Log - Used for tracking detailed program execution flow
             </summary>
         </member>
         <member name="F:ozakboy.NLOG.Core.LogLevel.Debug">
             <summary>
-            測試記錄檔
+            除錯記錄檔 - 用於開發階段的除錯訊息
+            Debug Log - Used for debugging messages during development
             </summary>
         </member>
         <member name="F:ozakboy.NLOG.Core.LogLevel.Info">
             <summary>
-            訊息記錄檔
+            資訊記錄檔 - 記錄一般性的系統運作資訊
+            Info Log - Records general system operational information
             </summary>
         </member>
         <member name="F:ozakboy.NLOG.Core.LogLevel.Warn">
             <summary>
-            警告記錄檔
+            警告記錄檔 - 記錄可能影響系統運作但不致嚴重的問題
+            Warning Log - Records potential issues that might affect system operation but are not severe
             </summary>
         </member>
         <member name="F:ozakboy.NLOG.Core.LogLevel.Error">
             <summary>
-            錯誤記錄檔
+            錯誤記錄檔 - 記錄系統運作中的錯誤狀況
+            Error Log - Records error conditions in system operation
             </summary>
         </member>
         <member name="F:ozakboy.NLOG.Core.LogLevel.Fatal">
             <summary>
-            致命記錄檔
+            致命錯誤記錄檔 - 記錄導致系統無法運作的嚴重錯誤
+            Fatal Log - Records severe errors that cause system failure
             </summary>
         </member>
         <member name="F:ozakboy.NLOG.Core.LogLevel.CostomName">
             <summary>
-            自定義名稱Log記錄檔
+            自定義記錄檔 - 用於特定需求的客製化日誌類型
+            Custom Log - Customized log type for specific requirements
             </summary>
         </member>
         <member name="T:ozakboy.NLOG.Core.LogSerializer">
             <summary>
             日誌序列化處理器
+            </summary>
+        </member>
+        <member name="F:ozakboy.NLOG.Core.LogSerializer._defaultOptions">
+            <summary>
+            預設的 JSON 序列化選項
+            Default JSON serialization options
+            </summary>
+        </member>
+        <member name="F:ozakboy.NLOG.Core.LogSerializer._exceptionOptions">
+            <summary>
+            異常序列化專用的 JSON 序列化選項
+            JSON serialization options specifically for exceptions
             </summary>
         </member>
         <member name="M:ozakboy.NLOG.Core.LogSerializer.SerializeObject``1(``0)">
@@ -437,6 +515,12 @@
             <summary>
             日誌檔案處理類別，負責日誌檔案的建立、寫入和管理
              支援單次寫入和批次寫入
+            </summary>
+        </member>
+        <member name="F:ozakboy.NLOG.Core.LogText.lockMe">
+            <summary>
+            同步鎖定物件，用於確保日誌寫入的執行緒安全
+            Synchronization lock object to ensure thread-safe log writing
             </summary>
         </member>
         <member name="M:ozakboy.NLOG.Core.LogText.Add_LogText(ozakboy.NLOG.Core.LogLevel,System.String,System.String,System.Object[])">
@@ -471,7 +555,26 @@
         </member>
         <member name="T:ozakboy.NLOG.Core.LogText.LogFileInfo">
             <summary>
-            日誌檔案資訊類
+            日誌檔案資訊類別 - 用於管理單個日誌檔案的相關資訊
+            Log File Information Class - Used to manage information related to a single log file
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.Core.LogText.LogFileInfo.DirectoryPath">
+            <summary>
+            日誌檔案所在目錄的完整路徑
+            Full path of the directory containing the log file
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.Core.LogText.LogFileInfo.FilePath">
+            <summary>
+            日誌檔案的完整路徑
+            Full path of the log file
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.Core.LogText.LogFileInfo.RequiresNewFile">
+            <summary>
+            標記是否需要建立新的日誌檔案
+            Flag indicating whether a new log file needs to be created
             </summary>
         </member>
         <member name="T:ozakboy.NLOG.LOG">
