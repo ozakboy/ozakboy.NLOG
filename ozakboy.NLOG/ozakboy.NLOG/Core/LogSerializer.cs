@@ -10,7 +10,15 @@ namespace ozakboy.NLOG.Core
     internal static class LogSerializer
     {
         // 使用傳統的初始化方式以確保跨版本兼容
+        /// <summary>
+        /// 預設的 JSON 序列化選項
+        /// Default JSON serialization options
+        /// </summary>
         private static readonly JsonSerializerOptions _defaultOptions;
+        /// <summary>
+        /// 異常序列化專用的 JSON 序列化選項
+        /// JSON serialization options specifically for exceptions
+        /// </summary>
         private static readonly JsonSerializerOptions _exceptionOptions;
 
         // 在靜態建構函數中初始化

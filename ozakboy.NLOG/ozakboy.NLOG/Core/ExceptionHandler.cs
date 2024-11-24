@@ -5,22 +5,26 @@ using System.Collections.Generic;
 namespace ozakboy.NLOG.Core
 {
     /// <summary>
-    /// 異常處理器，負責異常資訊的收集和序列化
+    /// 異常處理器 - 負責收集和序列化異常資訊
+    /// Exception Handler - Responsible for collecting and serializing exception information
     /// </summary>
     internal static class ExceptionHandler
     {
         /// <summary>
-        /// 用於序列化的異常資訊類別，提供異常資訊的結構化存儲
+        /// 用於序列化的異常資訊類別 - 提供異常資訊的結構化存儲
+        /// Serializable Exception Info Class - Provides structured storage for exception information
         /// </summary>
         public class SerializableExceptionInfo
         {
             /// <summary>
-            /// 異常類型的完整名稱
+            /// 異常類型的完整名稱 - 包含命名空間的類型名稱
+            /// Full Exception Type Name - Type name with namespace
             /// </summary>
             public string Type { get; set; }
 
             /// <summary>
-            /// 異常的錯誤訊息
+            /// 異常的錯誤訊息 - 描述錯誤的具體內容
+            /// Exception Message - Detailed description of the error
             /// </summary>
             public string Message { get; set; }
 

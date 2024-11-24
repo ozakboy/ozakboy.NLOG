@@ -12,6 +12,10 @@ namespace ozakboy.NLOG.Core
     /// </summary>
     static class LogText
     {
+        /// <summary>
+        /// 同步鎖定物件，用於確保日誌寫入的執行緒安全
+        /// Synchronization lock object to ensure thread-safe log writing
+        /// </summary>
         private static object lockMe = new object();
 
         /// <summary>
@@ -193,12 +197,25 @@ namespace ozakboy.NLOG.Core
         #region Class
 
         /// <summary>
-        /// 日誌檔案資訊類
+        /// 日誌檔案資訊類別 - 用於管理單個日誌檔案的相關資訊
+        /// Log File Information Class - Used to manage information related to a single log file
         /// </summary>
         private class LogFileInfo
         {
+            /// <summary>
+            /// 日誌檔案所在目錄的完整路徑
+            /// Full path of the directory containing the log file
+            /// </summary>
             public string DirectoryPath { get; set; }
+            /// <summary>
+            /// 日誌檔案的完整路徑
+            /// Full path of the log file
+            /// </summary>
             public string FilePath { get; set; }
+            /// <summary>
+            /// 標記是否需要建立新的日誌檔案
+            /// Flag indicating whether a new log file needs to be created
+            /// </summary>
             public bool RequiresNewFile { get; set; }
         }
 

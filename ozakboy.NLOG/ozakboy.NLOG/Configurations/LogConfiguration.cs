@@ -5,16 +5,36 @@ using static ozakboy.NLOG.LogConfiguration;
 namespace ozakboy.NLOG
 {
     /// <summary>
-    /// LOG配置類別
+    /// LOG配置類別 - 提供日誌系統的全局配置管理
+    /// Log Configuration Class - Provides global configuration management for the logging system
     /// </summary>
     public static class LogConfiguration
     {
-
+        /// <summary>
+        /// 儲存當前的日誌配置選項
+        /// Stores the current logging configuration options
+        /// </summary>
         private static readonly LogOptions _currentOptions = new LogOptions();
+        /// <summary>
+        /// 標記日誌系統是否已經初始化
+        /// Flag indicating whether the logging system has been initialized
+        /// </summary>
         private static bool _isInitialized = false;
+        /// <summary>
+        /// 取得日誌系統當前的配置
+        /// Gets the current configuration of the logging system
+        /// </summary>
         public static ILogOptions Current => new ReadOnlyLogOptions(_currentOptions);
+        /// <summary>
+        /// 日誌配置選項介面 - 定義可供外部讀取的配置項目
+        /// Log Options Interface - Defines configuration items available for external reading
+        /// </summary>
         public interface ILogOptions
         {
+            /// <summary>
+            /// 日誌保留天數 - 定義日誌檔案的保存期限
+            /// Log Retention Days - Defines how long log files are kept
+            /// </summary>
             int KeepDays { get; }
             long MaxFileSize { get; }
             string LogPath { get; }

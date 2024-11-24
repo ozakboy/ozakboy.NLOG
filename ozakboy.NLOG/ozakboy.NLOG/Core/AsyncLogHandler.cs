@@ -6,26 +6,34 @@ using System.Threading.Tasks;
 namespace ozakboy.NLOG.Core
 {
     /// <summary>
-    /// 異步日誌處理器，負責管理日誌的異步寫入操作
+    /// 異步日誌處理器 - 負責管理日誌的異步寫入操作，提供高效能的日誌處理機制
+    /// Asynchronous Log Handler - Manages asynchronous log writing operations, providing high-performance logging mechanism
     /// </summary>
     internal static class AsyncLogHandler
     {
         // 核心變數
         /// <summary>
-        /// 日誌隊列，用於存儲待處理的日誌項目
-        /// 使用 ConcurrentQueue 確保線程安全的入隊和出隊操作
+        /// 日誌隊列 - 用於存儲待處理的日誌項目
+        /// Log Queue - Stores pending log items for processing
         /// </summary>
+        /// <remarks>
+        /// 使用 ConcurrentQueue 確保線程安全的入隊和出隊操作
+        /// Uses ConcurrentQueue to ensure thread-safe enqueue and dequeue operations
+        /// </remarks>
         private static readonly ConcurrentQueue<LogItem> _logQueue = new ConcurrentQueue<LogItem>();
 
         /// <summary>
-        /// 信號量，用於通知處理線程有新的日誌需要處理
+        /// 信號量，用於通知處理執行緒有新的日誌需要處理
         /// 初始計數為0，每當有新日誌加入時會釋放一個信號
+        /// Semaphore for notifying the processing thread of new logs
+        /// Initial count is 0, releases a signal when new logs are added
         /// </summary>
+
         private static readonly SemaphoreSlim _signal = new SemaphoreSlim(0);
 
         /// <summary>
-        /// 取消令牌源，用於控制處理線程的生命週期
-        /// 當需要停止處理線程時，可以通過此令牌發出取消信號
+        /// 取消權杖來源，用於控制處理程序的生命週期
+        /// Cancellation token source for controlling the processor lifecycle
         /// </summary>
         private static readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
@@ -40,7 +48,8 @@ namespace ozakboy.NLOG.Core
         private static bool _isInitialized;
 
         /// <summary>
-        /// 用於初始化同步的鎖對象
+        /// 用於初始化同步的鎖定物件
+        /// Lock object for initialization synchronization
         /// </summary>
         private static readonly object _lockObj = new object();
 
@@ -51,7 +60,8 @@ namespace ozakboy.NLOG.Core
             => LogConfiguration.Current.AsyncOptions;
 
         /// <summary>
-        /// 上次寫入的時間
+        /// 最後一次寫入的時間戳記
+        /// Last write timestamp
         /// </summary>
         private static DateTime _lastFlushTime = DateTime.Now;
 
