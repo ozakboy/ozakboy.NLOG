@@ -1,24 +1,57 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    
     <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net7.0;net8.0;net462</TargetFrameworks>
-    <RootNamespace>ozakboy.NLOG</RootNamespace>
+    <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageVersion>2.0.0</PackageVersion>
+    <RootNamespace>ozakboy.NLOG</RootNamespace>
+
+
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+
+    <Features>strict</Features>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+
+    <Description>輕量級且高效能的日誌記錄工具，提供異步寫入、智能檔案管理和豐富的配置選項。專為 .NET 應用程式設計的本地日誌解決方案。</Description>
+    <PackageTags>logging;log;logger;dotnet;dotnetcore;csharp;async-logging;file-logger;diagnostic;debugging;trace;error-logging;structured-logging;log-management;performance-logging;exception-handling;dotnet-logging;logging-framework;net-framework;net-standard;log-rotation;thread-safe</PackageTags>
+
+    <Title></Title>
+    <PackageReleaseNotes>
+    </PackageReleaseNotes>
+
+
+    <!-- 版權宣告 -->
     <Authors>ozakboy</Authors>
-    <RepositoryType>github</RepositoryType>
-    <RepositoryUrl>https://github.com/ozakboy/ozakboy.NLOG</RepositoryUrl>
+    <Copyright>Copyright (c) 2024 ozakboy</Copyright>
+
+    <!-- 專案連結 -->
     <PackageProjectUrl>https://github.com/ozakboy/ozakboy.NLOG</PackageProjectUrl>
-    <PackAsTool>False</PackAsTool>
+    <RepositoryUrl>https://github.com/ozakboy/ozakboy.NLOG</RepositoryUrl>
+    <RepositoryType>github</RepositoryType>
+
+    <!-- 文件產生設定 -->
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <DocumentationFile>file.xml</DocumentationFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageLicenseFile>license</PackageLicenseFile>
-    <Description>輕量級且高效能的日誌記錄工具，提供異步寫入、智能檔案管理和豐富的配置選項。專為 .NET 應用程式設計的本地日誌解決方案。</Description>
-    <PackageTags>logging;log;logger;dotnet;dotnetcore;csharp;async-logging;file-logger;diagnostic;debugging;trace;error-logging;structured-logging;log-management;performance-logging;exception-handling;dotnet-logging;logging-framework;net-framework;net-standard;log-rotation;thread-safe</PackageTags>
-    <IsPublishable>False</IsPublishable>
-    <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+
+    <!-- 授權設定 -->
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+
+    
+   
+   
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|AnyCPU'">
@@ -38,6 +71,7 @@
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
+    <None Include="..\..\README_zh-TW.md"></None>
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
@@ -50,6 +84,13 @@
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net8.0' ">
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
 </Project>

@@ -3,9 +3,11 @@
 [![nuget](https://img.shields.io/badge/nuget-ozakboy.NLOG-blue)](https://www.nuget.org/packages/Ozakboy.NLOG/) 
 [![github](https://img.shields.io/badge/github-ozakboy.NLOG-blue)](https://github.com/ozakboy/ozakboy.NLOG/)
 
-輕量級且高效能的日誌記錄工具，提供異步寫入、智能檔案管理和豐富的配置選項。專為 .NET 應用程式設計的本地日誌解決方案。
+[English](README.md) | [繁體中文](README_zh-TW.md) 
 
-## 支援框架
+A lightweight and high-performance logging tool that provides asynchronous writing, intelligent file management, and rich configuration options. A local logging solution designed specifically for .NET applications.
+
+## Supported Frameworks
 
 - .NET Framework 4.6.2
 - .NET 6.0
@@ -13,152 +15,152 @@
 - .NET 8.0
 - .NET Standard 2.0/2.1
 
-## 主要特點
+## Key Features
 
-### 核心功能
-- 📝 自動建立日誌檔案和目錄結構
-- 🔄 支援異步日誌寫入，提升應用程式效能
-- ⚡ 智能批次處理和隊列管理
-- 🔍 詳細的異常資訊記錄和序列化
-- 📊 多層級日誌支援
-- 🛡️ 執行緒安全設計
+### Core Features
+- 📝 Automatic log file and directory structure creation
+- 🔄 Support for asynchronous log writing to enhance application performance
+- ⚡ Smart batch processing and queue management
+- 🔍 Detailed exception information logging and serialization
+- 📊 Multi-level logging support
+- 🛡️ Thread-safe design
 
-### 進階特性
-- ⚙️ 靈活的配置系統
-- 📂 自定義日誌目錄結構
-- 🔄 自動檔案分割和管理
-- ⏰ 可配置的日誌保留期限
-- 💾 智能檔案大小管理
-- 🎯 支援自定義日誌類型
-- 🖥️ 可選的控制台輸出
+### Advanced Features
+- ⚙️ Flexible configuration system
+- 📂 Custom log directory structure
+- 🔄 Automatic file splitting and management
+- ⏰ Configurable log retention period
+- 💾 Smart file size management
+- 🎯 Support for custom log types
+- 🖥️ Optional console output
 
-## 安裝
+## Installation
 
-透過 NuGet Package Manager：
+Via NuGet Package Manager:
 ```bash
 Install-Package Ozakboy.NLOG
 ```
 
-或使用 .NET CLI：
+Or using .NET CLI:
 ```bash
 dotnet add package Ozakboy.NLOG
 ```
 
-## 快速入門
+## Quick Start
 
-### 基本配置
+### Basic Configuration
 ```csharp
 LOG.Configure(options => {
-    options.KeepDays = -7;                    // 保留最近 7 天的日誌
-    options.SetFileSizeInMB(50);              // 設定單個檔案大小上限為 50MB
-    options.EnableAsyncLogging = true;         // 啟用異步寫入
-    options.EnableConsoleOutput = true;        // 啟用控制台輸出
+    options.KeepDays = -7;                    // Keep logs for the last 7 days
+    options.SetFileSizeInMB(50);              // Set single file size limit to 50MB
+    options.EnableAsyncLogging = true;         // Enable asynchronous writing
+    options.EnableConsoleOutput = true;        // Enable console output
     
-    // 配置異步選項
+    // Configure async options
     options.ConfigureAsync(async => {
-        async.MaxBatchSize = 100;              // 每批次最多處理 100 條日誌
-        async.MaxQueueSize = 10000;            // 隊列最大容量
-        async.FlushIntervalMs = 1000;          // 每秒寫入一次
+        async.MaxBatchSize = 100;              // Process up to 100 logs per batch
+        async.MaxQueueSize = 10000;            // Maximum queue capacity
+        async.FlushIntervalMs = 1000;          // Write once per second
     });
 });
 ```
 
-### 基本用法
+### Basic Usage
 
 ```csharp
-// 記錄不同級別的日誌
-LOG.Trace_Log("詳細追蹤資訊");
-LOG.Debug_Log("除錯資訊");
-LOG.Info_Log("一般資訊");
-LOG.Warn_Log("警告訊息");
-LOG.Error_Log("錯誤資訊");
-LOG.Fatal_Log("致命錯誤");
+// Log different levels
+LOG.Trace_Log("Detailed trace information");
+LOG.Debug_Log("Debug information");
+LOG.Info_Log("General information");
+LOG.Warn_Log("Warning message");
+LOG.Error_Log("Error information");
+LOG.Fatal_Log("Fatal error");
 
-// 記錄帶有參數的日誌
-LOG.Info_Log("使用者 {0} 執行了 {1} 操作", new string[] { "admin", "login" });
+// Log with parameters
+LOG.Info_Log("User {0} performed {1} operation", new string[] { "admin", "login" });
 
-// 記錄物件
+// Log objects
 var data = new { Id = 1, Name = "Test" };
-LOG.Info_Log("數據記錄", data);
+LOG.Info_Log("Data record", data);
 
-// 記錄異常
+// Log exceptions
 try {
-    // 程式碼
+    // Code
 } catch (Exception ex) {
     LOG.Error_Log(ex);
 }
 
-// 自定義日誌類型
-LOG.CustomName_Log("API", "外部服務呼叫");
+// Custom log type
+LOG.CustomName_Log("API", "External service call");
 ```
 
-## 日誌檔案管理
+## Log File Management
 
-### 預設目錄結構
+### Default Directory Structure
 ```
-應用程式根目錄/
-└── logs/                          # 預設根目錄（可通過 LogPath 修改）
-    └── yyyyMMdd/                  # 日期目錄
-        └── LogFiles/              # 預設日誌檔案目錄（可通過 TypeDirectories.DirectoryPath 修改）
-            └── [LogType]_Log.txt  # 日誌檔案
+Application Root/
+└── logs/                          # Default root directory (modifiable via LogPath)
+    └── yyyyMMdd/                  # Date directory
+        └── LogFiles/              # Default log file directory (modifiable via TypeDirectories.DirectoryPath)
+            └── [LogType]_Log.txt  # Log files
 ```
 
-### 自定義目錄結構
-可以通過配置為不同級別的日誌指定獨立的目錄：
+### Custom Directory Structure
+You can configure independent directories for different log levels:
 
 ```csharp
 LOG.Configure(options => {
-    // 修改根目錄
-    options.LogPath = "CustomLogs";  // 預設是 "logs"
+    // Modify root directory
+    options.LogPath = "CustomLogs";  // Default is "logs"
     
-    // 為不同級別的日誌配置獨立目錄
-    options.TypeDirectories.DirectoryPath = "AllLogs";     // 預設目錄，如未指定特定級別則使用此目錄
-    options.TypeDirectories.ErrorPath = "ErrorLogs";       // 錯誤日誌專用目錄
-    options.TypeDirectories.InfoPath = "InfoLogs";         // 信息日誌專用目錄
-    options.TypeDirectories.WarnPath = "WarningLogs";      // 警告日誌專用目錄
-    options.TypeDirectories.DebugPath = "DebugLogs";       // 調試日誌專用目錄
-    options.TypeDirectories.TracePath = "TraceLogs";       // 追蹤日誌專用目錄
-    options.TypeDirectories.FatalPath = "FatalLogs";       // 致命錯誤日誌專用目錄
-    options.TypeDirectories.CustomPath = "CustomLogs";     // 自定義類型日誌專用目錄
+    // Configure independent directories for different levels
+    options.TypeDirectories.DirectoryPath = "AllLogs";     // Default directory for unspecified levels
+    options.TypeDirectories.ErrorPath = "ErrorLogs";       // Directory for error logs
+    options.TypeDirectories.InfoPath = "InfoLogs";         // Directory for info logs
+    options.TypeDirectories.WarnPath = "WarningLogs";      // Directory for warning logs
+    options.TypeDirectories.DebugPath = "DebugLogs";       // Directory for debug logs
+    options.TypeDirectories.TracePath = "TraceLogs";       // Directory for trace logs
+    options.TypeDirectories.FatalPath = "FatalLogs";       // Directory for fatal logs
+    options.TypeDirectories.CustomPath = "CustomLogs";     // Directory for custom type logs
 });
 ```
 
-配置後的目錄結構示例：
+Example directory structure after configuration:
 ```
-應用程式根目錄/
-└── CustomLogs/                    # 自定義根目錄
-    └── yyyyMMdd/                  # 日期目錄
-        ├── ErrorLogs/             # 錯誤日誌目錄
+Application Root/
+└── CustomLogs/                    # Custom root directory
+    └── yyyyMMdd/                  # Date directory
+        ├── ErrorLogs/             # Error logs directory
         │   └── Error_Log.txt
-        ├── InfoLogs/              # 信息日誌目錄
+        ├── InfoLogs/              # Info logs directory
         │   └── Info_Log.txt
-        ├── WarningLogs/           # 警告日誌目錄
+        ├── WarningLogs/           # Warning logs directory
         │   └── Warn_Log.txt
-        └── AllLogs/               # 預設目錄（未特別指定的日誌類型）
+        └── AllLogs/               # Default directory (for unspecified log types)
             └── [LogType]_Log.txt
 ```
 
-### 檔案命名規則
-- 基本格式：`[LogType]_Log.txt`
-- 分割檔案：`[LogType]_part[N]_Log.txt`
-- 自定義日誌：`[CustomName]_Log.txt`
+### File Naming Rules
+- Basic format: `[LogType]_Log.txt`
+- Split files: `[LogType]_part[N]_Log.txt`
+- Custom logs: `[CustomName]_Log.txt`
 
-### 檔案大小管理
+### File Size Management
 ```csharp
 LOG.Configure(options => {
-    // 設定單個檔案大小上限（以 MB 為單位）
-    options.SetFileSizeInMB(50);  // 檔案達到 50MB 時自動分割
+    // Set single file size limit (in MB)
+    options.SetFileSizeInMB(50);  // Automatically split when file reaches 50MB
 });
 ```
 
-當檔案超過設定的大小限制時，會自動建立新的分割檔案：
-- 第一個分割檔案：`[LogType]_part1_Log.txt`
-- 第二個分割檔案：`[LogType]_part2_Log.txt`
-- 以此類推...
+When a file exceeds the size limit, new split files are automatically created:
+- First split file: `[LogType]_part1_Log.txt`
+- Second split file: `[LogType]_part2_Log.txt`
+- And so on...
 
-### 範例使用場景
+### Example Use Cases
 
-1. 所有日誌統一管理：
+1. Unified log management:
 ```csharp
 LOG.Configure(options => {
     options.LogPath = "logs";
@@ -166,7 +168,7 @@ LOG.Configure(options => {
 });
 ```
 
-2. 錯誤日誌獨立存放：
+2. Separate error log storage:
 ```csharp
 LOG.Configure(options => {
     options.LogPath = "logs";
@@ -175,7 +177,7 @@ LOG.Configure(options => {
 });
 ```
 
-3. 完全分離的日誌系統：
+3. Fully separated logging system:
 ```csharp
 LOG.Configure(options => {
     options.LogPath = "SystemLogs";
@@ -189,53 +191,53 @@ LOG.Configure(options => {
 });
 ```
 
-### 自動清理機制
+### Automatic Cleanup Mechanism
 ```csharp
-// 設定日誌保留天數
+// Set log retention period
 LOG.Configure(options => {
-    options.KeepDays = -30; // 保留最近 30 天的日誌
+    options.KeepDays = -30; // Keep logs for the last 30 days
 });
 ```
 
-## 異常處理功能
+## Exception Handling Features
 
-### 詳細的異常記錄
+### Detailed Exception Logging
 ```csharp
 try {
-    // 您的程式碼
+    // Your code
 } catch (Exception ex) {
-    // 記錄完整的異常資訊，包括：
-    // - 異常類型和訊息
-    // - 堆疊追蹤
-    // - 內部異常
-    // - 額外屬性
+    // Log complete exception information, including:
+    // - Exception type and message
+    // - Stack trace
+    // - Inner exceptions
+    // - Additional properties
     LOG.Error_Log(ex);
 }
 ```
 
-### 自定義異常資訊
+### Custom Exception Information
 ```csharp
 try {
-    // 您的程式碼
+    // Your code
 } catch (Exception ex) {
-    // 添加自定義訊息
-    LOG.Error_Log("資料處理失敗", ex);
+    // Add custom message
+    LOG.Error_Log("Data processing failed", ex);
     
-    // 同時記錄相關資料
+    // Also log related data
     var contextData = new { UserId = "123", Operation = "DataProcess" };
-    LOG.Error_Log("操作上下文", contextData);
+    LOG.Error_Log("Operation context", contextData);
 }
 ```
 
-### 異常序列化
+### Exception Serialization
 ```csharp
 try {
-    // 您的程式碼
+    // Your code
 } catch (Exception ex) {
-    // 異常會被自動序列化為結構化的 JSON 格式
+    // Exception will be automatically serialized to structured JSON format
     LOG.Error_Log(ex);
     
-    // 或者與其他資訊一起序列化
+    // Or serialize with other information
     var errorContext = new {
         Exception = ex,
         TimeStamp = DateTime.Now,
@@ -245,84 +247,84 @@ try {
 }
 ```
 
-## 即時寫入模式
+## Immediate Write Mode
 
-### 同步即時寫入
+### Synchronous Immediate Write
 ```csharp
-// 使用 immediateFlush 參數強制即時寫入
-LOG.Error_Log("重要錯誤", new string[] { "error_details" }, true, true);
+// Use immediateFlush parameter to force immediate writing
+LOG.Error_Log("Important error", new string[] { "error_details" }, true, true);
 
-// 用於自定義日誌
-LOG.CustomName_Log("Critical", "系統異常", new string[] { "error_code" }, true, true);
+// For custom logs
+LOG.CustomName_Log("Critical", "System anomaly", new string[] { "error_code" }, true, true);
 ```
 
-### 異步即時寫入配置
+### Asynchronous Immediate Write Configuration
 ```csharp
 LOG.Configure(options => {
     options.EnableAsyncLogging = true;
     options.ConfigureAsync(async => {
-        async.FlushIntervalMs = 100;     // 縮短寫入間隔
-        async.MaxBatchSize = 1;          // 設定最小批次大小
-        async.MaxQueueSize = 1000;       // 設定適當的隊列大小
+        async.FlushIntervalMs = 100;     // Reduce write interval
+        async.MaxBatchSize = 1;          // Set minimum batch size
+        async.MaxQueueSize = 1000;       // Set appropriate queue size
     });
 });
 
-// Error 和 Fatal 級別的日誌會自動觸發即時寫入
-LOG.Error_Log("嚴重錯誤");
-LOG.Fatal_Log("系統崩潰");
+// Error and Fatal level logs automatically trigger immediate writing
+LOG.Error_Log("Severe error");
+LOG.Fatal_Log("System crash");
 ```
 
-### 條件式即時寫入
+### Conditional Immediate Write
 ```csharp
-// 根據條件決定是否即時寫入
+// Decide whether to write immediately based on conditions
 void LogMessage(string message, bool isCritical) {
     if (isCritical) {
-        LOG.Error_Log(message, new string[] { }, true, true);  // 即時寫入
+        LOG.Error_Log(message, new string[] { }, true, true);  // Immediate write
     } else {
-        LOG.Info_Log(message);  // 一般寫入
+        LOG.Info_Log(message);  // Normal write
     }
 }
 ```
 
-## 效能優化
+## Performance Optimization
 
-- 異步寫入避免 I/O 阻塞
-- 智能批次處理減少磁碟操作
-- 優化的序列化機制
-- 執行緒安全的隊列管理
-- 自動檔案管理避免過大檔案
+- Asynchronous writing to avoid I/O blocking
+- Smart batch processing to reduce disk operations
+- Optimized serialization mechanism
+- Thread-safe queue management
+- Automatic file management to avoid oversized files
 
-## 最佳實踐
+## Best Practices
 
-1. 根據應用程式需求選擇同步或異步模式
-2. 適當配置批次大小和寫入間隔
-3. 根據日誌量調整檔案大小限制
-4. 設定合理的日誌保留期限
-5. 利用自定義類型分類管理日誌
-6. 在關鍵節點記錄必要的異常資訊
+1. Choose between synchronous or asynchronous mode based on application needs
+2. Configure appropriate batch size and write intervals
+3. Adjust file size limits based on log volume
+4. Set reasonable log retention periods
+5. Use custom types for log classification
+6. Record necessary exception information at critical points
 
-## 疑難排解
+## Troubleshooting
 
-常見問題處理：
+Common issue handling:
 
-1. 檔案存取權限問題
-   - 確保應用程式具有寫入權限
-   - 檢查資料夾存取權限設定
+1. File Access Permission Issues
+   - Ensure application has write permissions
+   - Check folder access permission settings
 
-2. 效能問題
-   - 調整異步配置參數
-   - 檢查日誌檔案大小設定
-   - 優化寫入頻率
+2. Performance Issues
+   - Adjust async configuration parameters
+   - Check log file size settings
+   - Optimize write frequency
 
-3. 檔案管理
-   - 定期檢查日誌清理狀況
-   - 監控磁碟空間使用
+3. File Management
+   - Regularly check log cleanup status
+   - Monitor disk space usage
 
-## 授權條款
+## License
 
 MIT License
 
-## 支援與回報
+## Support & Reporting
 
-- GitHub Issues: [回報問題](https://github.com/ozakboy/ozakboy.NLOG/issues)
-- Pull Requests: [貢獻代碼](https://github.com/ozakboy/ozakboy.NLOG/pulls)
+- GitHub Issues: [Report Issues](https://github.com/ozakboy/ozakboy.NLOG/issues)
+- Pull Requests: [Contribute Code](https://github.com/ozakboy/ozakboy.NLOG/pulls)
