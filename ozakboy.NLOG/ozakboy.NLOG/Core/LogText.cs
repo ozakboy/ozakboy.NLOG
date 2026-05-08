@@ -1,225 +1,48 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+using System;
+using System.Threading;
 
 namespace ozakboy.NLOG.Core
 {
     /// <summary>
-    /// 日誌檔案處理類別，負責日誌檔案的建立、寫入和管理
-    ///  支援單次寫入和批次寫入
+    /// 日誌寫入入口 - v3.0 改為 FileStreamPool 的薄包裝，
+    /// 不再持有單一全域 lock，不再每筆 open/close 檔案。
+    /// Log file writer - thin wrapper over FileStreamPool in v3.0.
     /// </summary>
-    static class LogText
+    internal static class LogText
     {
         /// <summary>
-        /// 同步鎖定物件，用於確保日誌寫入的執行緒安全
-        /// Synchronization lock object to ensure thread-safe log writing
+        /// 同步寫入單筆 log。v3.0 由 dispatcher 執行緒呼叫，或在 EnableAsyncLogging=false 時由呼叫端直接呼叫。
         /// </summary>
-        private static object lockMe = new object();
-
-        /// <summary>
-        /// 建立或是新增單條LOG紀錄
-        /// </summary>
-        internal static void Add_LogText(LogLevel level, string name, string message, object[] args)
-        {
-            var logItem = new LogItem
-            {
-                Level = level,
-                Name = name,
-                Message = message,
-                Args = args
-            };
-
-            Add_BatchLogText(new[] { logItem });
-        }
-
-
-        /// <summary>
-        /// 批次寫入多條日誌
-        /// </summary>
-        internal static void Add_BatchLogText(IEnumerable<LogItem> logItems)
+        internal static void Write(in LogItem item)
         {
             try
             {
-                lock (lockMe)
-                {
-                    // 按日誌級別和名稱分組
-                    var groupedLogs = logItems.GroupBy(item => new { item.Level, item.Name });
-
-                    foreach (var group in groupedLogs)
-                    {
-                        var level = group.Key.Level;
-                        var name = string.IsNullOrEmpty(group.Key.Name) ? level.ToString() : group.Key.Name;
-
-                        // 獲取日誌檔案資訊
-                        var fileInfo = GetLogFileInfo(level, name);
-
-                        // 批次寫入檔案
-                        WriteLogsToFile(fileInfo, group);
-                    }
-
-                    // 清理過期日誌（只在批次處理完成後執行一次）
-                    Remove_TimeOutLogText();
-                }
+                var line = LogFormatter.Format(in item);
+                FileStreamPool.AppendLine(item.Level, item.Name, line);
+                if (item.RequireImmediateFlush)
+                    FileStreamPool.Flush(item.Level, item.Name);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"{DateTime.Now:yyyy/MM/dd HH:mm:ss}>>LogText Add_BatchLogText Error:{ex.Message}");
-            }
-        }
-
-
-        /// <summary>
-        /// 獲取日誌檔案資訊
-        /// </summary>
-        private static LogFileInfo GetLogFileInfo(LogLevel level, string name)
-        {
-            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            var logPath = Path.Combine(baseDir, LogConfiguration.Current.LogPath,
-                                     DateTime.Now.ToString("yyyyMMdd"),
-                                     LogConfiguration.Current.TypeDirectories.GetPathForType(level));
-
-            var fileInfo = new LogFileInfo
-            {
-                DirectoryPath = logPath
-            };
-
-            // 確保目錄存在
-            if (!Directory.Exists(logPath))
-            {
-                Directory.CreateDirectory(logPath);
-            }
-
-            // 確定檔案路徑和是否需要新檔案
-            DetermineLogFile(fileInfo, name);
-
-            return fileInfo;
-        }
-
-        /// <summary>
-        /// 確定日誌檔案路徑和狀態
-        /// </summary>
-        private static void DetermineLogFile(LogFileInfo fileInfo, string name)
-        {
-            var logFileName = $"{name}_Log.txt";
-            var searchPattern = $"{name}*";
-            var di = new DirectoryInfo(fileInfo.DirectoryPath);
-            var files = di.GetFiles(searchPattern).OrderBy(x => x.LastWriteTimeUtc).ToArray();
-
-            if (files.Length == 0)
-            {
-                fileInfo.FilePath = Path.Combine(fileInfo.DirectoryPath, logFileName);
-                fileInfo.RequiresNewFile = true;
-                return;
-            }
-
-            var currentFile = files.Last();
-            if (currentFile.Length > LogConfiguration.Current.MaxFileSize)
-            {
-                var splits = currentFile.Name.Replace("_" + name, "").Split('_');
-                int nextPart = 1;
-
-                if (splits.Length > 1 && splits[1].StartsWith("part"))
-                {
-                    nextPart = int.Parse(splits[1].Replace("part", "")) + 1;
-                }
-
-                logFileName = $"{name}_part{nextPart}_Log.txt";
-                fileInfo.RequiresNewFile = true;
-            }
-            else
-            {
-                logFileName = currentFile.Name;
-                fileInfo.RequiresNewFile = false;
-            }
-
-            fileInfo.FilePath = Path.Combine(fileInfo.DirectoryPath, logFileName);
-        }
-
-
-        /// <summary>
-        /// 批次寫入日誌到檔案
-        /// </summary>
-        private static void WriteLogsToFile(LogFileInfo fileInfo, IEnumerable<LogItem> logs)
-        {
-            // 如果需要新檔案，先創建
-            if (fileInfo.RequiresNewFile)
-            {
-                using (File.Create(fileInfo.FilePath)) { }
-            }
-
-            // 批次寫入所有日誌
-            using (var writer = new StreamWriter(fileInfo.FilePath, true, Encoding.UTF8))
-            {
-                foreach (var log in logs)
-                {
-                    writer.WriteLine(string.Format(log.Message, log.Args));
-                }
+                Console.WriteLine($"{DateTime.Now:yyyy/MM/dd HH:mm:ss}>>LogText.Write 錯誤: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// 刪除超時紀錄檔
+        /// v2.x 相容入口 - 同步寫入路徑（EnableAsyncLogging=false 時呼叫）。
+        /// 內部會建構 LogItem 並呼叫 <see cref="Write(in LogItem)"/>。
         /// </summary>
-        private static void Remove_TimeOutLogText()
+        internal static void Add_LogText(LogLevel level, string name, string message, object[] args)
         {
-            try
-            {
-                string logBasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, LogConfiguration.Current.LogPath);      
-                // 確保目錄存在
-                if (!Directory.Exists(logBasePath))
-                    return;
-                var directories = Directory.GetDirectories(logBasePath);
-                int cutoffDate = int.Parse(DateTime.Now.AddDays(LogConfiguration.Current.KeepDays).ToString("yyyyMMdd"));
-                foreach (string dir in directories)
-                {
-                    string folderName = Path.GetFileName(dir);
-
-                    // 判斷是否為8位數的日期格式
-                    if (folderName.Length == 8 && int.TryParse(folderName, out int folderDate))
-                    {
-                        // 數字直接比較，小於截止日期就刪除
-                        if (folderDate < cutoffDate)
-                        {                         
-                            Directory.Delete(dir, true);                           
-                        }
-                    }
-                }
-            }
-            catch 
-            {
-
-            }
+            var item = new LogItem(
+                level: level,
+                name: name ?? string.Empty,
+                message: message,
+                args: (args != null && args.Length > 0) ? args : null,
+                timestampTicks: TimestampCache.GetCurrentTicks(),
+                threadId: Thread.CurrentThread.ManagedThreadId,
+                requireImmediateFlush: false);
+            Write(in item);
         }
-
-
-        #region Class
-
-        /// <summary>
-        /// 日誌檔案資訊類別 - 用於管理單個日誌檔案的相關資訊
-        /// Log File Information Class - Used to manage information related to a single log file
-        /// </summary>
-        private class LogFileInfo
-        {
-            /// <summary>
-            /// 日誌檔案所在目錄的完整路徑
-            /// Full path of the directory containing the log file
-            /// </summary>
-            public string DirectoryPath { get; set; }
-            /// <summary>
-            /// 日誌檔案的完整路徑
-            /// Full path of the log file
-            /// </summary>
-            public string FilePath { get; set; }
-            /// <summary>
-            /// 標記是否需要建立新的日誌檔案
-            /// Flag indicating whether a new log file needs to be created
-            /// </summary>
-            public bool RequiresNewFile { get; set; }
-        }
-
-
-        #endregion
     }
 }

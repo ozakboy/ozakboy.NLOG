@@ -1,44 +1,55 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System;
 
 namespace ozakboy.NLOG.Core
 {
-
     /// <summary>
-    /// 日誌項目類別 - 用於在不同組件間傳遞日誌資訊
-    /// Log Item Class - Used for transferring log information between different components
+    /// 日誌項目 - 在 producer / consumer 之間傳遞日誌資訊。
+    /// Log Item - Carries log information between producer and consumer threads.
     /// </summary>
-    internal class LogItem
+    /// <remarks>
+    /// v3.0 改為 readonly struct，避免高頻 log 時每筆 heap 配置造成 GC 壓力。
+    /// 欄位都採 raw 形式（未格式化），格式化動作延遲到 dispatcher 執行緒處理，
+    /// 讓呼叫端執行緒以最低成本完成入隊。
+    /// </remarks>
+    internal readonly struct LogItem
     {
-        /// <summary>
-        /// 日誌級別 - 定義日誌的重要程度
-        /// Log Level - Defines the severity of the log entry
-        /// </summary>
-        public LogLevel Level { get; set; }
+        /// <summary>日誌級別</summary>
+        public readonly LogLevel Level;
 
-        /// <summary>
-        /// 日誌名稱 - 用於識別日誌來源或類型
-        /// Log Name - Used to identify the source or type of log
-        /// </summary>
-        public string Name { get; set; }
+        /// <summary>日誌名稱（CustomName 用，其他層級為空字串）</summary>
+        public readonly string Name;
 
-        /// <summary>
-        /// 日誌訊息 - 記錄的實際內容
-        /// Log Message - The actual content of the log entry
-        /// </summary>
-        public string Message { get; set; }
+        /// <summary>原始訊息（尚未做 string.Format）</summary>
+        public readonly string Message;
 
-        /// <summary>
-        /// 日誌參數 - 用於格式化日誌訊息的參數陣列
-        /// Log Parameters - Array of parameters used for formatting log messages
-        /// </summary>
-        public object[] Args { get; set; }
+        /// <summary>格式化參數，未使用時為 null（避免配置空陣列）</summary>
+        public readonly object[] Args;
 
-        /// <summary>
-        /// 是否需要立即寫入 - 控制日誌的即時性
-        /// Immediate Flush Required - Controls whether the log needs immediate writing
-        /// </summary>
-        public bool RequireImmediateFlush { get; set; }
+        /// <summary>入隊瞬間的本地時間 ticks（由 TimestampCache 提供，不打 syscall）</summary>
+        public readonly long TimestampTicks;
+
+        /// <summary>入隊瞬間的執行緒 ID</summary>
+        public readonly int ThreadId;
+
+        /// <summary>是否需要立即寫入並 flush 落盤</summary>
+        public readonly bool RequireImmediateFlush;
+
+        public LogItem(
+            LogLevel level,
+            string name,
+            string message,
+            object[] args,
+            long timestampTicks,
+            int threadId,
+            bool requireImmediateFlush)
+        {
+            Level = level;
+            Name = name;
+            Message = message;
+            Args = args;
+            TimestampTicks = timestampTicks;
+            ThreadId = threadId;
+            RequireImmediateFlush = requireImmediateFlush;
+        }
     }
 }

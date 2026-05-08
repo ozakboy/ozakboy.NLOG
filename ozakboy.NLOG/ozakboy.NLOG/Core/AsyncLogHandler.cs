@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,275 +6,180 @@ using System.Threading.Tasks;
 namespace ozakboy.NLOG.Core
 {
     /// <summary>
-    /// 異步日誌處理器 - 負責管理日誌的異步寫入操作，提供高效能的日誌處理機制
-    /// Asynchronous Log Handler - Manages asynchronous log writing operations, providing high-performance logging mechanism
+    /// 異步日誌處理器 v3.0 - HFT 級高並發 producer / 單一 consumer 架構。
+    /// 呼叫端只做 Interlocked enqueue + count check（奈秒級），所有格式化與 I/O 由 dispatcher 執行緒承擔。
     /// </summary>
+    /// <remarks>
+    /// v3.0 與 v2.x 的差異：
+    /// • LogItem 改 readonly struct（零 GC 壓力）
+    /// • Backpressure 改為 drop oldest（觸發 OnDropped），不再降級為呼叫端同步寫入
+    /// • 格式化在 dispatcher 完成（呼叫端不打 DateTime.Now / string.Format）
+    /// • 過期清理改為背景 timer，不在 hot path
+    /// • 100ms 定期 flush 由 FileStreamPool 透過 timer 處理
+    /// </remarks>
     internal static class AsyncLogHandler
     {
-        // 核心變數
-        /// <summary>
-        /// 日誌隊列 - 用於存儲待處理的日誌項目
-        /// Log Queue - Stores pending log items for processing
-        /// </summary>
-        /// <remarks>
-        /// 使用 ConcurrentQueue 確保線程安全的入隊和出隊操作
-        /// Uses ConcurrentQueue to ensure thread-safe enqueue and dequeue operations
-        /// </remarks>
         private static readonly ConcurrentQueue<LogItem> _logQueue = new ConcurrentQueue<LogItem>();
-
-        /// <summary>
-        /// 信號量，用於通知處理執行緒有新的日誌需要處理
-        /// 初始計數為0，每當有新日誌加入時會釋放一個信號
-        /// Semaphore for notifying the processing thread of new logs
-        /// Initial count is 0, releases a signal when new logs are added
-        /// </summary>
-
         private static readonly SemaphoreSlim _signal = new SemaphoreSlim(0);
-
-        /// <summary>
-        /// 取消權杖來源，用於控制處理程序的生命週期
-        /// Cancellation token source for controlling the processor lifecycle
-        /// </summary>
         private static readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-
-        /// <summary>
-        /// 日誌處理任務，負責實際的日誌寫入操作
-        /// </summary>
         private static Task _processTask;
+        private static int _initialized;
+        private static Timer _diskFlushTimer;
 
-        /// <summary>
-        /// 標記處理器是否已初始化
-        /// </summary>
-        private static bool _isInitialized;
+        // 統計：未上報的 drop 計數（即使 OnDropped 為 null 仍記錄，便於除錯）
+        private static long _droppedCount;
 
-        /// <summary>
-        /// 用於初始化同步的鎖定物件
-        /// Lock object for initialization synchronization
-        /// </summary>
-        private static readonly object _lockObj = new object();
+        public static long DroppedCount => Interlocked.Read(ref _droppedCount);
 
-        /// <summary>
-        /// 獲取當前的異步配置
-        /// </summary>
         private static LogConfiguration.IAsyncLogOptions CurrentAsyncOptions
             => LogConfiguration.Current.AsyncOptions;
 
-        /// <summary>
-        /// 最後一次寫入的時間戳記
-        /// Last write timestamp
-        /// </summary>
-        private static DateTime _lastFlushTime = DateTime.Now;
-
-        /// <summary>
-        /// 初始化異步日誌處理器
-        /// 確保處理線程只被創建一次
-        /// </summary>
         public static void Initialize()
         {
-            // 如果已經初始化，直接返回
-            if (_isInitialized) return;
+            if (Interlocked.CompareExchange(ref _initialized, 1, 0) != 0) return;
 
-            // 使用鎖確保線程安全的初始化
-            lock (_lockObj)
-            {
-                if (_isInitialized) return;
+            // 啟動相關背景元件
+            _ = TimestampCache.GetCurrentTicks();   // 觸發 TimestampCache 起動
+            LogRetentionCleaner.EnsureStarted();
 
-                // 啟動處理線程
-                _processTask = Task.Run(ProcessLogQueueAsync);
-                _isInitialized = true;
-                // 註冊應用程序域卸載事件
+            _processTask = Task.Run(ProcessLogQueueAsync);
 
-                AppDomain.CurrentDomain.ProcessExit += (s, e) =>
-                {
-                    FlushAll().GetAwaiter().GetResult();
-                };
+            // 100ms（或使用者設定）定期 flush 全部 stream
+            var diskFlushMs = LogConfiguration.Current.DiskFlushIntervalMs;
+            _diskFlushTimer = new Timer(static _ => FileStreamPool.FlushAll(), null, diskFlushMs, diskFlushMs);
 
-                AppDomain.CurrentDomain.UnhandledException += (s, e) =>
-                {
-                    FlushAll().GetAwaiter().GetResult();
-                };
-            }
+            AppDomain.CurrentDomain.ProcessExit += static (s, e) => ShutdownGracefully();
+            AppDomain.CurrentDomain.UnhandledException += static (s, e) => ShutdownGracefully();
         }
 
         /// <summary>
-        /// 將日誌項目加入處理隊列
+        /// 入隊。呼叫端執行緒成本：1× volatile read（cache 大小）+ 1× ConcurrentQueue.Enqueue（CAS）+ 1× SemaphoreSlim.Release。
+        /// 若 queue 已滿，dequeue 一筆最舊的（drop oldest），觸發 OnDropped。
         /// </summary>
-        /// <param name="level">日誌級別</param>
-        /// <param name="name">日誌名稱</param>
-        /// <param name="message">日誌消息</param>
-        /// <param name="args">日誌參數</param>
-        /// <param name="immediateFlush">是否需要立即寫入</param>
-        public static void EnqueueLog(LogLevel level, string name, string message, object[] args, bool immediateFlush = false)
+        public static void Enqueue(in LogItem item)
         {
-            // 確保處理器已初始化
-            if (!_isInitialized)
+            if (Interlocked.CompareExchange(ref _initialized, 0, 0) == 0)
                 Initialize();
 
-            // 如果隊列已滿，進行同步寫入
-            if (_logQueue.Count >= CurrentAsyncOptions.MaxQueueSize)
+            // Drop oldest：滿時先丟一筆最舊的
+            var max = CurrentAsyncOptions.MaxQueueSize;
+            if (_logQueue.Count >= max)
             {
-                LogText.Add_LogText(level, name, message, args);
-                return;
+                if (_logQueue.TryDequeue(out _))
+                {
+                    Interlocked.Increment(ref _droppedCount);
+                    var cb = LogConfiguration.Current.OnDropped;
+                    if (cb != null)
+                    {
+                        try { cb(); } catch { /* callback 內出錯不能拖累寫入路徑 */ }
+                    }
+                }
             }
 
-            // 創建日誌項目
-            var logItem = new LogItem
-            {
-                Level = level,
-                Name = name,
-                Message = message,
-                Args = args,
-                RequireImmediateFlush = immediateFlush
-            };
+            _logQueue.Enqueue(item);
 
-            // 將日誌項目加入隊列
-            _logQueue.Enqueue(logItem);
-            // 釋放信號，通知處理線程
-            _signal.Release();
+            // 釋放 signal；若已被釋放過 dispatcher 仍在處理，本 release 是無傷的（會在 WaitAsync 等待時立刻通過）
+            try { _signal.Release(); } catch (SemaphoreFullException) { }
 
-            // 對於重要日誌，立即寫入
-            if (immediateFlush || level >= LogLevel.Error)
+            // 重要級別 / 立即 flush：插隊喚醒 dispatcher 處理（dispatcher 路徑不阻塞呼叫端）
+            if (item.RequireImmediateFlush || item.Level >= LogLevel.Error)
             {
-                FlushAll().GetAwaiter().GetResult();
+                // 等不到 dispatcher → 同步處理本筆（含 immediate flush）以保證落盤
+                if (item.RequireImmediateFlush || item.Level >= LogLevel.Fatal)
+                {
+                    LogText.Write(in item);
+                    FileStreamPool.Flush(item.Level, item.Name);
+                }
             }
         }
 
-        /// <summary>
-        /// 異步處理日誌隊列中的項目
-        /// 這是處理線程的主要邏輯
-        /// </summary>
         private static async Task ProcessLogQueueAsync()
         {
-            // 持續處理，直到收到取消信號
-            while (!_cancellationTokenSource.Token.IsCancellationRequested)
+            var token = _cancellationTokenSource.Token;
+            while (!token.IsCancellationRequested)
             {
                 try
                 {
-                    // 等待新的日誌或定時器觸發
-                    await _signal.WaitAsync(TimeSpan.FromMilliseconds(CurrentAsyncOptions.FlushIntervalMs));
-
-                    // 檢查是否需要定期寫入
-                    if ((DateTime.Now - _lastFlushTime).TotalMilliseconds >= CurrentAsyncOptions.FlushIntervalMs)
-                    {
-                        await FlushAll();
-                    }
-                    else
-                    {
-                        // 處理單個日誌
-                        await ProcessSingleLog();
-                    }                  
+                    await _signal.WaitAsync(TimeSpan.FromMilliseconds(CurrentAsyncOptions.FlushIntervalMs)).ConfigureAwait(false);
+                    DrainBatch();
                 }
                 catch (OperationCanceledException)
                 {
-                    // 處理取消操作
                     break;
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"日誌處理任務發生錯誤: {ex.Message}");
-                    // 發生錯誤時暫停一下，避免過度消耗資源
-                    await Task.Delay(100);
+                    Console.WriteLine($"AsyncLogHandler.ProcessLogQueueAsync 錯誤: {ex.Message}");
+                    await Task.Delay(100).ConfigureAwait(false);
                 }
             }
-            // 確保所有剩餘的日誌都被處理
-            await FlushAll();
+
+            DrainBatch();
         }
 
-        /// <summary>
-        /// 處理單個日誌項
-        /// </summary>
-        private static async Task ProcessSingleLog()
+        private static void DrainBatch()
         {
-            if (_logQueue.TryDequeue(out LogItem logItem))
+            var batchLimit = CurrentAsyncOptions.MaxBatchSize;
+            var processed = 0;
+            while (processed < batchLimit && _logQueue.TryDequeue(out var item))
             {
-                try
-                {
-                    LogText.Add_LogText(
-                        logItem.Level,
-                        logItem.Name,
-                        logItem.Message,
-                        logItem.Args);
-
-                    if (logItem.RequireImmediateFlush)
-                    {
-                        await FlushAll();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"處理日誌時發生錯誤: {ex.Message}");
-                }
+                LogText.Write(in item);
+                processed++;
             }
         }
 
-        /// <summary>
-        /// 強制寫入所有待處理的日誌
-        /// </summary>
-        private static async Task FlushAll()
-        {
-            try
-            {
-                int batchCount = 0;
-                while (_logQueue.TryDequeue(out LogItem logItem) && batchCount < CurrentAsyncOptions.MaxBatchSize)
-                {
-                    try
-                    {
-                        LogText.Add_LogText(
-                            logItem.Level,
-                            logItem.Name,
-                            logItem.Message,
-                            logItem.Args);
-                        batchCount++;
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"批次處理日誌時發生錯誤: {ex.Message}");
-                    }
-                }
-
-                _lastFlushTime = DateTime.Now;
-
-                // 如果還有剩餘的日誌，釋放信號繼續處理
-                if (!_logQueue.IsEmpty)
-                {
-                    _signal.Release();
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"強制寫入日誌時發生錯誤: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 關閉異步日誌處理器
-        /// 確保所有待處理的日誌都被寫入
-        /// </summary>
         public static async Task ShutdownAsync()
         {
-            if (!_isInitialized) return;
+            if (Interlocked.CompareExchange(ref _initialized, 0, 1) != 1) return;
 
             try
             {
-                // 處理所有剩餘的日誌
-                await FlushAll();
-
+                DrainBatch();   // 清隊列
                 _cancellationTokenSource.Cancel();
-                _signal.Release();
+                try { _signal.Release(); } catch (SemaphoreFullException) { }
 
                 if (_processTask != null)
-                {
-                    await Task.WhenAny(_processTask, Task.Delay(2000)); // 最多等待2秒
-                }
+                    await Task.WhenAny(_processTask, Task.Delay(2000)).ConfigureAwait(false);
+
+                FileStreamPool.FlushAll();
+                FileStreamPool.Shutdown();
+                LogRetentionCleaner.Shutdown();
+                TimestampCache.Shutdown();
+
+                var t = Interlocked.Exchange(ref _diskFlushTimer, null);
+                t?.Dispose();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"關閉日誌處理器時發生錯誤: {ex.Message}");
+                Console.WriteLine($"AsyncLogHandler.ShutdownAsync 錯誤: {ex.Message}");
             }
-            finally
+        }
+
+        private static void ShutdownGracefully()
+        {
+            try
             {
-                _isInitialized = false;
+                DrainBatch();
+                FileStreamPool.FlushAll();
             }
+            catch
+            {
+                // 收尾時的錯誤吞掉
+            }
+        }
+
+        // === v2.x 相容入口（保留方法名以利內部 callsite 漸進遷移） ===
+        public static void EnqueueLog(LogLevel level, string name, string message, object[] args, bool immediateFlush = false)
+        {
+            var item = new LogItem(
+                level: level,
+                name: name ?? string.Empty,
+                message: message,
+                args: (args != null && args.Length > 0) ? args : null,
+                timestampTicks: TimestampCache.GetCurrentTicks(),
+                threadId: Thread.CurrentThread.ManagedThreadId,
+                requireImmediateFlush: immediateFlush);
+            Enqueue(in item);
         }
     }
 }

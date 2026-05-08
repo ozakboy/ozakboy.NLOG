@@ -40,6 +40,27 @@
             Log Retention Days - Defines how long log files are kept
             </summary>
         </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.ILogOptions.EnableGlobalExceptionCapture">
+            <summary>
+            v3.0+ 是否啟用全域意外攔截（預設 false）
+            AppDomain.UnhandledException + TaskScheduler.UnobservedTaskException 自動 log Fatal
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.ILogOptions.MaxOpenFileStreams">
+            <summary>
+            v3.0+ FileStreamPool 同時保持開啟的檔案上限（LRU 自動關閉冷檔，預設 100）
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.ILogOptions.DiskFlushIntervalMs">
+            <summary>
+            v3.0+ 持久化 FileStream 定期 flush 至磁碟的間隔（毫秒，預設 100ms）
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.ILogOptions.OnDropped">
+            <summary>
+            v3.0+ queue 滿時 drop oldest 的通知 callback（純通知，使用者通常只計數）
+            </summary>
+        </member>
         <member name="M:ozakboy.NLOG.LogConfiguration.ReadOnlyLogTypeDirectories.GetPathForType(ozakboy.NLOG.Core.LogLevel)">
             <summary>
             取得指定日誌類型的目錄路徑
@@ -133,6 +154,34 @@
             是否在控制台輸出
             </summary>
         </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.LogOptions.EnableGlobalExceptionCapture">
+            <summary>
+            v3.0+ 是否啟用全域意外攔截
+            訂閱 AppDomain.UnhandledException 與 TaskScheduler.UnobservedTaskException
+            任何未攔截的例外都會自動以 Fatal 級別寫入 log
+            預設 false（避免函式庫副作用，使用者明確 opt-in）
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.LogOptions.MaxOpenFileStreams">
+            <summary>
+            v3.0+ FileStreamPool 同時保持開啟的檔案上限
+            超過時關閉最久未寫入（LRU），預設 100
+            範圍 [4, 4096]
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.LogOptions.DiskFlushIntervalMs">
+            <summary>
+            v3.0+ 持久化 FileStream 定期 flush 至磁碟的間隔（ms）
+            太小會增加 syscall 成本，太大會在 crash 時丟失更多資料
+            預設 100ms，範圍 [10, 10000]
+            </summary>
+        </member>
+        <member name="P:ozakboy.NLOG.LogConfiguration.LogOptions.OnDropped">
+            <summary>
+            v3.0+ queue 滿時 drop oldest 後觸發的 callback
+            通常用於計數丟棄量，請保持 callback body 極輕量（會在 dispatcher 執行緒呼叫）
+            </summary>
+        </member>
         <member name="M:ozakboy.NLOG.LogConfiguration.LogOptions.SetFileSizeInMB(System.Int32)">
             <summary>
             設定檔案大小的便捷方法（以 MB 為單位）
@@ -215,97 +264,22 @@
         </member>
         <member name="T:ozakboy.NLOG.Core.AsyncLogHandler">
             <summary>
-            異步日誌處理器 - 負責管理日誌的異步寫入操作，提供高效能的日誌處理機制
-            Asynchronous Log Handler - Manages asynchronous log writing operations, providing high-performance logging mechanism
-            </summary>
-        </member>
-        <member name="F:ozakboy.NLOG.Core.AsyncLogHandler._logQueue">
-            <summary>
-            日誌隊列 - 用於存儲待處理的日誌項目
-            Log Queue - Stores pending log items for processing
+            異步日誌處理器 v3.0 - HFT 級高並發 producer / 單一 consumer 架構。
+            呼叫端只做 Interlocked enqueue + count check（奈秒級），所有格式化與 I/O 由 dispatcher 執行緒承擔。
             </summary>
             <remarks>
-            使用 ConcurrentQueue 確保線程安全的入隊和出隊操作
-            Uses ConcurrentQueue to ensure thread-safe enqueue and dequeue operations
+            v3.0 與 v2.x 的差異：
+            • LogItem 改 readonly struct（零 GC 壓力）
+            • Backpressure 改為 drop oldest（觸發 OnDropped），不再降級為呼叫端同步寫入
+            • 格式化在 dispatcher 完成（呼叫端不打 DateTime.Now / string.Format）
+            • 過期清理改為背景 timer，不在 hot path
+            • 100ms 定期 flush 由 FileStreamPool 透過 timer 處理
             </remarks>
         </member>
-        <member name="F:ozakboy.NLOG.Core.AsyncLogHandler._signal">
+        <member name="M:ozakboy.NLOG.Core.AsyncLogHandler.Enqueue(ozakboy.NLOG.Core.LogItem@)">
             <summary>
-            信號量，用於通知處理執行緒有新的日誌需要處理
-            初始計數為0，每當有新日誌加入時會釋放一個信號
-            Semaphore for notifying the processing thread of new logs
-            Initial count is 0, releases a signal when new logs are added
-            </summary>
-        </member>
-        <member name="F:ozakboy.NLOG.Core.AsyncLogHandler._cancellationTokenSource">
-            <summary>
-            取消權杖來源，用於控制處理程序的生命週期
-            Cancellation token source for controlling the processor lifecycle
-            </summary>
-        </member>
-        <member name="F:ozakboy.NLOG.Core.AsyncLogHandler._processTask">
-            <summary>
-            日誌處理任務，負責實際的日誌寫入操作
-            </summary>
-        </member>
-        <member name="F:ozakboy.NLOG.Core.AsyncLogHandler._isInitialized">
-            <summary>
-            標記處理器是否已初始化
-            </summary>
-        </member>
-        <member name="F:ozakboy.NLOG.Core.AsyncLogHandler._lockObj">
-            <summary>
-            用於初始化同步的鎖定物件
-            Lock object for initialization synchronization
-            </summary>
-        </member>
-        <member name="P:ozakboy.NLOG.Core.AsyncLogHandler.CurrentAsyncOptions">
-            <summary>
-            獲取當前的異步配置
-            </summary>
-        </member>
-        <member name="F:ozakboy.NLOG.Core.AsyncLogHandler._lastFlushTime">
-            <summary>
-            最後一次寫入的時間戳記
-            Last write timestamp
-            </summary>
-        </member>
-        <member name="M:ozakboy.NLOG.Core.AsyncLogHandler.Initialize">
-            <summary>
-            初始化異步日誌處理器
-            確保處理線程只被創建一次
-            </summary>
-        </member>
-        <member name="M:ozakboy.NLOG.Core.AsyncLogHandler.EnqueueLog(ozakboy.NLOG.Core.LogLevel,System.String,System.String,System.Object[],System.Boolean)">
-            <summary>
-            將日誌項目加入處理隊列
-            </summary>
-            <param name="level">日誌級別</param>
-            <param name="name">日誌名稱</param>
-            <param name="message">日誌消息</param>
-            <param name="args">日誌參數</param>
-            <param name="immediateFlush">是否需要立即寫入</param>
-        </member>
-        <member name="M:ozakboy.NLOG.Core.AsyncLogHandler.ProcessLogQueueAsync">
-            <summary>
-            異步處理日誌隊列中的項目
-            這是處理線程的主要邏輯
-            </summary>
-        </member>
-        <member name="M:ozakboy.NLOG.Core.AsyncLogHandler.ProcessSingleLog">
-            <summary>
-            處理單個日誌項
-            </summary>
-        </member>
-        <member name="M:ozakboy.NLOG.Core.AsyncLogHandler.FlushAll">
-            <summary>
-            強制寫入所有待處理的日誌
-            </summary>
-        </member>
-        <member name="M:ozakboy.NLOG.Core.AsyncLogHandler.ShutdownAsync">
-            <summary>
-            關閉異步日誌處理器
-            確保所有待處理的日誌都被寫入
+            入隊。呼叫端執行緒成本：1× volatile read（cache 大小）+ 1× ConcurrentQueue.Enqueue（CAS）+ 1× SemaphoreSlim.Release。
+            若 queue 已滿，dequeue 一筆最舊的（drop oldest），觸發 OnDropped。
             </summary>
         </member>
         <member name="T:ozakboy.NLOG.Core.ExceptionHandler">
@@ -377,64 +351,86 @@
             處理序列化異常的錯誤訊息
             </summary>
         </member>
-        <member name="T:ozakboy.NLOG.Core.LogFormatter">
+        <member name="T:ozakboy.NLOG.Core.FileStreamPool">
             <summary>
-            日誌格式化處理器 - 負責將日誌內容轉換為標準格式
-            Log Formatter - Responsible for converting log content into standardized format
+            持久化檔案流池 - 維護 per-(level, name) 的 FileStream，
+            配合 LRU 上限自動關閉冷檔、換日自動切換目錄、超過大小自動分割檔案。
+            Persistent FileStream pool with LRU eviction, day rollover, and size-based splitting.
+            </summary>
+            <remarks>
+            v3.0 引入：取代 v2.x 每批次 open/close 的高 syscall 開銷。
+            單一 dispatcher 執行緒呼叫 AppendLine，不需 lock 細粒度同步，
+            但 periodic flush timer 與 shutdown 路徑會與 dispatcher 競爭，故仍以 lock 保護。
+            </remarks>
+        </member>
+        <member name="M:ozakboy.NLOG.Core.FileStreamPool.AppendLine(ozakboy.NLOG.Core.LogLevel,System.String,System.String)">
+            <summary>
+            寫入一行至對應檔案，自動處理建立、換日、大小分割、LRU。
             </summary>
         </member>
-        <member name="M:ozakboy.NLOG.Core.LogFormatter.FormatMessage(System.String,System.String[])">
+        <member name="M:ozakboy.NLOG.Core.FileStreamPool.Flush(ozakboy.NLOG.Core.LogLevel,System.String)">
             <summary>
-            格式化日誌訊息 - 將原始訊息轉換為包含時間戳記和執行緒 ID 的格式化訊息
-            Format Log Message - Converts raw message into formatted message with timestamp and thread ID
+            強制 flush 指定 (level, name) 的緩衝至磁碟（用於 crash log / immediateFlush）
             </summary>
-            <param name="message">要格式化的訊息 / Message to format</param>
-            <param name="args">格式化參數 / Formatting parameters</param>
-            <returns>格式化後的訊息 / Formatted message</returns>
+        </member>
+        <member name="M:ozakboy.NLOG.Core.FileStreamPool.FlushAll">
+            <summary>
+            flush 全部開啟的 stream（由 100ms 定期 timer 呼叫）
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.Core.FileStreamPool.Shutdown">
+            <summary>
+            shutdown：flush + 關閉所有 stream
+            </summary>
+        </member>
+        <member name="T:ozakboy.NLOG.Core.LogFormatter">
+            <summary>
+            日誌格式化處理器 - 將 LogItem 轉為要寫入檔案的單行字串。
+            v3.0：格式化全部移到 dispatcher 執行緒，呼叫端不再做 string.Format / StringBuilder。
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.Core.LogFormatter.Format(ozakboy.NLOG.Core.LogItem@)">
+            <summary>
+            格式化 LogItem 為單行檔案輸出（不含換行符；換行由 StreamWriter.WriteLine 補）
+            格式：HH:mm:ss.fff[T:tid] message
+            </summary>
         </member>
         <member name="M:ozakboy.NLOG.Core.LogFormatter.EscapeMessage(System.String)">
             <summary>
-            處理訊息中的特殊字符 - 確保訊息中的格式化字符被正確處理
-            Handle Special Characters - Ensures format characters in messages are properly handled
+            處理訊息中的特殊字符 - 確保訊息中的 {} 在無格式參數時被跳脫
             </summary>
-            <param name="message">原始訊息 / Original message</param>
-            <returns>處理後的訊息 / Processed message</returns>
         </member>
         <member name="T:ozakboy.NLOG.Core.LogItem">
             <summary>
-            日誌項目類別 - 用於在不同組件間傳遞日誌資訊
-            Log Item Class - Used for transferring log information between different components
+            日誌項目 - 在 producer / consumer 之間傳遞日誌資訊。
+            Log Item - Carries log information between producer and consumer threads.
             </summary>
+            <remarks>
+            v3.0 改為 readonly struct，避免高頻 log 時每筆 heap 配置造成 GC 壓力。
+            欄位都採 raw 形式（未格式化），格式化動作延遲到 dispatcher 執行緒處理，
+            讓呼叫端執行緒以最低成本完成入隊。
+            </remarks>
         </member>
-        <member name="P:ozakboy.NLOG.Core.LogItem.Level">
-            <summary>
-            日誌級別 - 定義日誌的重要程度
-            Log Level - Defines the severity of the log entry
-            </summary>
+        <member name="F:ozakboy.NLOG.Core.LogItem.Level">
+            <summary>日誌級別</summary>
         </member>
-        <member name="P:ozakboy.NLOG.Core.LogItem.Name">
-            <summary>
-            日誌名稱 - 用於識別日誌來源或類型
-            Log Name - Used to identify the source or type of log
-            </summary>
+        <member name="F:ozakboy.NLOG.Core.LogItem.Name">
+            <summary>日誌名稱（CustomName 用，其他層級為空字串）</summary>
         </member>
-        <member name="P:ozakboy.NLOG.Core.LogItem.Message">
-            <summary>
-            日誌訊息 - 記錄的實際內容
-            Log Message - The actual content of the log entry
-            </summary>
+        <member name="F:ozakboy.NLOG.Core.LogItem.Message">
+            <summary>原始訊息（尚未做 string.Format）</summary>
         </member>
-        <member name="P:ozakboy.NLOG.Core.LogItem.Args">
-            <summary>
-            日誌參數 - 用於格式化日誌訊息的參數陣列
-            Log Parameters - Array of parameters used for formatting log messages
-            </summary>
+        <member name="F:ozakboy.NLOG.Core.LogItem.Args">
+            <summary>格式化參數，未使用時為 null（避免配置空陣列）</summary>
         </member>
-        <member name="P:ozakboy.NLOG.Core.LogItem.RequireImmediateFlush">
-            <summary>
-            是否需要立即寫入 - 控制日誌的即時性
-            Immediate Flush Required - Controls whether the log needs immediate writing
-            </summary>
+        <member name="F:ozakboy.NLOG.Core.LogItem.TimestampTicks">
+            <summary>入隊瞬間的本地時間 ticks（由 TimestampCache 提供，不打 syscall）</summary>
+        </member>
+        <member name="F:ozakboy.NLOG.Core.LogItem.ThreadId">
+            <summary>入隊瞬間的執行緒 ID</summary>
+        </member>
+        <member name="F:ozakboy.NLOG.Core.LogItem.RequireImmediateFlush">
+            <summary>是否需要立即寫入並 flush 落盤</summary>
         </member>
         <member name="T:ozakboy.NLOG.Core.LogLevel">
             <summary>
@@ -478,10 +474,17 @@
             Fatal Log - Records severe errors that cause system failure
             </summary>
         </member>
-        <member name="F:ozakboy.NLOG.Core.LogLevel.CostomName">
+        <member name="F:ozakboy.NLOG.Core.LogLevel.CustomName">
             <summary>
             自定義記錄檔 - 用於特定需求的客製化日誌類型
             Custom Log - Customized log type for specific requirements
+            </summary>
+        </member>
+        <member name="T:ozakboy.NLOG.Core.LogRetentionCleaner">
+            <summary>
+            過期 log 清理器 - 由背景 Timer 每 60 秒掃一次，刪除超過 KeepDays 的日期目錄。
+            從 v2.x 的 hot path（每筆寫入後執行）移出，避免阻塞 dispatcher。
+            Background log retention cleaner; runs every 60s instead of on every batch write.
             </summary>
         </member>
         <member name="T:ozakboy.NLOG.Core.LogSerializer">
@@ -513,68 +516,48 @@
         </member>
         <member name="T:ozakboy.NLOG.Core.LogText">
             <summary>
-            日誌檔案處理類別，負責日誌檔案的建立、寫入和管理
-             支援單次寫入和批次寫入
+            日誌寫入入口 - v3.0 改為 FileStreamPool 的薄包裝，
+            不再持有單一全域 lock，不再每筆 open/close 檔案。
+            Log file writer - thin wrapper over FileStreamPool in v3.0.
             </summary>
         </member>
-        <member name="F:ozakboy.NLOG.Core.LogText.lockMe">
+        <member name="M:ozakboy.NLOG.Core.LogText.Write(ozakboy.NLOG.Core.LogItem@)">
             <summary>
-            同步鎖定物件，用於確保日誌寫入的執行緒安全
-            Synchronization lock object to ensure thread-safe log writing
+            同步寫入單筆 log。v3.0 由 dispatcher 執行緒呼叫，或在 EnableAsyncLogging=false 時由呼叫端直接呼叫。
             </summary>
         </member>
         <member name="M:ozakboy.NLOG.Core.LogText.Add_LogText(ozakboy.NLOG.Core.LogLevel,System.String,System.String,System.Object[])">
             <summary>
-            建立或是新增單條LOG紀錄
+            v2.x 相容入口 - 同步寫入路徑（EnableAsyncLogging=false 時呼叫）。
+            內部會建構 LogItem 並呼叫 <see cref="M:ozakboy.NLOG.Core.LogText.Write(ozakboy.NLOG.Core.LogItem@)"/>。
             </summary>
         </member>
-        <member name="M:ozakboy.NLOG.Core.LogText.Add_BatchLogText(System.Collections.Generic.IEnumerable{ozakboy.NLOG.Core.LogItem})">
+        <member name="T:ozakboy.NLOG.Core.TimestampCache">
             <summary>
-            批次寫入多條日誌
+            時間戳快取 - 由背景執行緒以 1ms 間隔更新 volatile ticks，
+            高頻 log 呼叫端只需讀 long 值，避免每筆 log 都打 DateTime.Now 的 syscall。
+            Timestamp cache - background thread updates a volatile ticks value at 1ms,
+            hot log paths read the cached long instead of calling DateTime.Now.
+            </summary>
+            <remarks>
+            對 HFT 類場景至關重要：DateTime.Now 在 Windows 上會呼叫 GetSystemTimeAsFileTime
+            並轉時區，連續百萬次呼叫成本顯著。此快取以 1ms 精度為代價，把每筆 log 的時間取得
+            成本壓到一次 volatile read（~奈秒等級）。
+            </remarks>
+        </member>
+        <member name="M:ozakboy.NLOG.Core.TimestampCache.GetCurrentTicks">
+            <summary>
+            取得當前快取的本地時間 ticks。第一次呼叫時會自動啟動背景更新計時器。
             </summary>
         </member>
-        <member name="M:ozakboy.NLOG.Core.LogText.GetLogFileInfo(ozakboy.NLOG.Core.LogLevel,System.String)">
+        <member name="M:ozakboy.NLOG.Core.TimestampCache.GetCurrentDateTime">
             <summary>
-            獲取日誌檔案資訊
+            取得當前快取對應的 DateTime（本地時間）。
             </summary>
         </member>
-        <member name="M:ozakboy.NLOG.Core.LogText.DetermineLogFile(ozakboy.NLOG.Core.LogText.LogFileInfo,System.String)">
+        <member name="M:ozakboy.NLOG.Core.TimestampCache.Shutdown">
             <summary>
-            確定日誌檔案路徑和狀態
-            </summary>
-        </member>
-        <member name="M:ozakboy.NLOG.Core.LogText.WriteLogsToFile(ozakboy.NLOG.Core.LogText.LogFileInfo,System.Collections.Generic.IEnumerable{ozakboy.NLOG.Core.LogItem})">
-            <summary>
-            批次寫入日誌到檔案
-            </summary>
-        </member>
-        <member name="M:ozakboy.NLOG.Core.LogText.Remove_TimeOutLogText">
-            <summary>
-            刪除超時紀錄檔
-            </summary>
-        </member>
-        <member name="T:ozakboy.NLOG.Core.LogText.LogFileInfo">
-            <summary>
-            日誌檔案資訊類別 - 用於管理單個日誌檔案的相關資訊
-            Log File Information Class - Used to manage information related to a single log file
-            </summary>
-        </member>
-        <member name="P:ozakboy.NLOG.Core.LogText.LogFileInfo.DirectoryPath">
-            <summary>
-            日誌檔案所在目錄的完整路徑
-            Full path of the directory containing the log file
-            </summary>
-        </member>
-        <member name="P:ozakboy.NLOG.Core.LogText.LogFileInfo.FilePath">
-            <summary>
-            日誌檔案的完整路徑
-            Full path of the log file
-            </summary>
-        </member>
-        <member name="P:ozakboy.NLOG.Core.LogText.LogFileInfo.RequiresNewFile">
-            <summary>
-            標記是否需要建立新的日誌檔案
-            Flag indicating whether a new log file needs to be created
+            停止快取計時器（用於 shutdown / 測試）
             </summary>
         </member>
         <member name="T:ozakboy.NLOG.LOG">

@@ -18,24 +18,33 @@ namespace ozakboy.NLOG
 
         private static void Log(LogLevel level, string name = "", string message = "", bool writeTxt = true, bool immediateFlush = false, string[] args = null)
         {
+            // v3.0：呼叫端零格式化路徑。
+            // 只取得 ticks 與 threadId、跳脫 message 中 {} 後就建構 struct LogItem 入隊。
+            // 真正的時間戳渲染、string.Format 都延遲到 dispatcher 執行緒。
             var escapedMessage = LogFormatter.EscapeMessage(message);
-            var formattedMessage = LogFormatter.FormatMessage(escapedMessage, args ?? Array.Empty<string>());
+            var hasArgs = args != null && args.Length > 0;
+
+            var item = new LogItem(
+                level: level,
+                name: name ?? string.Empty,
+                message: escapedMessage,
+                args: hasArgs ? args : null,
+                timestampTicks: TimestampCache.GetCurrentTicks(),
+                threadId: Thread.CurrentThread.ManagedThreadId,
+                requireImmediateFlush: immediateFlush);
 
             if (LogConfiguration.Current.EnableConsoleOutput)
-                Console.WriteLine(formattedMessage);
-
-            if (writeTxt)
             {
-                if (LogConfiguration.Current.EnableAsyncLogging)
-                {
-                    AsyncLogHandler.EnqueueLog(level, name, formattedMessage, args ?? Array.Empty<string>(), immediateFlush);
-                }
-                else
-                {
-                    LogText.Add_LogText(level, name, formattedMessage, args ?? Array.Empty<string>());
-                }
+                // Console 輸出在呼叫端走（保持 v2.x 行為），避免 Console 與檔案輸出順序錯亂
+                Console.WriteLine(LogFormatter.Format(in item));
             }
 
+            if (!writeTxt) return;
+
+            if (LogConfiguration.Current.EnableAsyncLogging)
+                AsyncLogHandler.Enqueue(in item);
+            else
+                LogText.Write(in item);
         }
 
         private static void LogObject<T>(LogLevel level, T obj, string name = "", string message = "", bool writeTxt = true, bool _immediateFlush = false, string[] args = null) where T : class

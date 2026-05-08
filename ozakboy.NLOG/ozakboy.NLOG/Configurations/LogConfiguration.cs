@@ -42,6 +42,27 @@ namespace ozakboy.NLOG
             bool EnableAsyncLogging { get; }
             bool EnableConsoleOutput { get; }
             IAsyncLogOptions AsyncOptions { get; }
+
+            /// <summary>
+            /// v3.0+ 是否啟用全域意外攔截（預設 false）
+            /// AppDomain.UnhandledException + TaskScheduler.UnobservedTaskException 自動 log Fatal
+            /// </summary>
+            bool EnableGlobalExceptionCapture { get; }
+
+            /// <summary>
+            /// v3.0+ FileStreamPool 同時保持開啟的檔案上限（LRU 自動關閉冷檔，預設 100）
+            /// </summary>
+            int MaxOpenFileStreams { get; }
+
+            /// <summary>
+            /// v3.0+ 持久化 FileStream 定期 flush 至磁碟的間隔（毫秒，預設 100ms）
+            /// </summary>
+            int DiskFlushIntervalMs { get; }
+
+            /// <summary>
+            /// v3.0+ queue 滿時 drop oldest 的通知 callback（純通知，使用者通常只計數）
+            /// </summary>
+            Action OnDropped { get; }
         }
 
         private class ReadOnlyLogOptions : ILogOptions
@@ -58,8 +79,12 @@ namespace ozakboy.NLOG
             public string LogPath => _options.LogPath;
             public bool EnableAsyncLogging => _options.EnableAsyncLogging;
             public bool EnableConsoleOutput => _options.EnableConsoleOutput;
-            public ILogTypeDirectories TypeDirectories =>new ReadOnlyLogTypeDirectories(_options.TypeDirectories);
+            public ILogTypeDirectories TypeDirectories => new ReadOnlyLogTypeDirectories(_options.TypeDirectories);
             public IAsyncLogOptions AsyncOptions => new ReadOnlyAsyncLogOptions(_options.AsyncOptions);
+            public bool EnableGlobalExceptionCapture => _options.EnableGlobalExceptionCapture;
+            public int MaxOpenFileStreams => _options.MaxOpenFileStreams;
+            public int DiskFlushIntervalMs => _options.DiskFlushIntervalMs;
+            public Action OnDropped => _options.OnDropped;
         }
 
         public interface ILogTypeDirectories
@@ -195,7 +220,7 @@ namespace ozakboy.NLOG
             public int FlushIntervalMs
             {
                 get => _flushIntervalMs;
-                set => _flushIntervalMs = Math.Max(100, Math.Min(10000, value));
+                set => _flushIntervalMs = Math.Max(10, Math.Min(10000, value));
             }
         }
 
@@ -239,6 +264,44 @@ namespace ozakboy.NLOG
             /// 是否在控制台輸出
             /// </summary>
             public bool EnableConsoleOutput { get; set; } = true;
+
+            /// <summary>
+            /// v3.0+ 是否啟用全域意外攔截
+            /// 訂閱 AppDomain.UnhandledException 與 TaskScheduler.UnobservedTaskException
+            /// 任何未攔截的例外都會自動以 Fatal 級別寫入 log
+            /// 預設 false（避免函式庫副作用，使用者明確 opt-in）
+            /// </summary>
+            public bool EnableGlobalExceptionCapture { get; set; } = false;
+
+            private int _maxOpenFileStreams = 100;
+            /// <summary>
+            /// v3.0+ FileStreamPool 同時保持開啟的檔案上限
+            /// 超過時關閉最久未寫入（LRU），預設 100
+            /// 範圍 [4, 4096]
+            /// </summary>
+            public int MaxOpenFileStreams
+            {
+                get => _maxOpenFileStreams;
+                set => _maxOpenFileStreams = Math.Max(4, Math.Min(4096, value));
+            }
+
+            private int _diskFlushIntervalMs = 100;
+            /// <summary>
+            /// v3.0+ 持久化 FileStream 定期 flush 至磁碟的間隔（ms）
+            /// 太小會增加 syscall 成本，太大會在 crash 時丟失更多資料
+            /// 預設 100ms，範圍 [10, 10000]
+            /// </summary>
+            public int DiskFlushIntervalMs
+            {
+                get => _diskFlushIntervalMs;
+                set => _diskFlushIntervalMs = Math.Max(10, Math.Min(10000, value));
+            }
+
+            /// <summary>
+            /// v3.0+ queue 滿時 drop oldest 後觸發的 callback
+            /// 通常用於計數丟棄量，請保持 callback body 極輕量（會在 dispatcher 執行緒呼叫）
+            /// </summary>
+            public Action OnDropped { get; set; }
 
             /// <summary>
             /// 設定檔案大小的便捷方法（以 MB 為單位）
