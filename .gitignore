@@ -243,3 +243,6 @@ AI-Development-Guidelines.md
 STRATEGIC-DECISIONS.md
 .claude/
 
+# BenchmarkDotNet 輸出（會在每次跑 benchmark 後重生成，不該入版控）
+BenchmarkDotNet.Artifacts/
+
