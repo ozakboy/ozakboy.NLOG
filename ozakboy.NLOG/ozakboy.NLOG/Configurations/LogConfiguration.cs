@@ -389,6 +389,12 @@ namespace ozakboy.NLOG
             }
             configure?.Invoke(_currentOptions);
             _isInitialized = true;
+
+            // v3.0：啟用全域意外攔截（如果使用者明確 opt-in）
+            if (_currentOptions.EnableGlobalExceptionCapture)
+            {
+                Core.GlobalExceptionCapture.Enable();
+            }
         }
 
         /// <summary>

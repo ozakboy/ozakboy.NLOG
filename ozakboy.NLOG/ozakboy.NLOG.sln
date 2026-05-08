@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ozakboy.NLOG", "ozakboy.NLO
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ozakboy.NLOG.Test", "ozakboy.NLOG.Test\ozakboy.NLOG.Test.csproj", "{AE0ED0B3-F0DB-47F5-9A80-09200932B174}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ozakboy.NLOG.Tests", "ozakboy.NLOG.Tests\ozakboy.NLOG.Tests.csproj", "{C8F5A1E0-3B22-4D1A-B7F0-2A6E8B3D9F11}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{AE0ED0B3-F0DB-47F5-9A80-09200932B174}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AE0ED0B3-F0DB-47F5-9A80-09200932B174}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AE0ED0B3-F0DB-47F5-9A80-09200932B174}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8F5A1E0-3B22-4D1A-B7F0-2A6E8B3D9F11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8F5A1E0-3B22-4D1A-B7F0-2A6E8B3D9F11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8F5A1E0-3B22-4D1A-B7F0-2A6E8B3D9F11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8F5A1E0-3B22-4D1A-B7F0-2A6E8B3D9F11}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

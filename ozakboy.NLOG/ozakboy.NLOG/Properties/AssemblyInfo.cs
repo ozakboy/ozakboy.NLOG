@@ -20,5 +20,8 @@ using System.Resources;
 // 混淆設定
 [assembly: Obfuscation(Feature = "all")]
 
+// 讓單元測試專案可存取 internal 成員（用於測試 LogFormatter / LogItem 等內部類型）
+[assembly: InternalsVisibleTo("ozakboy.NLOG.Tests")]
+
 // 如果需要排除某些類別不被混淆,可以加入以下設定
 // [assembly: Obfuscation(Feature = "rename", Exclude = true, ApplyToMembers = true, Scope = "type", Target = "ozakboy.NLOG.LOG")]

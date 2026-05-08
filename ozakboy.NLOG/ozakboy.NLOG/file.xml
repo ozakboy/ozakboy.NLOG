@@ -383,6 +383,29 @@
             shutdown：flush + 關閉所有 stream
             </summary>
         </member>
+        <member name="T:ozakboy.NLOG.Core.GlobalExceptionCapture">
+            <summary>
+            全域意外攔截器 - 訂閱 AppDomain.UnhandledException 與 TaskScheduler.UnobservedTaskException，
+            將任何未被攔截的例外以 Fatal 等級同步寫入 log（含 immediate flush 確保 crash 前落盤）。
+            Global exception capture - logs any unhandled exception synchronously with immediate flush.
+            </summary>
+            <remarks>
+            v3.0 引入：使用者透過 <c>LogOptions.EnableGlobalExceptionCapture = true</c> 啟用，預設 false。
+            函式庫不主動接管全域例外處理，避免與宿主應用既有 handler 衝突；採明確 opt-in 設計。
+            不涵蓋 WPF DispatcherUnhandledException / WinForms ThreadException / ASP.NET Core 等 UI/middleware 路徑，
+            因為函式庫層級無法取得這些 framework 物件，需由宿主應用自行 hook。
+            </remarks>
+        </member>
+        <member name="M:ozakboy.NLOG.Core.GlobalExceptionCapture.Enable">
+            <summary>
+            啟用全域意外攔截（idempotent，重複呼叫無副作用）。
+            </summary>
+        </member>
+        <member name="M:ozakboy.NLOG.Core.GlobalExceptionCapture.Disable">
+            <summary>
+            停用全域意外攔截。
+            </summary>
+        </member>
         <member name="T:ozakboy.NLOG.Core.LogFormatter">
             <summary>
             日誌格式化處理器 - 將 LogItem 轉為要寫入檔案的單行字串。
