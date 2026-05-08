@@ -118,9 +118,10 @@ If you cloned the source repo:
 
 | v2.x | v3.0 |
 |------|------|
-| `ozakboy.NLOG/ozakboy.NLOG/ozakboy.NLOG.sln` | `ozakboy.NLOG/OzaLog.sln` |
-| `ozakboy.NLOG/ozakboy.NLOG/` (project folder) | `ozakboy.NLOG/OzaLog/` |
-| `ozakboy.NLOG/ozakboy.NLOG.csproj` | `OzaLog.csproj` |
+| `ozakboy.NLOG/ozakboy.NLOG/ozakboy.NLOG.sln` | `OzaLog/OzaLog.sln` |
+| `ozakboy.NLOG/ozakboy.NLOG/` (solution folder) | `OzaLog/` |
+| `ozakboy.NLOG/ozakboy.NLOG/ozakboy.NLOG/` (project folder) | `OzaLog/OzaLog/` |
+| `ozakboy.NLOG.csproj` | `OzaLog.csproj` |
 | `NLOG.cs` (filename) | `LOG.cs` |
 
 ## 6. If you cannot migrate now
