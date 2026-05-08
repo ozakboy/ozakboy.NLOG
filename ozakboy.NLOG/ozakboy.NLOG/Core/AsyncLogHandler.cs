@@ -81,15 +81,13 @@ namespace ozakboy.NLOG.Core
             // 釋放 signal；若已被釋放過 dispatcher 仍在處理，本 release 是無傷的（會在 WaitAsync 等待時立刻通過）
             try { _signal.Release(); } catch (SemaphoreFullException) { }
 
-            // 重要級別 / 立即 flush：插隊喚醒 dispatcher 處理（dispatcher 路徑不阻塞呼叫端）
-            if (item.RequireImmediateFlush || item.Level >= LogLevel.Error)
+            // 重要級別 / 立即 flush：直接同步寫入 + flush 確保落盤（不阻塞 dispatcher）
+            // ⚠️ 用明確等式判斷，避免 LogLevel.CustomName=99 被 >= Fatal 條件誤判為高嚴重性
+            bool isAutoFlush = item.Level == LogLevel.Error || item.Level == LogLevel.Fatal;
+            if (item.RequireImmediateFlush || isAutoFlush)
             {
-                // 等不到 dispatcher → 同步處理本筆（含 immediate flush）以保證落盤
-                if (item.RequireImmediateFlush || item.Level >= LogLevel.Fatal)
-                {
-                    LogText.Write(in item);
-                    FileStreamPool.Flush(item.Level, item.Name);
-                }
+                LogText.Write(in item);
+                FileStreamPool.Flush(item.Level, item.Name);
             }
         }
 

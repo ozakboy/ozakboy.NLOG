@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ozakboy.NLOG.Test", "ozakbo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ozakboy.NLOG.Tests", "ozakboy.NLOG.Tests\ozakboy.NLOG.Tests.csproj", "{C8F5A1E0-3B22-4D1A-B7F0-2A6E8B3D9F11}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ozakboy.NLOG.Benchmarks", "ozakboy.NLOG.Benchmarks\ozakboy.NLOG.Benchmarks.csproj", "{D7A8B2C3-4E5F-4A1B-9C2D-3E4F5A6B7C8D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{C8F5A1E0-3B22-4D1A-B7F0-2A6E8B3D9F11}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C8F5A1E0-3B22-4D1A-B7F0-2A6E8B3D9F11}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C8F5A1E0-3B22-4D1A-B7F0-2A6E8B3D9F11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7A8B2C3-4E5F-4A1B-9C2D-3E4F5A6B7C8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7A8B2C3-4E5F-4A1B-9C2D-3E4F5A6B7C8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7A8B2C3-4E5F-4A1B-9C2D-3E4F5A6B7C8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7A8B2C3-4E5F-4A1B-9C2D-3E4F5A6B7C8D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
