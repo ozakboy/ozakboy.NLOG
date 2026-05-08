@@ -233,3 +233,12 @@ _Pvt_Extensions
 # FAKE - F# Make
 .fake/
 
+################################################################################
+# AI 助理本地文件（不入版控；CHANGELOG.md 為面向使用者的公開文件，需入版控）
+# AI assistant-local docs (excluded from VCS; CHANGELOG.md is user-facing and tracked)
+################################################################################
+CLAUDE.md
+AI.md
+AI-Development-Guidelines.md
+.claude/
+
