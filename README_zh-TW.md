@@ -1,330 +1,174 @@
-# Ozakboy.NLOG
+# OzaLog
 
-[![nuget](https://img.shields.io/badge/nuget-ozakboy.NLOG-blue)](https://www.nuget.org/packages/Ozakboy.NLOG/) 
-[![github](https://img.shields.io/badge/github-ozakboy.NLOG-blue)](https://github.com/ozakboy/ozakboy.NLOG/)
+[![nuget](https://img.shields.io/badge/nuget-OzaLog-blue)](https://www.nuget.org/packages/OzaLog/)
+[![github](https://img.shields.io/badge/github-OzaLog-blue)](https://github.com/ozakboy/OzaLog/)
 
-[English](README.md) | [繁體中文](README_zh-TW.md) 
+[English](README.md) | [繁體中文](README_zh-TW.md)
 
-輕量級且高效能的日誌記錄工具，提供異步寫入、智能檔案管理和豐富的配置選項。專為 .NET 應用程式設計的本地日誌解決方案。
+> **免責聲明**：OzaLog 與 [NLog](https://www.nuget.org/packages/NLog)（jkowalski 維護的套件）**完全沒有關係**。本套件為獨立函式庫。
+>
+> **從 `Ozakboy.NLOG` v2.x 升級？** 請看 [MIGRATION.md](MIGRATION.md)。舊套件已棄用並更名為 `OzaLog`。
+
+極簡的 .NET 本地檔案 logging 函式庫，採用最簡單的靜態 API。不需 DI、不需 LoggerFactory，net8+ 零 NuGet 依賴。為高並發多執行緒場景設計（例如加密貨幣報價串流）。
+
+## 為什麼選 OzaLog
+
+- **API 極簡** — `LOG.Info_Log("hello")` 一行就能用，不需任何設定
+- **單一目的** — 只做本地檔案 logging，沒有抽象層
+- **零依賴** — net8+ 目標完全不需 NuGet
+- **HFT 等級熱路徑** — 持久化 FileStream pool + LRU 上限 + 1ms 時間戳快取 + struct 隊列 + drop oldest 反壓
+- **HFT 場景下比 NLog 與 Serilog 都快**（見下方 [Benchmarks](#benchmarks)）
+
+## OzaLog 不是
+
+- ❌ 不是 `Microsoft.Extensions.Logging` provider — 不支援 `ILogger<T>` 注入
+- ❌ 不是結構化 logger — 不捕捉 `{Property}` placeholder
+- ❌ 不是多目標 logger — 只寫檔（沒有 Console / Database / 遠端 sink）
+- ❌ 不能用 XML / appsettings.json 配置 — 只支援程式內配置
+
+如果以上任一是硬性需求，請改用 NLog 或 Serilog。
 
 ## 支援框架
 
-- .NET Framework 4.6.2
-- .NET 6.0
-- .NET 7.0
-- .NET 8.0
-- .NET Standard 2.0/2.1
+- .NET 8.0 / 9.0 / 10.0（LTS + 當前）
+- .NET Standard 2.0 / 2.1（舊版相容）
 
-## 主要特點
-
-### 核心功能
-- 📝 自動建立日誌檔案和目錄結構
-- 🔄 支援異步日誌寫入，提升應用程式效能
-- ⚡ 智能批次處理和隊列管理
-- 🔍 詳細的異常資訊記錄和序列化
-- 📊 多層級日誌支援
-- 🛡️ 執行緒安全設計
-
-### 進階特性
-- ⚙️ 靈活的配置系統
-- 📂 自定義日誌目錄結構
-- 🔄 自動檔案分割和管理
-- ⏰ 可配置的日誌保留期限
-- 💾 智能檔案大小管理
-- 🎯 支援自定義日誌類型
-- 🖥️ 可選的控制台輸出
+> **OzaLog v3.0 已移除**：.NET Framework 4.6.2、.NET 6.0、.NET 7.0（皆已 EOL）。
 
 ## 安裝
 
-透過 NuGet Package Manager：
 ```bash
-Install-Package Ozakboy.NLOG
+dotnet add package OzaLog
 ```
 
-或使用 .NET CLI：
+或使用 Package Manager Console：
+
 ```bash
-dotnet add package Ozakboy.NLOG
+Install-Package OzaLog
 ```
 
-## 快速入門
+## 快速開始
 
-### 基本配置
 ```csharp
-LOG.Configure(options => {
-    options.KeepDays = -7;                    // 保留最近 7 天的日誌
-    options.SetFileSizeInMB(50);              // 設定單個檔案大小上限為 50MB
-    options.EnableAsyncLogging = true;         // 啟用異步寫入
-    options.EnableConsoleOutput = true;        // 啟用控制台輸出
-    
-    // 配置異步選項
-    options.ConfigureAsync(async => {
-        async.MaxBatchSize = 100;              // 每批次最多處理 100 條日誌
-        async.MaxQueueSize = 10000;            // 隊列最大容量
-        async.FlushIntervalMs = 1000;          // 每秒寫入一次
+using OzaLog;
+
+LOG.Info_Log("Hello, World!");
+LOG.Error_Log("發生錯誤");
+LOG.CustomName_Log("BTC", "tick: 67890.12");
+```
+
+就這樣 — 不需呼叫 Configure（預設值即可運作）。需進階配置時：
+
+```csharp
+LOG.Configure(o =>
+{
+    o.KeepDays = -7;                          // 保留最近 7 天的 log
+    o.SetFileSizeInMB(50);                    // 單檔超過 50MB 自動分割
+    o.EnableAsyncLogging = true;              // 預設 true
+    o.EnableConsoleOutput = true;             // 同時輸出到 console
+    o.MaxOpenFileStreams = 100;               // LRU 上限
+    o.DiskFlushIntervalMs = 100;              // 定期 flush 間隔
+    o.EnableGlobalExceptionCapture = false;   // 是否啟用全域意外攔截（預設 false）
+    o.OnDropped = () => Interlocked.Increment(ref _dropCount);
+    o.ConfigureAsync(a =>
+    {
+        a.MaxBatchSize = 1000;
+        a.MaxQueueSize = 100_000;
+        a.FlushIntervalMs = 100;
     });
 });
 ```
 
-### 基本用法
+## 檔案配置
+
+```
+{AppRoot}/
+└── logs/
+    └── 20260509/                 # yyyyMMdd 日期資料夾
+        └── LogFiles/             # 類別子資料夾（可自訂）
+            ├── Info_Log.txt
+            ├── Error_Log.txt
+            ├── BTC_Log.txt       # CustomName log 寫到這
+            └── ETH_Log.txt
+```
+
+用 `options.LogPath` 改根目錄，用 `options.TypeDirectories.*Path` 給每個層級獨立資料夾。
+
+## 寫入方法
+
+每個層級都有這 5 個多載：
 
 ```csharp
-// 記錄不同級別的日誌
-LOG.Trace_Log("詳細追蹤資訊");
-LOG.Debug_Log("除錯資訊");
-LOG.Info_Log("一般資訊");
-LOG.Warn_Log("警告訊息");
-LOG.Error_Log("錯誤資訊");
-LOG.Fatal_Log("致命錯誤");
-
-// 記錄帶有參數的日誌
-LOG.Info_Log("使用者 {0} 執行了 {1} 操作", new string[] { "admin", "login" });
-
-// 記錄物件
-var data = new { Id = 1, Name = "Test" };
-LOG.Info_Log("數據記錄", data);
-
-// 記錄異常
-try {
-    // 程式碼
-} catch (Exception ex) {
-    LOG.Error_Log(ex);
-}
-
-// 自定義日誌類型
-LOG.CustomName_Log("API", "外部服務呼叫");
+LOG.Info_Log(string message);
+LOG.Info_Log(string message, bool writeTxt);
+LOG.Info_Log(string message, string[] args, bool writeTxt = true, bool immediateFlush = false);
+LOG.Info_Log<T>(T obj, bool writeTxt = true, bool immediateFlush = false) where T : class;
+LOG.Info_Log<T>(string message, T obj, bool writeTxt = true, bool immediateFlush = false) where T : class;
 ```
 
-## 日誌檔案管理
+可用層級：`Trace_Log` / `Debug_Log` / `Info_Log` / `Warn_Log` / `Error_Log` / `Fatal_Log`。
 
-### 預設目錄結構
-```
-應用程式根目錄/
-└── logs/                          # 預設根目錄（可通過 LogPath 修改）
-    └── yyyyMMdd/                  # 日期目錄
-        └── LogFiles/              # 預設日誌檔案目錄（可通過 TypeDirectories.DirectoryPath 修改）
-            └── [LogType]_Log.txt  # 日誌檔案
-```
-
-### 自定義目錄結構
-可以通過配置為不同級別的日誌指定獨立的目錄：
+自訂 log 類型：
 
 ```csharp
-LOG.Configure(options => {
-    // 修改根目錄
-    options.LogPath = "CustomLogs";  // 預設是 "logs"
-    
-    // 為不同級別的日誌配置獨立目錄
-    options.TypeDirectories.DirectoryPath = "AllLogs";     // 預設目錄，如未指定特定級別則使用此目錄
-    options.TypeDirectories.ErrorPath = "ErrorLogs";       // 錯誤日誌專用目錄
-    options.TypeDirectories.InfoPath = "InfoLogs";         // 信息日誌專用目錄
-    options.TypeDirectories.WarnPath = "WarningLogs";      // 警告日誌專用目錄
-    options.TypeDirectories.DebugPath = "DebugLogs";       // 調試日誌專用目錄
-    options.TypeDirectories.TracePath = "TraceLogs";       // 追蹤日誌專用目錄
-    options.TypeDirectories.FatalPath = "FatalLogs";       // 致命錯誤日誌專用目錄
-    options.TypeDirectories.CustomPath = "CustomLogs";     // 自定義類型日誌專用目錄
-});
+LOG.CustomName_Log("BTC", "tick: 67890.12");        // → BTC_Log.txt
+LOG.CustomName_Log("API", "外部呼叫");              // → API_Log.txt
 ```
 
-配置後的目錄結構示例：
-```
-應用程式根目錄/
-└── CustomLogs/                    # 自定義根目錄
-    └── yyyyMMdd/                  # 日期目錄
-        ├── ErrorLogs/             # 錯誤日誌目錄
-        │   └── Error_Log.txt
-        ├── InfoLogs/              # 信息日誌目錄
-        │   └── Info_Log.txt
-        ├── WarningLogs/           # 警告日誌目錄
-        │   └── Warn_Log.txt
-        └── AllLogs/               # 預設目錄（未特別指定的日誌類型）
-            └── [LogType]_Log.txt
-```
+## 異常記錄
 
-### 檔案命名規則
-- 基本格式：`[LogType]_Log.txt`
-- 分割檔案：`[LogType]_part[N]_Log.txt`
-- 自定義日誌：`[CustomName]_Log.txt`
-
-### 檔案大小管理
 ```csharp
-LOG.Configure(options => {
-    // 設定單個檔案大小上限（以 MB 為單位）
-    options.SetFileSizeInMB(50);  // 檔案達到 50MB 時自動分割
-});
-```
-
-當檔案超過設定的大小限制時，會自動建立新的分割檔案：
-- 第一個分割檔案：`[LogType]_part1_Log.txt`
-- 第二個分割檔案：`[LogType]_part2_Log.txt`
-- 以此類推...
-
-### 範例使用場景
-
-1. 所有日誌統一管理：
-```csharp
-LOG.Configure(options => {
-    options.LogPath = "logs";
-    options.TypeDirectories.DirectoryPath = "LogFiles";
-});
-```
-
-2. 錯誤日誌獨立存放：
-```csharp
-LOG.Configure(options => {
-    options.LogPath = "logs";
-    options.TypeDirectories.ErrorPath = "CriticalErrors";
-    options.TypeDirectories.FatalPath = "CriticalErrors";
-});
-```
-
-3. 完全分離的日誌系統：
-```csharp
-LOG.Configure(options => {
-    options.LogPath = "SystemLogs";
-    options.TypeDirectories.ErrorPath = "Errors";
-    options.TypeDirectories.InfoPath = "Information";
-    options.TypeDirectories.WarnPath = "Warnings";
-    options.TypeDirectories.DebugPath = "Debugging";
-    options.TypeDirectories.TracePath = "Traces";
-    options.TypeDirectories.FatalPath = "Critical";
-    options.TypeDirectories.CustomPath = "Custom";
-});
-```
-
-### 自動清理機制
-```csharp
-// 設定日誌保留天數
-LOG.Configure(options => {
-    options.KeepDays = -30; // 保留最近 30 天的日誌
-});
-```
-
-## 異常處理功能
-
-### 詳細的異常記錄
-```csharp
-try {
-    // 您的程式碼
-} catch (Exception ex) {
-    // 記錄完整的異常資訊，包括：
-    // - 異常類型和訊息
-    // - 堆疊追蹤
-    // - 內部異常
-    // - 額外屬性
-    LOG.Error_Log(ex);
+try { /* 程式碼 */ }
+catch (Exception ex)
+{
+    LOG.Error_Log(ex);                            // 自動序列化為 JSON
+    LOG.Error_Log("操作上下文", ex);              // 含自訂訊息
 }
 ```
 
-### 自定義異常資訊
+異常細節（Type、Message、StackTrace、InnerException、Data dictionary、額外屬性）會自動捕捉。
+
+## 全域意外攔截（opt-in）
+
 ```csharp
-try {
-    // 您的程式碼
-} catch (Exception ex) {
-    // 添加自定義訊息
-    LOG.Error_Log("資料處理失敗", ex);
-    
-    // 同時記錄相關資料
-    var contextData = new { UserId = "123", Operation = "DataProcess" };
-    LOG.Error_Log("操作上下文", contextData);
-}
+LOG.Configure(o => o.EnableGlobalExceptionCapture = true);
 ```
 
-### 異常序列化
-```csharp
-try {
-    // 您的程式碼
-} catch (Exception ex) {
-    // 異常會被自動序列化為結構化的 JSON 格式
-    LOG.Error_Log(ex);
-    
-    // 或者與其他資訊一起序列化
-    var errorContext = new {
-        Exception = ex,
-        TimeStamp = DateTime.Now,
-        Environment = "Production"
-    };
-    LOG.Error_Log(errorContext);
-}
-```
+訂閱 `AppDomain.UnhandledException` 與 `TaskScheduler.UnobservedTaskException`，將任何未攔截的例外以 `Fatal` 等級**同步寫入並 immediate flush**，確保 crash 前 log 落盤。
 
-## 即時寫入模式
+> 注意：本功能不涵蓋 WPF/WinForms UI thread 異常與 ASP.NET Core middleware 異常 — 那些需要應用程式自行 hook。
 
-### 同步即時寫入
-```csharp
-// 使用 immediateFlush 參數強制即時寫入
-LOG.Error_Log("重要錯誤", new string[] { "error_details" }, true, true);
+## Benchmarks
 
-// 用於自定義日誌
-LOG.CustomName_Log("Critical", "系統異常", new string[] { "error_code" }, true, true);
-```
+對 ZLogger 2.5.10、ZeroLog 2.6.1、Serilog 4.2.0 + Sinks.File 6.0.0 比較。.NET 10.0.7、AMD Ryzen 9 9950X3D、BenchmarkDotNet 0.14：
 
-### 異步即時寫入配置
-```csharp
-LOG.Configure(options => {
-    options.EnableAsyncLogging = true;
-    options.ConfigureAsync(async => {
-        async.FlushIntervalMs = 100;     // 縮短寫入間隔
-        async.MaxBatchSize = 1;          // 設定最小批次大小
-        async.MaxQueueSize = 1000;       // 設定適當的隊列大小
-    });
-});
+### S1 — 單筆短訊息
 
-// Error 和 Fatal 級別的日誌會自動觸發即時寫入
-LOG.Error_Log("嚴重錯誤");
-LOG.Fatal_Log("系統崩潰");
-```
+| Method | Mean | Allocated |
+|--------|------|-----------|
+| **OzaLog** | **65.96 ns** | 151 B |
+| ZLogger | 219.53 ns | 278 B |
+| ZeroLog | 12.19 ns | 0 B |
+| Serilog | 168.87 ns | 160 B |
 
-### 條件式即時寫入
-```csharp
-// 根據條件決定是否即時寫入
-void LogMessage(string message, bool isCritical) {
-    if (isCritical) {
-        LOG.Error_Log(message, new string[] { }, true, true);  // 即時寫入
-    } else {
-        LOG.Info_Log(message);  // 一般寫入
-    }
-}
-```
+### S3 — HFT 8 thread × 50 商品 × 2000 logs = 80 萬筆
 
-## 效能優化
+| Method | Mean | Allocated |
+|--------|------|-----------|
+| **OzaLog** | **3,047 μs** | 3.94 MB |
+| ZLogger | 4,996 μs | 5.21 KB |
+| ZeroLog | 649 μs | 3.35 KB |
+| Serilog | 11,092 μs | 8.27 MB |
 
-- 異步寫入避免 I/O 阻塞
-- 智能批次處理減少磁碟操作
-- 優化的序列化機制
-- 執行緒安全的隊列管理
-- 自動檔案管理避免過大檔案
+**結論**：OzaLog 在兩個場景都**比 ZLogger 與 Serilog 快**。ZeroLog 純效能贏（用 source generator 達到真零分配），但 OzaLog 的靜態 API 更簡單。
 
-## 最佳實踐
+→ 自己跑 benchmark：`dotnet run -c Release --project OzaLog.Benchmarks`
 
-1. 根據應用程式需求選擇同步或異步模式
-2. 適當配置批次大小和寫入間隔
-3. 根據日誌量調整檔案大小限制
-4. 設定合理的日誌保留期限
-5. 利用自定義類型分類管理日誌
-6. 在關鍵節點記錄必要的異常資訊
-
-## 疑難排解
-
-常見問題處理：
-
-1. 檔案存取權限問題
-   - 確保應用程式具有寫入權限
-   - 檢查資料夾存取權限設定
-
-2. 效能問題
-   - 調整異步配置參數
-   - 檢查日誌檔案大小設定
-   - 優化寫入頻率
-
-3. 檔案管理
-   - 定期檢查日誌清理狀況
-   - 監控磁碟空間使用
-
-## 授權條款
+## 授權
 
 MIT License
 
-## 支援與回報
+## 回報與支援
 
-- GitHub Issues: [回報問題](https://github.com/ozakboy/ozakboy.NLOG/issues)
-- Pull Requests: [貢獻代碼](https://github.com/ozakboy/ozakboy.NLOG/pulls)
+- GitHub Issues：[回報問題](https://github.com/ozakboy/OzaLog/issues)
+- Pull Requests：[貢獻程式碼](https://github.com/ozakboy/OzaLog/pulls)

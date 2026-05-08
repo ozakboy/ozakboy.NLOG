@@ -1,0 +1,91 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0;net9.0;net10.0</TargetFrameworks>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageId>OzaLog</PackageId>
+    <AssemblyName>OzaLog</AssemblyName>
+    <PackageVersion>2.1.0</PackageVersion>
+    <RootNamespace>OzaLog</RootNamespace>
+    <LangVersion>latest</LangVersion>
+
+
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+
+    <Features>strict</Features>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <Description>OzaLog — a lean, lightweight .NET local file logging library with a simplest possible static API. No dependency injection required, no LoggerFactory, zero NuGet dependencies on net8+. Designed for high-throughput multi-threaded scenarios such as cryptocurrency tick streams. Note: OzaLog is NOT related to NLog (jkowalski's package); the previous version "Ozakboy.NLOG" has been deprecated and renamed to OzaLog.</Description>
+    <PackageTags>logging;log;logger;dotnet;csharp;async-logging;file-logger;local-logging;hft;multi-threaded;structured;exception-handling;net-standard;log-rotation;thread-safe;multi-level-logging;configurable-logging;file-management;async-io;batch-processing;queue-management;zero-dependency</PackageTags>
+
+    <Title>OzaLog — lean local file logger for .NET</Title>
+    <!-- PackageReleaseNotes 在每次發版時由 uplog 指令填入；此區留空避免混淆 -->
+    <PackageReleaseNotes>See CHANGELOG.md for release notes. See MIGRATION.md if upgrading from Ozakboy.NLOG v2.x.</PackageReleaseNotes>
+
+
+
+    <!-- 版權宣告 -->
+    <Authors>ozakboy</Authors>
+
+    <!-- 專案連結 -->
+    <PackageProjectUrl>https://github.com/ozakboy/OzaLog</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ozakboy/OzaLog</RepositoryUrl>
+    <RepositoryType>github</RepositoryType>
+
+    <!-- 文件產生設定 -->
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <DocumentationFile>file.xml</DocumentationFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+
+    <!-- 授權設定 -->
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|AnyCPU'">
+    <WarningLevel>6</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.1|AnyCPU'">
+    <WarningLevel>6</WarningLevel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\..\README_zh-TW.md"></None>
+  </ItemGroup>
+
+  <!--
+    System.Text.Json (STJ) 依賴策略：
+    • net8.0 / net9.0 / net10.0：STJ 已內建於 BCL，零 NuGet 依賴
+    • netstandard2.0 / netstandard2.1：BCL 不含 STJ，需透過 NuGet 引入
+  -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1' ">
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

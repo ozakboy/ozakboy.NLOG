@@ -1,330 +1,174 @@
-# Ozakboy.NLOG
+# OzaLog
 
-[![nuget](https://img.shields.io/badge/nuget-ozakboy.NLOG-blue)](https://www.nuget.org/packages/Ozakboy.NLOG/) 
-[![github](https://img.shields.io/badge/github-ozakboy.NLOG-blue)](https://github.com/ozakboy/ozakboy.NLOG/)
+[![nuget](https://img.shields.io/badge/nuget-OzaLog-blue)](https://www.nuget.org/packages/OzaLog/)
+[![github](https://img.shields.io/badge/github-OzaLog-blue)](https://github.com/ozakboy/OzaLog/)
 
-[English](README.md) | [繁體中文](README_zh-TW.md) 
+[English](README.md) | [繁體中文](README_zh-TW.md)
 
-A lightweight and high-performance logging tool that provides asynchronous writing, intelligent file management, and rich configuration options. A local logging solution designed specifically for .NET applications.
+> **Disclaimer:** OzaLog is **not related** to [NLog](https://www.nuget.org/packages/NLog) (jkowalski's package). This is a separate, independent library.
+>
+> **Migrating from `Ozakboy.NLOG` v2.x?** See [MIGRATION.md](MIGRATION.md). The previous package has been deprecated and renamed to `OzaLog`.
+
+A lean, lightweight .NET local file logging library with the simplest possible static API. No DI, no LoggerFactory, zero NuGet dependencies on net8+. Designed for high-throughput multi-threaded scenarios such as cryptocurrency tick streams.
+
+## Why OzaLog
+
+- **Simplest possible API** — `LOG.Info_Log("hello")` works without any setup
+- **Single purpose** — local file logging only, no abstractions
+- **Zero dependencies** — net8+ targets have no NuGet dependencies
+- **HFT-tuned hot path** — persistent FileStream pool with LRU eviction, cached timestamp, struct-based queue, drop-oldest backpressure
+- **Faster than NLog and Serilog** in HFT-style multi-thread scenarios (see [Benchmarks](#benchmarks) below)
+
+## What OzaLog is NOT
+
+- ❌ Not a `Microsoft.Extensions.Logging` provider — does not integrate with `ILogger<T>` DI
+- ❌ Not a structured logger — no `{Property}` placeholder capture
+- ❌ Not a multi-target logger — file output only (no Console / Database / remote sinks)
+- ❌ Not configurable via XML / appsettings.json — programmatic configuration only
+
+If any of the above is a hard requirement, use NLog or Serilog instead.
 
 ## Supported Frameworks
 
-- .NET Framework 4.6.2
-- .NET 6.0
-- .NET 7.0
-- .NET 8.0
-- .NET Standard 2.0/2.1
+- .NET 8.0 / 9.0 / 10.0 (LTS + current)
+- .NET Standard 2.0 / 2.1 (legacy compatibility)
 
-## Key Features
-
-### Core Features
-- 📝 Automatic log file and directory structure creation
-- 🔄 Support for asynchronous log writing to enhance application performance
-- ⚡ Smart batch processing and queue management
-- 🔍 Detailed exception information logging and serialization
-- 📊 Multi-level logging support
-- 🛡️ Thread-safe design
-
-### Advanced Features
-- ⚙️ Flexible configuration system
-- 📂 Custom log directory structure
-- 🔄 Automatic file splitting and management
-- ⏰ Configurable log retention period
-- 💾 Smart file size management
-- 🎯 Support for custom log types
-- 🖥️ Optional console output
+> **Dropped in OzaLog v3.0**: .NET Framework 4.6.2, .NET 6.0, .NET 7.0 (all EOL).
 
 ## Installation
 
-Via NuGet Package Manager:
 ```bash
-Install-Package Ozakboy.NLOG
+dotnet add package OzaLog
 ```
 
-Or using .NET CLI:
+Or via Package Manager Console:
+
 ```bash
-dotnet add package Ozakboy.NLOG
+Install-Package OzaLog
 ```
 
 ## Quick Start
 
-### Basic Configuration
 ```csharp
-LOG.Configure(options => {
-    options.KeepDays = -7;                    // Keep logs for the last 7 days
-    options.SetFileSizeInMB(50);              // Set single file size limit to 50MB
-    options.EnableAsyncLogging = true;         // Enable asynchronous writing
-    options.EnableConsoleOutput = true;        // Enable console output
-    
-    // Configure async options
-    options.ConfigureAsync(async => {
-        async.MaxBatchSize = 100;              // Process up to 100 logs per batch
-        async.MaxQueueSize = 10000;            // Maximum queue capacity
-        async.FlushIntervalMs = 1000;          // Write once per second
+using OzaLog;
+
+LOG.Info_Log("Hello, World!");
+LOG.Error_Log("Something went wrong");
+LOG.CustomName_Log("BTC", "tick: 67890.12");
+```
+
+That's it — no Configure call required (defaults work). For advanced configuration:
+
+```csharp
+LOG.Configure(o =>
+{
+    o.KeepDays = -7;                          // keep last 7 days of logs
+    o.SetFileSizeInMB(50);                    // split files at 50 MB
+    o.EnableAsyncLogging = true;              // default true
+    o.EnableConsoleOutput = true;             // also write to console
+    o.MaxOpenFileStreams = 100;               // LRU upper bound
+    o.DiskFlushIntervalMs = 100;              // periodic flush
+    o.EnableGlobalExceptionCapture = false;   // opt-in: auto-log unhandled exceptions
+    o.OnDropped = () => Interlocked.Increment(ref _dropCount);
+    o.ConfigureAsync(a =>
+    {
+        a.MaxBatchSize = 1000;
+        a.MaxQueueSize = 100_000;
+        a.FlushIntervalMs = 100;
     });
 });
 ```
 
-### Basic Usage
+## Log File Layout
+
+```
+{AppRoot}/
+└── logs/
+    └── 20260509/                 # yyyyMMdd date folder
+        └── LogFiles/             # type subfolder (configurable)
+            ├── Info_Log.txt
+            ├── Error_Log.txt
+            ├── BTC_Log.txt       # CustomName logs go here
+            └── ETH_Log.txt
+```
+
+Use `options.LogPath` to change the root, and `options.TypeDirectories.*Path` to give each level its own folder.
+
+## Logging Methods
+
+Every level has the same 5 overloads:
 
 ```csharp
-// Log different levels
-LOG.Trace_Log("Detailed trace information");
-LOG.Debug_Log("Debug information");
-LOG.Info_Log("General information");
-LOG.Warn_Log("Warning message");
-LOG.Error_Log("Error information");
-LOG.Fatal_Log("Fatal error");
-
-// Log with parameters
-LOG.Info_Log("User {0} performed {1} operation", new string[] { "admin", "login" });
-
-// Log objects
-var data = new { Id = 1, Name = "Test" };
-LOG.Info_Log("Data record", data);
-
-// Log exceptions
-try {
-    // Code
-} catch (Exception ex) {
-    LOG.Error_Log(ex);
-}
-
-// Custom log type
-LOG.CustomName_Log("API", "External service call");
+LOG.Info_Log(string message);
+LOG.Info_Log(string message, bool writeTxt);
+LOG.Info_Log(string message, string[] args, bool writeTxt = true, bool immediateFlush = false);
+LOG.Info_Log<T>(T obj, bool writeTxt = true, bool immediateFlush = false) where T : class;
+LOG.Info_Log<T>(string message, T obj, bool writeTxt = true, bool immediateFlush = false) where T : class;
 ```
 
-## Log File Management
+Available levels: `Trace_Log` / `Debug_Log` / `Info_Log` / `Warn_Log` / `Error_Log` / `Fatal_Log`.
 
-### Default Directory Structure
-```
-Application Root/
-└── logs/                          # Default root directory (modifiable via LogPath)
-    └── yyyyMMdd/                  # Date directory
-        └── LogFiles/              # Default log file directory (modifiable via TypeDirectories.DirectoryPath)
-            └── [LogType]_Log.txt  # Log files
-```
-
-### Custom Directory Structure
-You can configure independent directories for different log levels:
+For custom log buckets:
 
 ```csharp
-LOG.Configure(options => {
-    // Modify root directory
-    options.LogPath = "CustomLogs";  // Default is "logs"
-    
-    // Configure independent directories for different levels
-    options.TypeDirectories.DirectoryPath = "AllLogs";     // Default directory for unspecified levels
-    options.TypeDirectories.ErrorPath = "ErrorLogs";       // Directory for error logs
-    options.TypeDirectories.InfoPath = "InfoLogs";         // Directory for info logs
-    options.TypeDirectories.WarnPath = "WarningLogs";      // Directory for warning logs
-    options.TypeDirectories.DebugPath = "DebugLogs";       // Directory for debug logs
-    options.TypeDirectories.TracePath = "TraceLogs";       // Directory for trace logs
-    options.TypeDirectories.FatalPath = "FatalLogs";       // Directory for fatal logs
-    options.TypeDirectories.CustomPath = "CustomLogs";     // Directory for custom type logs
-});
+LOG.CustomName_Log("BTC", "tick: 67890.12");        // → BTC_Log.txt
+LOG.CustomName_Log("API", "external call");         // → API_Log.txt
 ```
 
-Example directory structure after configuration:
-```
-Application Root/
-└── CustomLogs/                    # Custom root directory
-    └── yyyyMMdd/                  # Date directory
-        ├── ErrorLogs/             # Error logs directory
-        │   └── Error_Log.txt
-        ├── InfoLogs/              # Info logs directory
-        │   └── Info_Log.txt
-        ├── WarningLogs/           # Warning logs directory
-        │   └── Warn_Log.txt
-        └── AllLogs/               # Default directory (for unspecified log types)
-            └── [LogType]_Log.txt
-```
+## Exception Logging
 
-### File Naming Rules
-- Basic format: `[LogType]_Log.txt`
-- Split files: `[LogType]_part[N]_Log.txt`
-- Custom logs: `[CustomName]_Log.txt`
-
-### File Size Management
 ```csharp
-LOG.Configure(options => {
-    // Set single file size limit (in MB)
-    options.SetFileSizeInMB(50);  // Automatically split when file reaches 50MB
-});
-```
-
-When a file exceeds the size limit, new split files are automatically created:
-- First split file: `[LogType]_part1_Log.txt`
-- Second split file: `[LogType]_part2_Log.txt`
-- And so on...
-
-### Example Use Cases
-
-1. Unified log management:
-```csharp
-LOG.Configure(options => {
-    options.LogPath = "logs";
-    options.TypeDirectories.DirectoryPath = "LogFiles";
-});
-```
-
-2. Separate error log storage:
-```csharp
-LOG.Configure(options => {
-    options.LogPath = "logs";
-    options.TypeDirectories.ErrorPath = "CriticalErrors";
-    options.TypeDirectories.FatalPath = "CriticalErrors";
-});
-```
-
-3. Fully separated logging system:
-```csharp
-LOG.Configure(options => {
-    options.LogPath = "SystemLogs";
-    options.TypeDirectories.ErrorPath = "Errors";
-    options.TypeDirectories.InfoPath = "Information";
-    options.TypeDirectories.WarnPath = "Warnings";
-    options.TypeDirectories.DebugPath = "Debugging";
-    options.TypeDirectories.TracePath = "Traces";
-    options.TypeDirectories.FatalPath = "Critical";
-    options.TypeDirectories.CustomPath = "Custom";
-});
-```
-
-### Automatic Cleanup Mechanism
-```csharp
-// Set log retention period
-LOG.Configure(options => {
-    options.KeepDays = -30; // Keep logs for the last 30 days
-});
-```
-
-## Exception Handling Features
-
-### Detailed Exception Logging
-```csharp
-try {
-    // Your code
-} catch (Exception ex) {
-    // Log complete exception information, including:
-    // - Exception type and message
-    // - Stack trace
-    // - Inner exceptions
-    // - Additional properties
-    LOG.Error_Log(ex);
+try { /* code */ }
+catch (Exception ex)
+{
+    LOG.Error_Log(ex);                            // serialized as JSON
+    LOG.Error_Log("operation context", ex);       // with custom message
 }
 ```
 
-### Custom Exception Information
+Exception details (Type, Message, StackTrace, InnerException, Data dictionary, additional properties) are automatically captured.
+
+## Global Exception Capture (opt-in)
+
 ```csharp
-try {
-    // Your code
-} catch (Exception ex) {
-    // Add custom message
-    LOG.Error_Log("Data processing failed", ex);
-    
-    // Also log related data
-    var contextData = new { UserId = "123", Operation = "DataProcess" };
-    LOG.Error_Log("Operation context", contextData);
-}
+LOG.Configure(o => o.EnableGlobalExceptionCapture = true);
 ```
 
-### Exception Serialization
-```csharp
-try {
-    // Your code
-} catch (Exception ex) {
-    // Exception will be automatically serialized to structured JSON format
-    LOG.Error_Log(ex);
-    
-    // Or serialize with other information
-    var errorContext = new {
-        Exception = ex,
-        TimeStamp = DateTime.Now,
-        Environment = "Production"
-    };
-    LOG.Error_Log(errorContext);
-}
-```
+Subscribes to `AppDomain.UnhandledException` and `TaskScheduler.UnobservedTaskException` and logs them as `Fatal` with synchronous flush to ensure crash logs land on disk.
 
-## Immediate Write Mode
+> Note: This does not cover WPF/WinForms UI thread exceptions or ASP.NET Core middleware exceptions — those need to be hooked separately by the application.
 
-### Synchronous Immediate Write
-```csharp
-// Use immediateFlush parameter to force immediate writing
-LOG.Error_Log("Important error", new string[] { "error_details" }, true, true);
+## Benchmarks
 
-// For custom logs
-LOG.CustomName_Log("Critical", "System anomaly", new string[] { "error_code" }, true, true);
-```
+Measured against ZLogger 2.5.10, ZeroLog 2.6.1, Serilog 4.2.0 + Sinks.File 6.0.0 on .NET 10.0.7 (AMD Ryzen 9 9950X3D, BenchmarkDotNet 0.14):
 
-### Asynchronous Immediate Write Configuration
-```csharp
-LOG.Configure(options => {
-    options.EnableAsyncLogging = true;
-    options.ConfigureAsync(async => {
-        async.FlushIntervalMs = 100;     // Reduce write interval
-        async.MaxBatchSize = 1;          // Set minimum batch size
-        async.MaxQueueSize = 1000;       // Set appropriate queue size
-    });
-});
+### S1 — Single short message
 
-// Error and Fatal level logs automatically trigger immediate writing
-LOG.Error_Log("Severe error");
-LOG.Fatal_Log("System crash");
-```
+| Method | Mean | Allocated |
+|--------|------|-----------|
+| **OzaLog** | **65.96 ns** | 151 B |
+| ZLogger | 219.53 ns | 278 B |
+| ZeroLog | 12.19 ns | 0 B |
+| Serilog | 168.87 ns | 160 B |
 
-### Conditional Immediate Write
-```csharp
-// Decide whether to write immediately based on conditions
-void LogMessage(string message, bool isCritical) {
-    if (isCritical) {
-        LOG.Error_Log(message, new string[] { }, true, true);  // Immediate write
-    } else {
-        LOG.Info_Log(message);  // Normal write
-    }
-}
-```
+### S3 — HFT 8 thread × 50 products × 2000 logs = 800 K writes
 
-## Performance Optimization
+| Method | Mean | Allocated |
+|--------|------|-----------|
+| **OzaLog** | **3,047 μs** | 3.94 MB |
+| ZLogger | 4,996 μs | 5.21 KB |
+| ZeroLog | 649 μs | 3.35 KB |
+| Serilog | 11,092 μs | 8.27 MB |
 
-- Asynchronous writing to avoid I/O blocking
-- Smart batch processing to reduce disk operations
-- Optimized serialization mechanism
-- Thread-safe queue management
-- Automatic file management to avoid oversized files
+**Verdict**: OzaLog is **faster than ZLogger and Serilog** in both scenarios. ZeroLog wins on raw speed (it uses source generators for true zero-allocation), but OzaLog's static API is simpler.
 
-## Best Practices
-
-1. Choose between synchronous or asynchronous mode based on application needs
-2. Configure appropriate batch size and write intervals
-3. Adjust file size limits based on log volume
-4. Set reasonable log retention periods
-5. Use custom types for log classification
-6. Record necessary exception information at critical points
-
-## Troubleshooting
-
-Common issue handling:
-
-1. File Access Permission Issues
-   - Ensure application has write permissions
-   - Check folder access permission settings
-
-2. Performance Issues
-   - Adjust async configuration parameters
-   - Check log file size settings
-   - Optimize write frequency
-
-3. File Management
-   - Regularly check log cleanup status
-   - Monitor disk space usage
+→ Run benchmarks yourself: `dotnet run -c Release --project OzaLog.Benchmarks`
 
 ## License
 
 MIT License
 
-## Support & Reporting
+## Support
 
-- GitHub Issues: [Report Issues](https://github.com/ozakboy/ozakboy.NLOG/issues)
-- Pull Requests: [Contribute Code](https://github.com/ozakboy/ozakboy.NLOG/pulls)
+- GitHub Issues: [Report Issues](https://github.com/ozakboy/OzaLog/issues)
+- Pull Requests: [Contribute Code](https://github.com/ozakboy/OzaLog/pulls)
