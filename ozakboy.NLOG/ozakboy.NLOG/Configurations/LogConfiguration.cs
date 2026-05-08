@@ -113,7 +113,7 @@ namespace ozakboy.NLOG
                         return ErrorPath ?? DirectoryPath;
                     case LogLevel.Fatal:
                         return FatalPath ?? DirectoryPath;
-                    case LogLevel.CostomName:
+                    case LogLevel.CustomName:
                         return CustomPath ?? DirectoryPath;
                     default:
                         return CustomPath ?? DirectoryPath;

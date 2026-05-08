@@ -21,8 +21,8 @@ namespace ozakboy.NLOG
             var escapedMessage = LogFormatter.EscapeMessage(message);
             var formattedMessage = LogFormatter.FormatMessage(escapedMessage, args ?? Array.Empty<string>());
 
-            if(LogConfiguration.Current.EnableConsoleOutput)
-                Console.WriteLine(formattedMessage, args);
+            if (LogConfiguration.Current.EnableConsoleOutput)
+                Console.WriteLine(formattedMessage);
 
             if (writeTxt)
             {
@@ -255,30 +255,30 @@ namespace ozakboy.NLOG
         /// <summary>
         /// 記錄自定義類型日誌
         /// </summary>
-        public static void CustomName_Log(string name, string message) => Log(LogLevel.CostomName, name, message);
+        public static void CustomName_Log(string name, string message) => Log(LogLevel.CustomName, name, message);
 
         /// <summary>
         /// 記錄自定義類型日誌，可控制是否寫入檔案
         /// </summary>
-        public static void CustomName_Log(string name, string message, bool writeTxt) => Log(LogLevel.CostomName, name, message, writeTxt);
+        public static void CustomName_Log(string name, string message, bool writeTxt) => Log(LogLevel.CustomName, name, message, writeTxt);
 
         /// <summary>
         /// 記錄格式化的自定義類型日誌，可控制寫入選項
         /// </summary>
         public static void CustomName_Log(string name, string message, string[] args, bool writeTxt = true, bool immediateFlush = false)
-            => Log(LogLevel.CostomName, name, message, writeTxt, immediateFlush, args);
+            => Log(LogLevel.CustomName, name, message, writeTxt, immediateFlush, args);
 
         /// <summary>
         /// 記錄物件形式的自定義類型日誌
         /// </summary>
         public static void CustomName_Log<T>(string name, T obj, bool writeTxt = true, bool immediateFlush = false) where T : class
-            => LogObject(LogLevel.CostomName, obj, name, string.Empty, writeTxt, immediateFlush);
+            => LogObject(LogLevel.CustomName, obj, name, string.Empty, writeTxt, immediateFlush);
 
         /// <summary>
         /// 記錄帶有訊息的物件形式自定義類型日誌
         /// </summary>
         public static void CustomName_Log<T>(string name, string message, T obj, bool writeTxt = true, bool immediateFlush = false) where T : class
-            => LogObject(LogLevel.CostomName, obj, name, message, writeTxt, immediateFlush);
+            => LogObject(LogLevel.CustomName, obj, name, message, writeTxt, immediateFlush);
 
         #endregion
 

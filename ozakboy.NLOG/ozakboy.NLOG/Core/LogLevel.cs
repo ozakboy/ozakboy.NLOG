@@ -50,6 +50,6 @@ namespace ozakboy.NLOG.Core
         /// 自定義記錄檔 - 用於特定需求的客製化日誌類型
         /// Custom Log - Customized log type for specific requirements
         /// </summary>
-        CostomName = 99
+        CustomName = 99
     }
 }
