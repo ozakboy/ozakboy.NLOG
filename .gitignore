@@ -262,3 +262,7 @@ site/*.log
 # site/content/ 由 scripts/sync-docs.mjs 從 docs/ 自動產生,不入版控
 site/content/
 
+# pnpm-lock.yaml: 本專案 CI 走 npm + package-lock.json,pnpm-lock 不入版控避免漂移
+# 若本機要用 pnpm 也 OK,只是當你新增/移除依賴時請另外跑 npm install 同步 package-lock.json
+site/pnpm-lock.yaml
+

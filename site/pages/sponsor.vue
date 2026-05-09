@@ -65,7 +65,7 @@ async function copyAddress() {
             <p class="text-sm text-slate-600 mt-2">{{ $t('sponsor.binancePay.desc') }}</p>
             <div class="mt-4 flex justify-center sm:justify-start">
               <img
-                :src="`${baseURL}binance-pay-qr.png`"
+                :src="`${baseURL}binance-pay-qr.jpg`"
                 :alt="$t('sponsor.binancePay.title')"
                 class="w-56 h-56 border border-slate-200 rounded bg-white p-2 object-contain"
                 width="224"
