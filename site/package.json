@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "sync-docs": "node scripts/sync-docs.mjs",
+    "fix-sitemap": "node scripts/fix-sitemap.mjs",
     "predev": "node scripts/sync-docs.mjs",
     "pregenerate": "node scripts/sync-docs.mjs",
+    "postgenerate": "node scripts/fix-sitemap.mjs",
     "prebuild": "node scripts/sync-docs.mjs",
     "build": "nuxt build",
     "dev": "nuxt dev",
