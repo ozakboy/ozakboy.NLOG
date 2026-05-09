@@ -246,3 +246,16 @@ STRATEGIC-DECISIONS.md
 # BenchmarkDotNet 輸出（會在每次跑 benchmark 後重生成，不該入版控）
 BenchmarkDotNet.Artifacts/
 
+################################################################################
+# Nuxt 3 site (site/) — 介紹網站建置產物
+################################################################################
+site/node_modules/
+site/.nuxt/
+site/.output/
+site/.data/
+site/.cache/
+site/dist/
+site/.env
+site/.env.*
+site/*.log
+

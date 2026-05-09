@@ -1,0 +1,83 @@
+{
+  "header": {
+    "tagline": ".NET local file logger"
+  },
+  "nav": {
+    "docs": "Docs",
+    "benchmarks": "Benchmarks",
+    "migration": "Migration",
+    "changelog": "Changelog",
+    "sponsor": "Sponsor"
+  },
+  "home": {
+    "hero": {
+      "title": "OzaLog",
+      "subtitle": "Lean. Minimal API. HFT-grade async pipeline. A local file logging library built for .NET applications.",
+      "install": "Install Now",
+      "github": "View on GitHub"
+    },
+    "features": {
+      "title": "Core Features",
+      "items": {
+        "simple": {
+          "title": "Minimal API",
+          "desc": "One line LOG.Info_Log(\"...\") — no DI, no LoggerFactory."
+        },
+        "hft": {
+          "title": "HFT-grade Async",
+          "desc": "ConcurrentQueue + persistent FileStream pool + 1ms cached timestamp + drop-oldest backpressure."
+        },
+        "zerodep": {
+          "title": "Zero Dependencies",
+          "desc": "Zero NuGet dependencies on net8.0 / net9.0 / net10.0."
+        },
+        "thread": {
+          "title": "Thread-safe",
+          "desc": "Thread-safe by default; designed for high-throughput multi-threaded scenarios like crypto tick streams."
+        }
+      }
+    },
+    "quickstart": {
+      "title": "Quick Start",
+      "step1": "1. Install the package",
+      "step2": "2. Use immediately",
+      "step3": "3. (Optional) Configure"
+    }
+  },
+  "docs": {
+    "title": "Documentation",
+    "intro": "Pick a topic below to get started with OzaLog.",
+    "sections": {
+      "gettingStarted": "Getting Started",
+      "configuration": "Configuration",
+      "api": "API Reference",
+      "asyncPipeline": "HFT Async Architecture"
+    },
+    "wip": "Page content coming soon — see README.md in the GitHub repo."
+  },
+  "benchmarks": {
+    "title": "Benchmarks",
+    "intro": "OzaLog measured head-to-head against ZLogger, ZeroLog, and Serilog with BenchmarkDotNet.",
+    "wip": "Detailed charts coming soon — see the OzaLog.Benchmarks project in the GitHub repo."
+  },
+  "migration": {
+    "title": "v2.x → v3.0 Migration Guide",
+    "intro": "Complete guide for upgrading from Ozakboy.NLOG v2.x to OzaLog v3.0.",
+    "wip": "Full guide coming soon — see MIGRATION.md in the GitHub repo."
+  },
+  "changelog": {
+    "title": "Changelog",
+    "intro": "See CHANGELOG.md in the GitHub repo for the full history."
+  },
+  "sponsor": {
+    "title": "Sponsor",
+    "intro": "If OzaLog helps you, consider sponsoring the developer via cryptocurrency.",
+    "crypto": {
+      "title": "Cryptocurrency Wallets",
+      "btc": "Bitcoin (BTC)",
+      "eth": "Ethereum (ETH)",
+      "usdt": "USDT (TRC20)",
+      "placeholder": "(Address coming soon)"
+    }
+  }
+}

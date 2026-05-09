@@ -1,0 +1,83 @@
+{
+  "header": {
+    "tagline": ".NET 本地日誌函式庫"
+  },
+  "nav": {
+    "docs": "文件",
+    "benchmarks": "效能對比",
+    "migration": "升級指南",
+    "changelog": "版本歷史",
+    "sponsor": "贊助"
+  },
+  "home": {
+    "hero": {
+      "title": "OzaLog",
+      "subtitle": "輕量、極簡 API、HFT 級異步——專為 .NET 應用設計的本地檔案日誌函式庫。",
+      "install": "立即安裝",
+      "github": "查看 GitHub"
+    },
+    "features": {
+      "title": "核心特色",
+      "items": {
+        "simple": {
+          "title": "極簡 API",
+          "desc": "一行 LOG.Info_Log(\"...\") 即可使用,無需 DI、無需 LoggerFactory。"
+        },
+        "hft": {
+          "title": "HFT 級異步",
+          "desc": "ConcurrentQueue + 持久化 FileStream 池 + 1ms 快取時間戳 + drop-oldest 壓力控制。"
+        },
+        "zerodep": {
+          "title": "零依賴",
+          "desc": "net8.0 / net9.0 / net10.0 完全零 NuGet 依賴。"
+        },
+        "thread": {
+          "title": "線程安全",
+          "desc": "預設線程安全,支援多執行緒併發場景如加密貨幣報價串流。"
+        }
+      }
+    },
+    "quickstart": {
+      "title": "快速開始",
+      "step1": "1. 安裝套件",
+      "step2": "2. 立即使用",
+      "step3": "3. (選用) 自訂配置"
+    }
+  },
+  "docs": {
+    "title": "文件",
+    "intro": "選擇下方主題開始學習 OzaLog。",
+    "sections": {
+      "gettingStarted": "快速開始",
+      "configuration": "配置選項",
+      "api": "API 參考",
+      "asyncPipeline": "HFT 異步架構"
+    },
+    "wip": "本頁內容整理中,完整資訊請參考 GitHub repo 的 README_zh-TW.md。"
+  },
+  "benchmarks": {
+    "title": "效能對比",
+    "intro": "OzaLog 與 ZLogger / ZeroLog / Serilog 的 BenchmarkDotNet 實測對比。",
+    "wip": "詳細圖表整理中,請參考 GitHub repo 的 OzaLog.Benchmarks 專案。"
+  },
+  "migration": {
+    "title": "v2.x → v3.0 升級指南",
+    "intro": "從 Ozakboy.NLOG v2.x 升級至 OzaLog v3.0 的完整指南。",
+    "wip": "完整指南請見 GitHub repo 的 MIGRATION.md。"
+  },
+  "changelog": {
+    "title": "版本歷史",
+    "intro": "完整變更紀錄請見 GitHub repo 的 CHANGELOG_zh-TW.md。"
+  },
+  "sponsor": {
+    "title": "贊助",
+    "intro": "如果 OzaLog 對您有幫助,歡迎透過加密貨幣錢包贊助開發者。",
+    "crypto": {
+      "title": "加密貨幣錢包",
+      "btc": "Bitcoin (BTC)",
+      "eth": "Ethereum (ETH)",
+      "usdt": "USDT (TRC20)",
+      "placeholder": "(地址尚未公開,敬請期待)"
+    }
+  }
+}
