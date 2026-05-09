@@ -24,33 +24,40 @@
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 
-    <Description>OzaLog — a lean, lightweight .NET local file logging library with a simplest possible static API. No dependency injection required, no LoggerFactory, zero NuGet dependencies on net8+. Designed for high-throughput multi-threaded scenarios such as cryptocurrency tick streams. Note: OzaLog is NOT related to NLog (jkowalski's package); the previous version "Ozakboy.NLOG" has been deprecated and renamed to OzaLog.</Description>
-    <PackageTags>logging;log;logger;dotnet;csharp;async-logging;file-logger;local-logging;hft;multi-threaded;structured;exception-handling;net-standard;log-rotation;thread-safe;multi-level-logging;configurable-logging;file-management;async-io;batch-processing;queue-management;zero-dependency</PackageTags>
+    <Description>Lean .NET local file logging library with the simplest possible static API — one line LOG.Info_Log("...") and you're done, no DI, no LoggerFactory. HFT-grade async pipeline: ConcurrentQueue&lt;struct LogItem&gt; + persistent FileStream pool + 1ms cached timestamp + drop-oldest backpressure. Zero NuGet dependencies on net8.0 / net9.0 / net10.0. Designed for high-throughput multi-threaded scenarios like cryptocurrency tick streams. NOT related to NLog (jkowalski's package); the previous version "Ozakboy.NLOG" has been deprecated and renamed to OzaLog in v3.0. See https://github.com/ozakboy/OzaLog/blob/main/docs/en/migration.md for upgrade guide.</Description>
+    <PackageTags>ozalog;logging;logger;log;dotnet;csharp;nuget;async-logging;file-logging;local-logging;high-performance;hft;zero-dependency;thread-safe;multi-threaded;exception-handling;log-rotation;dotnet-core;dotnet-standard;performance-logging</PackageTags>
 
-    <Title>OzaLog — lean local file logger for .NET</Title>
-    <!-- PackageReleaseNotes 在每次發版時由 uplog 指令填入；與英文 CHANGELOG.md 對齊 -->
+    <Title>OzaLog — Lean .NET local file logger</Title>
+    <!-- PackageReleaseNotes 由 uplog 指令在每次發版時更新;與英文 changelog 對齊 -->
     <PackageReleaseNotes>
-v3.0.0 — Major release. Package renamed from Ozakboy.NLOG to OzaLog (see docs/en/migration.md).
+v3.0.0 — Major release: package rename + HFT-grade rewrite.
 
-Breaking Changes:
-- Package renamed: Ozakboy.NLOG -&gt; OzaLog. Namespace renamed: ozakboy.LOG -&gt; OzaLog.
+The previous package "Ozakboy.NLOG" v2.x is deprecated and points here. Migration guide: https://github.com/ozakboy/OzaLog/blob/main/docs/en/migration.md
+
+BREAKING CHANGES:
+- Package renamed: Ozakboy.NLOG -&gt; OzaLog. Namespace: ozakboy.LOG -&gt; OzaLog.
 - Removed TargetFrameworks: net462, net6.0, net7.0 (all EOL). Now: netstandard2.0, netstandard2.1, net8.0, net9.0, net10.0.
 - Enum typo fixed: LogLevel.CostomName -&gt; LogLevel.CustomName.
 
-Added:
+ADDED:
 - HFT-grade async pipeline: ConcurrentQueue&lt;struct LogItem&gt; + persistent FileStream pool + 1ms cached timestamp + drop-oldest backpressure.
 - New LogOptions: EnableGlobalExceptionCapture, MaxOpenFileStreams, DiskFlushIntervalMs, OnDropped.
-- OzaLog.Tests xUnit test project; OzaLog.Benchmarks BenchmarkDotNet project (vs. ZLogger / ZeroLog / Serilog).
+- xUnit tests (OzaLog.Tests) + BenchmarkDotNet project (OzaLog.Benchmarks vs. ZLogger / ZeroLog / Serilog).
 
-Improved:
+IMPROVED:
 - Zero NuGet dependencies on net8.0 / net9.0 / net10.0.
 - Formatting moved off the calling thread; persistent FileStreams; background expired-log cleanup.
 
-Fixed:
+FIXED:
 - Console.WriteLine double-format bug.
 - Auto-flush level selection for Error/Fatal.
 
-See docs/en/changelog.md for the full list. See docs/en/migration.md for the upgrade guide from Ozakboy.NLOG v2.x.
+TECHNICAL:
+- LogItem is now a readonly struct (zero GC on hot path).
+- Build verified across all 5 TargetFrameworks with 0 warnings / 0 errors.
+
+Full changelog: https://github.com/ozakboy/OzaLog/blob/main/docs/en/changelog.md
+Website: https://ozakboy.github.io/OzaLog/
     </PackageReleaseNotes>
 
 
