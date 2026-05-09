@@ -10,6 +10,26 @@ Version numbers follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [3.0.1] - 2026-05-09
+
+> Metadata + repository improvements release. **No library code changes** — the OzaLog assembly is byte-identical to v3.0.0 (Deterministic build).
+
+### Improved
+- **NuGet package metadata refreshed**: cleaner `Description` (highlights `LOG.Info_Log("...")` API + HFT pipeline + zero dependencies + crypto tick stream use case), updated `PackageTags` (added `ozalog`, `hft`, `high-performance`, `zero-dependency`; removed misleading `nlog` tag), polished `Title`.
+- `PackageReleaseNotes` now uses absolute GitHub URLs for cross-references (NuGet doesn't render relative paths).
+
+### Technical
+- **New project website**: Nuxt 4 + @nuxt/content + Tailwind CSS, deployed to GitHub Pages → <https://ozakboy.github.io/OzaLog/>
+- **Repository documentation restructured**: all user-facing docs moved to `docs/{en,zh-TW}/` bilingual tree (`changelog.md`, `migration.md`, plus templates for `getting-started.md`, `configuration.md`, `api.md`, `async-pipeline.md`, `benchmarks.md`).
+- GitHub Actions auto-deploys the site on push to main.
+- Sponsor page added with USDT (BEP20) wallet + Binance Pay QR.
+- `uplog` release flow extended: now also creates GitHub Release and pushes to NuGet.org automatically.
+
+### Notes
+- For migration from v2.x see [migration guide](./migration.md).
+
+---
+
 ## [3.0.0] - 2026-05-09
 
 ### Breaking Changes

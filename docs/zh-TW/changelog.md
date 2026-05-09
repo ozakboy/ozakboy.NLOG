@@ -10,6 +10,26 @@ description: OzaLog 所有重要變更紀錄。
 
 ---
 
+## [3.0.1] - 2026-05-09
+
+> 元資料與 repo 改善版本。**函式庫程式碼無變更** —— OzaLog 組件與 v3.0.0 二進位等同 (Deterministic build)。
+
+### 功能優化
+- **NuGet 套件元資料翻新**: `Description` 更精煉 (突出 `LOG.Info_Log("...")` API + HFT pipeline + 零依賴 + 加密貨幣報價串流場景)、更新 `PackageTags` (新增 `ozalog`、`hft`、`high-performance`、`zero-dependency`;移除誤導的 `nlog` tag)、調整 `Title`。
+- `PackageReleaseNotes` 改用完整 GitHub URL (NuGet 不解析相對路徑)。
+
+### 技術改進
+- **新建專案介紹網站**: Nuxt 4 + @nuxt/content + Tailwind CSS,部署至 GitHub Pages → <https://ozakboy.github.io/OzaLog/>
+- **Repo 文件結構重整**: 所有對外文件搬到 `docs/{en,zh-TW}/` 雙語樹 (`changelog.md`、`migration.md`,並含 5 個子頁模板 `getting-started.md` / `configuration.md` / `api.md` / `async-pipeline.md` / `benchmarks.md`)。
+- GitHub Actions 在 push 至 main 時自動部署網站。
+- 贊助頁新增 USDT (BEP20) 錢包 + Binance Pay QR。
+- `uplog` 發佈流程擴充: 現在會自動建立 GitHub Release 並推送到 NuGet.org。
+
+### 備註
+- v2.x 升級指南見 [升級指南](./migration.md)。
+
+---
+
 ## [3.0.0] - 2026-05-09
 
 ### 破壞性變更
