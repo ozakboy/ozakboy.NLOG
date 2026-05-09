@@ -1,5 +1,7 @@
 <script setup>
 const localePath = useLocalePath()
+const config = useRuntimeConfig()
+const baseURL = config.app.baseURL || '/'
 </script>
 
 <template>
@@ -7,6 +9,13 @@ const localePath = useLocalePath()
     <header class="border-b border-slate-200 bg-white sticky top-0 z-10">
       <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
         <NuxtLink :to="localePath('/')" class="flex items-center gap-2">
+          <img
+            :src="`${baseURL}logo.png`"
+            alt="OzaLog logo"
+            class="w-8 h-8 rounded-full"
+            width="32"
+            height="32"
+          />
           <span class="text-xl font-bold text-brand-700">OzaLog</span>
           <span class="text-xs text-slate-500 hidden sm:inline">{{ $t('header.tagline') }}</span>
         </NuxtLink>

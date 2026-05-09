@@ -65,6 +65,8 @@ Website: https://ozakboy.github.io/OzaLog/
     <DocumentationFile>file.xml</DocumentationFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
+    <!-- 套件圖示 (顯示於 NuGet.org 與 IDE 套件管理員) -->
+    <PackageIcon>logo.png</PackageIcon>
 
     <!-- 授權設定 -->
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -89,6 +91,7 @@ Website: https://ozakboy.github.io/OzaLog/
       <PackagePath>\</PackagePath>
     </None>
     <None Include="..\..\README_zh-TW.md"></None>
+    <None Include="..\..\logo.png" Pack="True" PackagePath="\" />
   </ItemGroup>
 
   <!--
