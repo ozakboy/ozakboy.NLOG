@@ -3,18 +3,22 @@
 OzaLog 介紹網站（Nuxt 3 + Vite + Vue 3 + Tailwind CSS + i18n）。
 部署至 GitHub Pages：<https://ozakboy.github.io/OzaLog/>
 
+## 套件管理器
+
+本專案使用 **pnpm**（搭配 `.npmrc` 中的 `node-linker=hoisted`，避免 Windows symlink 鎖檔問題）。
+
 ## 開發
 
 ```bash
 cd site
-npm install
-npm run dev   # http://localhost:3000
+pnpm install
+pnpm run dev   # http://localhost:3000
 ```
 
 ## 建置（產生靜態檔案）
 
 ```bash
-npm run generate   # 輸出至 .output/public/
+pnpm run generate   # 輸出至 .output/public/
 ```
 
 ## 部署
