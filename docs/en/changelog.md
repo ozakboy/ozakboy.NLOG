@@ -1,6 +1,9 @@
-# Changelog
+---
+title: Changelog
+description: All notable changes to OzaLog.
+---
 
-[English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh-TW.md)
+# Changelog
 
 This file tracks all notable changes to the **OzaLog** package (formerly **Ozakboy.NLOG**).
 Version numbers follow [Semantic Versioning](https://semver.org/).
@@ -10,7 +13,7 @@ Version numbers follow [Semantic Versioning](https://semver.org/).
 ## [3.0.0] - 2026-05-09
 
 ### Breaking Changes
-- **Package renamed**: `Ozakboy.NLOG` → `OzaLog`. The previous package on NuGet is deprecated and points here. See `MIGRATION.md` for the upgrade guide.
+- **Package renamed**: `Ozakboy.NLOG` → `OzaLog`. The previous package on NuGet is deprecated and points here. See [migration guide](./migration.md) for the upgrade guide.
 - **Namespace renamed**: `ozakboy.LOG` → `OzaLog`. All `using` statements in consumer code must be updated.
 - **Removed TargetFrameworks**: dropped `.NET Framework 4.6.2`, `net6.0`, `net7.0` (all EOL). Now supports `netstandard2.0`, `netstandard2.1`, `net8.0`, `net9.0`, `net10.0`.
 - **Enum typo fixed**: `LogLevel.CostomName` → `LogLevel.CustomName`. The public method `LOG.CustomName_Log(...)` was already correctly named — only the underlying enum value was renamed.

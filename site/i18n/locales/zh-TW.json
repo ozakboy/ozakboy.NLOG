@@ -71,13 +71,20 @@
   },
   "sponsor": {
     "title": "贊助",
-    "intro": "如果 OzaLog 對您有幫助,歡迎透過加密貨幣錢包贊助開發者。",
+    "intro": "如果 OzaLog 對您有幫助,歡迎透過加密貨幣或 Binance Pay 贊助開發者。",
     "crypto": {
-      "title": "加密貨幣錢包",
-      "btc": "Bitcoin (BTC)",
-      "eth": "Ethereum (ETH)",
-      "usdt": "USDT (TRC20)",
-      "placeholder": "(地址尚未公開,敬請期待)"
-    }
+      "title": "加密貨幣"
+    },
+    "usdt": {
+      "title": "USDT (BEP20)",
+      "warningTitle": "僅限 BSC (Binance Smart Chain / BEP20) 網路",
+      "warningBody": "匯到其他網路 (ERC20 / TRC20 / Solana 等) 將永久遺失,無法找回。"
+    },
+    "binancePay": {
+      "title": "Binance Pay",
+      "desc": "掃描以透過 Binance Pay 贊助"
+    },
+    "copy": "複製",
+    "copied": "已複製 ✓"
   }
 }

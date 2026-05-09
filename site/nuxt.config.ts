@@ -24,7 +24,19 @@ export default defineNuxtConfig({
     },
   },
 
-  modules: ['@nuxtjs/i18n', '@nuxtjs/tailwindcss'],
+  modules: ['@nuxtjs/i18n', '@nuxtjs/tailwindcss', '@nuxt/content'],
+
+  // @nuxt/content 預設讀 site/content/。內容由 scripts/sync-docs.mjs 自動從 ../docs/ 同步進來。
+  content: {
+    build: {
+      markdown: {
+        toc: { depth: 3 },
+        highlight: {
+          theme: 'github-light',
+        },
+      },
+    },
+  },
 
   i18n: {
     locales: [

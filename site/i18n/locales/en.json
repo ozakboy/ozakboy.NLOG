@@ -71,13 +71,20 @@
   },
   "sponsor": {
     "title": "Sponsor",
-    "intro": "If OzaLog helps you, consider sponsoring the developer via cryptocurrency.",
+    "intro": "If OzaLog helps you, consider sponsoring the developer via cryptocurrency or Binance Pay.",
     "crypto": {
-      "title": "Cryptocurrency Wallets",
-      "btc": "Bitcoin (BTC)",
-      "eth": "Ethereum (ETH)",
-      "usdt": "USDT (TRC20)",
-      "placeholder": "(Address coming soon)"
-    }
+      "title": "Cryptocurrency"
+    },
+    "usdt": {
+      "title": "USDT (BEP20)",
+      "warningTitle": "BSC (Binance Smart Chain / BEP20) network only",
+      "warningBody": "Sending to other networks (ERC20 / TRC20 / Solana, etc.) will result in permanent loss of funds."
+    },
+    "binancePay": {
+      "title": "Binance Pay",
+      "desc": "Scan to sponsor via Binance Pay"
+    },
+    "copy": "Copy",
+    "copied": "Copied ✓"
   }
 }

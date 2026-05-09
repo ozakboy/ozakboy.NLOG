@@ -30,7 +30,7 @@
     <Title>OzaLog — lean local file logger for .NET</Title>
     <!-- PackageReleaseNotes 在每次發版時由 uplog 指令填入；與英文 CHANGELOG.md 對齊 -->
     <PackageReleaseNotes>
-v3.0.0 — Major release. Package renamed from Ozakboy.NLOG to OzaLog (see MIGRATION.md).
+v3.0.0 — Major release. Package renamed from Ozakboy.NLOG to OzaLog (see docs/en/migration.md).
 
 Breaking Changes:
 - Package renamed: Ozakboy.NLOG -&gt; OzaLog. Namespace renamed: ozakboy.LOG -&gt; OzaLog.
@@ -50,7 +50,7 @@ Fixed:
 - Console.WriteLine double-format bug.
 - Auto-flush level selection for Error/Fatal.
 
-See CHANGELOG.md for the full list. See MIGRATION.md for the upgrade guide from Ozakboy.NLOG v2.x.
+See docs/en/changelog.md for the full list. See docs/en/migration.md for the upgrade guide from Ozakboy.NLOG v2.x.
     </PackageReleaseNotes>
 
 

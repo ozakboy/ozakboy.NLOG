@@ -1,3 +1,8 @@
+---
+title: Migration Guide
+description: Upgrade from Ozakboy.NLOG v2.x to OzaLog v3.0.
+---
+
 # Migration Guide — `Ozakboy.NLOG` v2.x → `OzaLog` v3.0
 
 > **Why the rename?** `Ozakboy.NLOG` and the well-known [`NLog`](https://www.nuget.org/packages/NLog) package have nothing to do with each other. The naming similarity caused user confusion. Starting v3.0 the package is renamed to **`OzaLog`** to avoid this and to mark a clean break for the v3.0 architectural rewrite.

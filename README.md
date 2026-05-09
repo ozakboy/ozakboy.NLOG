@@ -7,7 +7,9 @@
 
 > **Disclaimer:** OzaLog is **not related** to [NLog](https://www.nuget.org/packages/NLog) (jkowalski's package). This is a separate, independent library.
 >
-> **Migrating from `Ozakboy.NLOG` v2.x?** See [MIGRATION.md](MIGRATION.md). The previous package has been deprecated and renamed to `OzaLog`.
+> **Migrating from `Ozakboy.NLOG` v2.x?** See [Migration Guide](docs/en/migration.md). The previous package has been deprecated and renamed to `OzaLog`.
+>
+> **Changelog**: [English](docs/en/changelog.md) · [繁體中文](docs/zh-TW/changelog.md)
 
 A lean, lightweight .NET local file logging library with the simplest possible static API. No DI, no LoggerFactory, zero NuGet dependencies on net8+. Designed for high-throughput multi-threaded scenarios such as cryptocurrency tick streams.
 

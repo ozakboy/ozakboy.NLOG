@@ -1,6 +1,9 @@
-# 版本更新記錄
+---
+title: 版本歷史
+description: OzaLog 所有重要變更紀錄。
+---
 
-[English](CHANGELOG.md) | [繁體中文](CHANGELOG_zh-TW.md)
+# 版本更新記錄
 
 本檔案記錄 **OzaLog**（前身為 **Ozakboy.NLOG**）套件的所有重要變更。
 版本號遵循 [語意化版本（SemVer）](https://semver.org/lang/zh-TW/)。
@@ -10,7 +13,7 @@
 ## [3.0.0] - 2026-05-09
 
 ### 破壞性變更
-- **套件改名**：`Ozakboy.NLOG` → `OzaLog`。NuGet 上原套件標 deprecated 並指向此處。升級指南請見 `MIGRATION.md`。
+- **套件改名**：`Ozakboy.NLOG` → `OzaLog`。NuGet 上原套件標 deprecated 並指向此處。升級指南請見[升級指南](./migration.md)。
 - **命名空間改名**：`ozakboy.LOG` → `OzaLog`。使用端程式碼的 `using` 須同步更新。
 - **移除 TargetFramework**：砍掉 `.NET Framework 4.6.2`、`net6.0`、`net7.0`（皆 EOL）。現支援 `netstandard2.0`、`netstandard2.1`、`net8.0`、`net9.0`、`net10.0`。
 - **Enum 拼字修正**：`LogLevel.CostomName` → `LogLevel.CustomName`。公開方法 `LOG.CustomName_Log(...)` 原本就拼對,僅修正底層 enum 值名稱。

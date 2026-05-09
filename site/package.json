@@ -4,6 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "sync-docs": "node scripts/sync-docs.mjs",
+    "predev": "node scripts/sync-docs.mjs",
+    "pregenerate": "node scripts/sync-docs.mjs",
+    "prebuild": "node scripts/sync-docs.mjs",
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
@@ -11,10 +15,12 @@
     "postinstall": "nuxt prepare"
   },
   "devDependencies": {
-    "@nuxtjs/i18n": "^9.1.0",
-    "@nuxtjs/tailwindcss": "^6.12.2",
-    "nuxt": "^3.14.0",
-    "vue": "^3.5.13",
-    "vue-router": "^4.4.5"
+    "@nuxt/content": "^3.4.0",
+    "@nuxtjs/i18n": "^10.3.0",
+    "@nuxtjs/tailwindcss": "^6.14.0",
+    "@tailwindcss/typography": "^0.5.15",
+    "nuxt": "^4.4.4",
+    "vue": "^3.5.34",
+    "vue-router": "^5.0.6"
   }
 }

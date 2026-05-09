@@ -7,7 +7,9 @@
 
 > **免責聲明**：OzaLog 與 [NLog](https://www.nuget.org/packages/NLog)（jkowalski 維護的套件）**完全沒有關係**。本套件為獨立函式庫。
 >
-> **從 `Ozakboy.NLOG` v2.x 升級？** 請看 [MIGRATION.md](MIGRATION.md)。舊套件已棄用並更名為 `OzaLog`。
+> **從 `Ozakboy.NLOG` v2.x 升級？** 請看[升級指南](docs/zh-TW/migration.md)。舊套件已棄用並更名為 `OzaLog`。
+>
+> **版本歷史**：[English](docs/en/changelog.md) · [繁體中文](docs/zh-TW/changelog.md)
 
 極簡的 .NET 本地檔案 logging 函式庫，採用最簡單的靜態 API。不需 DI、不需 LoggerFactory，net8+ 零 NuGet 依賴。為高並發多執行緒場景設計（例如加密貨幣報價串流）。
 

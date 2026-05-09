@@ -247,7 +247,7 @@ STRATEGIC-DECISIONS.md
 BenchmarkDotNet.Artifacts/
 
 ################################################################################
-# Nuxt 3 site (site/) — 介紹網站建置產物
+# Nuxt site (site/) — 介紹網站建置產物
 ################################################################################
 site/node_modules/
 site/.nuxt/
@@ -258,4 +258,7 @@ site/dist/
 site/.env
 site/.env.*
 site/*.log
+
+# site/content/ 由 scripts/sync-docs.mjs 從 docs/ 自動產生,不入版控
+site/content/
 
