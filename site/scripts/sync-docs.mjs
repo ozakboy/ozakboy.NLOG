@@ -3,10 +3,16 @@
 // Sync repo-root docs/ to site/content/ so @nuxt/content can read them.
 //
 // 觸發時機 / Triggered by:
-//   - pnpm run dev      (predev hook)
-//   - pnpm run generate (pregenerate hook)
-//   - pnpm run build    (prebuild hook)
-//   - pnpm run sync-docs (manual)
+//   - npm run dev      (predev hook)
+//   - npm run generate (pregenerate hook)
+//   - npm run build    (prebuild hook)
+//   - npm run sync-docs (manual)
+//
+// 注意: 不用 fs.cpSync —— Node 22.22.x 在 Windows + 含 CJK 字元的路徑下會
+// 觸發 STATUS_ACCESS_VIOLATION (0xC0000005) 直接 crash process。
+// NOTE: We avoid fs.cpSync because Node 22.22.x crashes (STATUS_ACCESS_VIOLATION)
+// when copying recursively across paths containing CJK characters on Windows.
+// See https://github.com/nodejs/node/issues (search "cpSync access violation").
 
 import fs from 'node:fs'
 import path from 'node:path'
@@ -23,22 +29,29 @@ if (!fs.existsSync(SRC)) {
   process.exit(1)
 }
 
-// Wipe and recreate target so deleted files in docs/ are reflected.
+// 1. Wipe target so deletions in docs/ propagate.
 fs.rmSync(DST, { recursive: true, force: true })
-fs.mkdirSync(DST, { recursive: true })
 
-// Recursive copy (Node 16.7+ has fs.cpSync).
-fs.cpSync(SRC, DST, { recursive: true, force: true })
-
-// Count files for log.
+// 2. Manual recursive copy (avoids fs.cpSync Windows + CJK bug).
 let count = 0
-function walk(dir) {
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, entry.name)
-    if (entry.isDirectory()) walk(p)
-    else if (entry.isFile()) count++
+function copyDir(srcDir, dstDir) {
+  fs.mkdirSync(dstDir, { recursive: true })
+  for (const entry of fs.readdirSync(srcDir, { withFileTypes: true })) {
+    const srcPath = path.join(srcDir, entry.name)
+    const dstPath = path.join(dstDir, entry.name)
+    if (entry.isDirectory()) {
+      copyDir(srcPath, dstPath)
+    } else if (entry.isFile()) {
+      fs.copyFileSync(srcPath, dstPath)
+      count++
+    }
+    // 忽略 symlinks / 其他類型(本專案 docs/ 內只有 .md 檔)
   }
 }
-walk(DST)
 
-console.log(`[sync-docs] ${count} files copied: ${path.relative(REPO_ROOT, SRC)} -> ${path.relative(REPO_ROOT, DST)}`)
+copyDir(SRC, DST)
+
+console.log(
+  `[sync-docs] ${count} files copied: ` +
+  `${path.relative(REPO_ROOT, SRC)} -> ${path.relative(REPO_ROOT, DST)}`
+)
