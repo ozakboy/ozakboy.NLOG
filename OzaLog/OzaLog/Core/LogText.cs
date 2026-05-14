@@ -12,12 +12,17 @@ namespace OzaLog.Core
     {
         /// <summary>
         /// 同步寫入單筆 log。v3.0 由 dispatcher 執行緒呼叫，或在 EnableAsyncLogging=false 時由呼叫端直接呼叫。
+        /// v3.1+：依 <c>LogConfiguration.Current.OutputFormat</c> 路由到對應 formatter。
         /// </summary>
         internal static void Write(in LogItem item)
         {
             try
             {
-                var line = LogFormatter.Format(in item);
+                var format = LogConfiguration.Current.OutputFormat;
+                var line = format == LogOutputFormat.Json
+                    ? JsonLogFormatter.Format(in item)
+                    : LogFormatter.Format(in item);
+
                 FileStreamPool.AppendLine(item.Level, item.Name, line);
                 if (item.RequireImmediateFlush)
                     FileStreamPool.Flush(item.Level, item.Name);
@@ -34,13 +39,15 @@ namespace OzaLog.Core
         /// </summary>
         internal static void Add_LogText(LogLevel level, string name, string message, object[] args)
         {
+            var currentThread = Thread.CurrentThread;
             var item = new LogItem(
                 level: level,
                 name: name ?? string.Empty,
                 message: message,
                 args: (args != null && args.Length > 0) ? args : null,
                 timestampTicks: TimestampCache.GetCurrentTicks(),
-                threadId: Thread.CurrentThread.ManagedThreadId,
+                threadId: currentThread.ManagedThreadId,
+                threadName: currentThread.Name,
                 requireImmediateFlush: false);
             Write(in item);
         }

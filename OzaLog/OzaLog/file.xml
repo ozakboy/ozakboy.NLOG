@@ -61,6 +61,39 @@
             v3.0+ queue 滿時 drop oldest 的通知 callback（純通知，使用者通常只計數）
             </summary>
         </member>
+        <member name="P:OzaLog.LogConfiguration.ILogOptions.OutputFormat">
+            <summary>
+            v3.1+ 主 logger 的輸出格式（Txt / Log / Json，預設 Txt）
+            </summary>
+        </member>
+        <member name="P:OzaLog.LogConfiguration.ILogOptions.TimeFormat">
+            <summary>
+            v3.1+ 訊息前綴的時間字串格式(自由格式,預設 <c>"HH:mm:ss.fff"</c>)
+            JSON 模式下此設定不適用(JSON 走 epoch_ms)
+            </summary>
+        </member>
+        <member name="P:OzaLog.LogConfiguration.ILogOptions.ShowThreadId">
+            <summary>
+            v3.1+ 是否在訊息前綴顯示 Thread ID(預設 true)
+            </summary>
+        </member>
+        <member name="P:OzaLog.LogConfiguration.ILogOptions.ShowThreadName">
+            <summary>
+            v3.1+ 是否在訊息前綴顯示 Thread Name(預設 false)
+            若該執行緒無名稱(Thread.Name == null),thread 區塊整個省略
+            </summary>
+        </member>
+        <member name="P:OzaLog.LogConfiguration.ILogOptions.HighPrecisionTimestamp">
+            <summary>
+            v3.1+ 是否啟用高精度時間戳(Stopwatch hybrid,提供 µs 級精度)
+            預設 false;啟用後呼叫端讀 ticks 從 ~5ns 增加到 ~30ns,但能拿到真實 µs 精度
+            </summary>
+        </member>
+        <member name="P:OzaLog.LogConfiguration.ILogOptions.QuoteOptions">
+            <summary>
+            v3.1+ 報價 pipeline 的唯讀設定視圖
+            </summary>
+        </member>
         <member name="M:OzaLog.LogConfiguration.ReadOnlyLogTypeDirectories.GetPathForType(OzaLog.Core.LogLevel)">
             <summary>
             取得指定日誌類型的目錄路徑
@@ -199,6 +232,53 @@
             </summary>
             <param name="configure">配置動作</param>
         </member>
+        <member name="P:OzaLog.LogConfiguration.LogOptions.OutputFormat">
+            <summary>
+            v3.1+ 主 logger 的輸出格式(全域,只能擇一)
+            Txt 與 Log 內容相同只差副檔名;Json 走 NDJSON 結構化輸出
+            </summary>
+        </member>
+        <member name="P:OzaLog.LogConfiguration.LogOptions.TimeFormat">
+            <summary>
+            v3.1+ 文字模式下訊息前綴的時間字串格式(自由格式 .NET DateTime format)
+            預設 <c>"HH:mm:ss.fff"</c>;若包含 <c>fffff</c> 以上的精度,須搭配
+            <see cref="P:OzaLog.LogConfiguration.LogOptions.HighPrecisionTimestamp"/> = true 才能拿到真實精度,否則最後數位是 0
+            JSON 模式下此設定不適用(JSON 一律走 epoch_ms 整數時間戳)
+            </summary>
+        </member>
+        <member name="P:OzaLog.LogConfiguration.LogOptions.ShowThreadId">
+            <summary>
+            v3.1+ 是否在訊息前綴顯示 Thread ID(預設 true)
+            文字模式:控制 <c>[T:12]</c> 或 <c>[T:12/Name]</c> 區段是否輸出
+            JSON 模式:控制 <c>tid</c> 欄位是否輸出
+            </summary>
+        </member>
+        <member name="P:OzaLog.LogConfiguration.LogOptions.ShowThreadName">
+            <summary>
+            v3.1+ 是否在訊息前綴顯示 Thread Name(預設 false)
+            若該執行緒無名稱(Thread.Name == null),thread 區塊整個省略
+            JSON 模式:控制 <c>tn</c> 欄位是否輸出
+            </summary>
+        </member>
+        <member name="P:OzaLog.LogConfiguration.LogOptions.HighPrecisionTimestamp">
+            <summary>
+            v3.1+ 是否啟用高精度時間戳(Stopwatch hybrid)
+            預設 false;1ms cache 解析度上限
+            啟用後:呼叫端讀 ticks 從 ~5ns 增加到 ~30ns,但能拿到真實 µs 精度
+            適用情境:需要 latency 分析、tick-level 時序排查
+            </summary>
+        </member>
+        <member name="P:OzaLog.LogConfiguration.LogOptions.QuoteOptions">
+            <summary>
+            v3.1+ 報價 pipeline 設定
+            </summary>
+        </member>
+        <member name="M:OzaLog.LogConfiguration.LogOptions.ConfigureQuote(System.Action{OzaLog.QuoteOptions})">
+            <summary>
+            v3.1+ 設定報價 pipeline。預設 <c>QuoteOptions.Enable</c> 為 false,需在此 callback 內明確開啟
+            </summary>
+            <param name="configure">配置動作</param>
+        </member>
         <member name="T:OzaLog.LogConfiguration.LogTypeDirectories">
             <summary>
             日誌類型目錄配置
@@ -260,6 +340,145 @@
         <member name="M:OzaLog.LogConfiguration.EnsureInitialized">
             <summary>
             確保配置已初始化
+            </summary>
+        </member>
+        <member name="T:OzaLog.LogOutputFormat">
+            <summary>
+            主 logger 的輸出格式選項
+            Output format for the main logger pipeline.
+            </summary>
+            <remarks>
+            v3.1+ 引入：搭配 <c>LogOptions.OutputFormat</c> 全域設定使用。
+            txt 與 log 內容完全相同,只差副檔名;json 是結構化 NDJSON。
+            </remarks>
+        </member>
+        <member name="F:OzaLog.LogOutputFormat.Txt">
+            <summary>
+            純文字格式,副檔名 <c>.txt</c>(預設)
+            </summary>
+        </member>
+        <member name="F:OzaLog.LogOutputFormat.Log">
+            <summary>
+            純文字格式,副檔名 <c>.log</c>(內容與 Txt 完全相同)
+            </summary>
+        </member>
+        <member name="F:OzaLog.LogOutputFormat.Json">
+            <summary>
+            NDJSON 格式(每行一個 JSON 物件),副檔名 <c>.json</c>
+            Schema: <c>{"ts":epoch_ms,"lv":string,"nm":string,"tid":int?,"tn":string?,"msg":string,"data":object?}</c>
+            </summary>
+        </member>
+        <member name="T:OzaLog.QuoteOptions">
+            <summary>
+            報價 pipeline 的設定選項。透過 <see cref="M:OzaLog.LogConfiguration.LogOptions.ConfigureQuote(System.Action{OzaLog.QuoteOptions})"/> 設定。
+            Options for the independent Quote pipeline.
+            </summary>
+            <remarks>
+            v3.1+ 引入:報價 pipeline 預設關閉(<c>Enable = false</c>),使用者需 opt-in。
+            啟用後會建立獨立的 dispatcher、佇列與 FileStreamPool,不與主 logger 互相影響。
+            </remarks>
+        </member>
+        <member name="P:OzaLog.QuoteOptions.Enable">
+            <summary>
+            是否啟用報價 pipeline。預設 <c>false</c>(opt-in)。
+            設為 true 後第一次呼叫 <c>LOG.Quote(...)</c> 會啟動 dispatcher。
+            </summary>
+        </member>
+        <member name="P:OzaLog.QuoteOptions.OutputFormat">
+            <summary>
+            報價檔案的輸出格式。預設 <see cref="F:OzaLog.QuoteOutputFormat.Txt"/>。
+            </summary>
+        </member>
+        <member name="P:OzaLog.QuoteOptions.QuotePath">
+            <summary>
+            報價檔案的根目錄(會接在 <see cref="P:OzaLog.LogConfiguration.LogOptions.LogPath"/> 與日期目錄之下)。
+            預設 <c>"Quotes"</c>。最終路徑形如:<c>{baseDir}/{LogPath}/{yyyyMMdd}/{QuotePath}/{bucket}_{symbol}_Quote.{ext}</c>
+            </summary>
+        </member>
+        <member name="P:OzaLog.QuoteOptions.MaxOpenStreams">
+            <summary>
+            報價 FileStreamPool 同時保持開啟的檔案上限(獨立於主 logger 的 <c>MaxOpenFileStreams</c>)。
+            預設 500(因為報價 symbol 量大);範圍 [4, 4096]。
+            </summary>
+        </member>
+        <member name="P:OzaLog.QuoteOptions.MaxQueueSize">
+            <summary>
+            報價佇列容量。預設 50000(因為報價量遠大於普通 log);範圍 [1000, 1_000_000]。
+            佇列滿時走 drop oldest + <see cref="P:OzaLog.QuoteOptions.OnDropped"/> callback。
+            </summary>
+        </member>
+        <member name="P:OzaLog.QuoteOptions.FlushIntervalMs">
+            <summary>
+            報價 dispatcher 的批次 flush 間隔(ms)。預設 100ms;範圍 [10, 10000]。
+            </summary>
+        </member>
+        <member name="P:OzaLog.QuoteOptions.MaxBatchSize">
+            <summary>
+            報價 dispatcher 單次處理的最大筆數。預設 500;範圍 [1, 10000]。
+            </summary>
+        </member>
+        <member name="P:OzaLog.QuoteOptions.OnDropped">
+            <summary>
+            報價佇列滿時 drop oldest 後觸發的 callback。
+            參數為「自上次回呼以來新丟棄的累計筆數」;callback body 請保持極輕量(會在生產者執行緒呼叫)。
+            預設 null(靜默丟棄)。
+            </summary>
+        </member>
+        <member name="T:OzaLog.IQuoteOptions">
+            <summary>
+            報價 pipeline 設定的唯讀視圖介面
+            Read-only view of Quote options.
+            </summary>
+        </member>
+        <member name="P:OzaLog.IQuoteOptions.Enable">
+            <summary>是否啟用報價 pipeline</summary>
+        </member>
+        <member name="P:OzaLog.IQuoteOptions.OutputFormat">
+            <summary>報價輸出格式</summary>
+        </member>
+        <member name="P:OzaLog.IQuoteOptions.QuotePath">
+            <summary>報價根目錄(預設 "Quotes")</summary>
+        </member>
+        <member name="P:OzaLog.IQuoteOptions.MaxOpenStreams">
+            <summary>同時開啟的 FileStream 上限</summary>
+        </member>
+        <member name="P:OzaLog.IQuoteOptions.MaxQueueSize">
+            <summary>報價佇列容量</summary>
+        </member>
+        <member name="P:OzaLog.IQuoteOptions.FlushIntervalMs">
+            <summary>dispatcher 批次 flush 間隔(ms)</summary>
+        </member>
+        <member name="P:OzaLog.IQuoteOptions.MaxBatchSize">
+            <summary>dispatcher 單次處理的最大筆數</summary>
+        </member>
+        <member name="P:OzaLog.IQuoteOptions.OnDropped">
+            <summary>drop oldest callback</summary>
+        </member>
+        <member name="T:OzaLog.QuoteOutputFormat">
+            <summary>
+            報價 pipeline 的輸出格式選項
+            Output format for the independent Quote pipeline.
+            </summary>
+            <remarks>
+            v3.1+ 引入:搭配 <c>QuoteOptions.OutputFormat</c> 使用。
+            報價 pipeline 獨立於主 logger,可設定不同格式(例如主 logger 用 Txt,報價用 Json)。
+            </remarks>
+        </member>
+        <member name="F:OzaLog.QuoteOutputFormat.Txt">
+            <summary>
+            人類可讀的 key=value 格式,副檔名 <c>.txt</c>(預設)
+            範例:<c>[2026-05-13 10:23:45.123] binance_spot BTCUSDT last=60123.5 bid=60123.0 ask=60124.0</c>
+            </summary>
+        </member>
+        <member name="F:OzaLog.QuoteOutputFormat.Log">
+            <summary>
+            人類可讀的 key=value 格式,副檔名 <c>.log</c>(內容與 Txt 完全相同)
+            </summary>
+        </member>
+        <member name="F:OzaLog.QuoteOutputFormat.Json">
+            <summary>
+            NDJSON 格式,副檔名 <c>.json</c>
+            範例:<c>{"ts":1715587425123,"symbol":"BTCUSDT","bucket":"binance_spot","last":60123.5,"extras":{"funding":0.0001}}</c>
             </summary>
         </member>
         <member name="T:OzaLog.Core.AsyncLogHandler">
@@ -406,21 +625,77 @@
             停用全域意外攔截。
             </summary>
         </member>
+        <member name="T:OzaLog.Core.JsonLogFormatter">
+            <summary>
+            JSON(NDJSON)模式的主 logger 格式化器。
+            每筆 log 輸出一行 JSON 物件,schema 固定:
+            <c>{"ts":epoch_ms,"lv":string,"nm":string,"tid":int?,"tn":string?,"msg":string,"data":object?}</c>
+            </summary>
+            <remarks>
+            v3.1+ 引入。當 <c>LogOptions.OutputFormat == LogOutputFormat.Json</c> 時取代 LogFormatter。
+            注意:JSON 模式下 <c>TimeFormat</c> 設定不適用,時間一律走 epoch_ms 整數。
+            短欄位名(<c>lv</c>/<c>nm</c>/<c>tid</c>/<c>tn</c>)為使用者於需求 2 拍板。
+            </remarks>
+        </member>
+        <member name="M:OzaLog.Core.JsonLogFormatter.Format(OzaLog.Core.LogItem@)">
+            <summary>
+            將 LogItem 格式化為 NDJSON 行(不含換行符)
+            </summary>
+        </member>
+        <member name="M:OzaLog.Core.JsonLogFormatter.ApplyArgs(System.String,System.Object[])">
+            <summary>
+            把 args 展開到 message(等價 LogFormatter 的行為,但回傳純字串而非 StringBuilder)
+            </summary>
+        </member>
+        <member name="M:OzaLog.Core.JsonLogFormatter.TryWriteDataFromMessage(System.Text.Json.Utf8JsonWriter,System.String)">
+            <summary>
+            若 message 是 "header\n{...json...}" 格式(LOG.LogObject 的輸出形式),
+            把 \n 之後的 JSON 部分提取出來,當作 data 欄位寫入。失敗則不寫 data。
+            </summary>
+            <remarks>
+            注意:呼叫端會先走 LogFormatter.EscapeMessage,該方法會把 <c>{</c>/<c>}</c> 雙倍化(<c>{{</c>/<c>}}</c>)。
+            因此 JSON 部分實際長相是 <c>{{"foo":"bar"}}</c>,需先反跳脫才能 parse。
+            先嘗試 raw parse(萬一有人直接傳合法 JSON 字串進 message),失敗再嘗試反跳脫。
+            </remarks>
+        </member>
         <member name="T:OzaLog.Core.LogFormatter">
             <summary>
             日誌格式化處理器 - 將 LogItem 轉為要寫入檔案的單行字串。
             v3.0：格式化全部移到 dispatcher 執行緒，呼叫端不再做 string.Format / StringBuilder。
+            v3.1：時間格式變為使用者可設定的 .NET DateTime 格式;支援 Thread ID/Name 顯示開關。
+            </summary>
+        </member>
+        <member name="F:OzaLog.Core.LogFormatter.DefaultTimeFormat">
+            <summary>
+            預設時間格式(對應 v3.0 行為,避免變更使用者輸出)
             </summary>
         </member>
         <member name="M:OzaLog.Core.LogFormatter.Format(OzaLog.Core.LogItem@)">
             <summary>
             格式化 LogItem 為單行檔案輸出（不含換行符；換行由 StreamWriter.WriteLine 補）
-            格式：HH:mm:ss.fff[T:tid] message
+            格式取決於 <see cref="P:OzaLog.LogConfiguration.LogOptions.TimeFormat"/>、
+            <see cref="P:OzaLog.LogConfiguration.LogOptions.ShowThreadId"/>、
+            <see cref="P:OzaLog.LogConfiguration.LogOptions.ShowThreadName"/> 設定
             </summary>
         </member>
         <member name="M:OzaLog.Core.LogFormatter.EscapeMessage(System.String)">
             <summary>
             處理訊息中的特殊字符 - 確保訊息中的 {} 在無格式參數時被跳脫
+            </summary>
+        </member>
+        <member name="M:OzaLog.Core.LogFormatter.AppendTimestamp(System.Text.StringBuilder,System.DateTime,System.String)">
+            <summary>
+            將 DateTime 依使用者設定的格式字串輸出。
+            預設 <c>HH:mm:ss.fff</c> 走手寫 fast path(零配置);其他格式走 .NET ToString。
+            </summary>
+        </member>
+        <member name="M:OzaLog.Core.LogFormatter.AppendThreadSegment(System.Text.StringBuilder,System.Int32,System.String,System.Boolean,System.Boolean)">
+            <summary>
+            附加 thread 區段。規則:
+              - 只開 ShowThreadId(或 ShowThreadName 但 Name 為 null) → "[T:12] "
+              - ShowThreadId 開,且 ShowThreadName 開且 Name 非 null → "[T:12/Name] "
+              - 只開 ShowThreadName 且 Name 非 null → "[N:Name] "
+              - 兩者都關 或 對應條件不成立 → 整個區段省略
             </summary>
         </member>
         <member name="T:OzaLog.Core.LogItem">
@@ -432,6 +707,8 @@
             v3.0 改為 readonly struct，避免高頻 log 時每筆 heap 配置造成 GC 壓力。
             欄位都採 raw 形式（未格式化），格式化動作延遲到 dispatcher 執行緒處理，
             讓呼叫端執行緒以最低成本完成入隊。
+            v3.1+ 新增 ThreadName 欄位:因為格式化在 dispatcher 執行緒,讀不到 caller 的 Thread.Name,
+            必須在入隊時 capture。Thread.CurrentThread.Name 通常為 null(未設定),記憶體開銷極低。
             </remarks>
         </member>
         <member name="F:OzaLog.Core.LogItem.Level">
@@ -451,6 +728,9 @@
         </member>
         <member name="F:OzaLog.Core.LogItem.ThreadId">
             <summary>入隊瞬間的執行緒 ID</summary>
+        </member>
+        <member name="F:OzaLog.Core.LogItem.ThreadName">
+            <summary>入隊瞬間的執行緒名稱(可能為 null,大部分 thread 未設定 Name)</summary>
         </member>
         <member name="F:OzaLog.Core.LogItem.RequireImmediateFlush">
             <summary>是否需要立即寫入並 flush 落盤</summary>
@@ -547,6 +827,7 @@
         <member name="M:OzaLog.Core.LogText.Write(OzaLog.Core.LogItem@)">
             <summary>
             同步寫入單筆 log。v3.0 由 dispatcher 執行緒呼叫，或在 EnableAsyncLogging=false 時由呼叫端直接呼叫。
+            v3.1+：依 <c>LogConfiguration.Current.OutputFormat</c> 路由到對應 formatter。
             </summary>
         </member>
         <member name="M:OzaLog.Core.LogText.Add_LogText(OzaLog.Core.LogLevel,System.String,System.String,System.Object[])">
@@ -555,22 +836,102 @@
             內部會建構 LogItem 並呼叫 <see cref="M:OzaLog.Core.LogText.Write(OzaLog.Core.LogItem@)"/>。
             </summary>
         </member>
-        <member name="T:OzaLog.Core.TimestampCache">
+        <member name="T:OzaLog.Core.QuoteFileStreamPool">
             <summary>
-            時間戳快取 - 由背景執行緒以 1ms 間隔更新 volatile ticks，
-            高頻 log 呼叫端只需讀 long 值，避免每筆 log 都打 DateTime.Now 的 syscall。
-            Timestamp cache - background thread updates a volatile ticks value at 1ms,
-            hot log paths read the cached long instead of calling DateTime.Now.
+            報價 pipeline 的持久化 FileStream 池。獨立於主 logger 的 FileStreamPool。
+            鍵為 <c>(bucket, symbol)</c>;LRU 上限由 <see cref="P:OzaLog.QuoteOptions.MaxOpenStreams"/> 控制。
             </summary>
             <remarks>
-            對 HFT 類場景至關重要：DateTime.Now 在 Windows 上會呼叫 GetSystemTimeAsFileTime
-            並轉時區，連續百萬次呼叫成本顯著。此快取以 1ms 精度為代價，把每筆 log 的時間取得
-            成本壓到一次 volatile read（~奈秒等級）。
+            與主 FileStreamPool 的差異:
+            • 鍵維度不同(bucket+symbol vs level+name)
+            • 路徑不同:<c>{baseDir}/{LogPath}/{yyyyMMdd}/{QuotePath}/{bucket}_{symbol}_Quote.{ext}</c>
+            • 不分子目錄(使用者拍板的 Q3D-1 a)
+            • 檔名特殊字元自動 sanitize(Q4-1)
             </remarks>
+        </member>
+        <member name="M:OzaLog.Core.QuoteFileStreamPool.AppendLine(System.String,System.String,System.String)">
+            <summary>
+            寫入一行至 (bucket, symbol) 對應檔案,自動處理建立、換日、大小分割、LRU。
+            </summary>
+        </member>
+        <member name="M:OzaLog.Core.QuoteFileStreamPool.FlushAll">
+            <summary>
+            flush 全部開啟的 stream(由 dispatcher 的定期 timer 呼叫)
+            </summary>
+        </member>
+        <member name="M:OzaLog.Core.QuoteFileStreamPool.Shutdown">
+            <summary>shutdown:flush + 關閉所有 stream</summary>
+        </member>
+        <member name="M:OzaLog.Core.QuoteFileStreamPool.Sanitize(System.String)">
+            <summary>
+            把使用者傳入的 bucket / symbol 中含的檔系統非法字元換成 '-'
+            </summary>
+        </member>
+        <member name="T:OzaLog.Core.QuoteFormatter">
+             <summary>
+             報價格式化器 - 把 <see cref="T:OzaLog.QuoteRecord"/> 渲染成單行字串(txt/log/json 三種格式)。
+             </summary>
+             <remarks>
+             v3.1+ 引入,獨立於主 logger 的 LogFormatter / JsonLogFormatter。
+            
+             格式對照(來自需求 3 拍板):
+             • Txt/Log:<c>[2026-05-13 10:23:45.123] binance_spot BTCUSDT last=60123.5 bid=60123.0 ask=60124.0</c>
+               - ISO 8601 風格時間(給人看)
+               - 只輸出非 null 欄位(空欄位略過)
+               - Extras 展開成更多 k=v
+             • Json:NDJSON,epoch_ms,只輸出非 null,Extras nested 在 <c>extras</c> 子物件
+               - 不含 thread 資訊(報價是市場事件,非程式內部事件)
+             </remarks>
+        </member>
+        <member name="M:OzaLog.Core.QuoteFormatter.Format(OzaLog.QuoteRecord@,OzaLog.QuoteOutputFormat)">
+            <summary>
+            依設定格式渲染單筆 QuoteRecord 為單行字串(不含換行符)
+            </summary>
+        </member>
+        <member name="M:OzaLog.Core.QuoteFormatter.ValidateExtras(OzaLog.QuoteRecord@)">
+            <summary>
+            驗證 Extras / ExtrasJson 是否衝突或撞名內建欄位
+            </summary>
+        </member>
+        <member name="T:OzaLog.Core.QuoteLogHandler">
+            <summary>
+            報價 pipeline 的非同步處理器。獨立於主 logger 的 AsyncLogHandler。
+            </summary>
+            <remarks>
+            v3.1+ 引入。
+            • 預設關閉(QuoteOptions.Enable=false),使用者需在 Configure 內明確 opt-in
+            • 啟動後建立獨立的 dispatcher Task + 獨立 disk flush timer
+            • Backpressure:drop oldest,觸發 OnDropped callback(若有設定)
+            • 收尾:ProcessExit 時並行於主 logger 的 flush(兩條 pipeline 互不阻塞)
+            </remarks>
+        </member>
+        <member name="M:OzaLog.Core.QuoteLogHandler.Enqueue(OzaLog.QuoteRecord@)">
+            <summary>
+            入隊。第一次呼叫時自動啟動 dispatcher(若 QuoteOptions.Enable=true)。
+            佇列滿時 drop oldest 並觸發 callback(若有設定)。
+            </summary>
+        </member>
+        <member name="T:OzaLog.Core.TimestampCache">
+             <summary>
+             時間戳快取 - 由背景執行緒以 1ms 間隔更新 volatile ticks，
+             高頻 log 呼叫端只需讀 long 值，避免每筆 log 都打 DateTime.Now 的 syscall。
+             Timestamp cache - background thread updates a volatile ticks value at 1ms,
+             hot log paths read the cached long instead of calling DateTime.Now.
+             </summary>
+             <remarks>
+             對 HFT 類場景至關重要：DateTime.Now 在 Windows 上會呼叫 GetSystemTimeAsFileTime
+             並轉時區，連續百萬次呼叫成本顯著。此快取以 1ms 精度為代價，把每筆 log 的時間取得
+             成本壓到一次 volatile read（~奈秒等級）。
+            
+             v3.1+ 新增 HighPrecision 模式:每次更新快取時同步記錄當下的 Stopwatch.GetTimestamp(),
+             呼叫端讀取時用 Stopwatch 差值補回真實 µs 精度。代價是讀 ticks 從 ~5ns 增加到 ~30ns。
+             切換由 <c>LogConfiguration.Current.HighPrecisionTimestamp</c> 控制。
+             </remarks>
         </member>
         <member name="M:OzaLog.Core.TimestampCache.GetCurrentTicks">
             <summary>
             取得當前快取的本地時間 ticks。第一次呼叫時會自動啟動背景更新計時器。
+            HighPrecisionTimestamp = true 時走 Stopwatch hybrid 路徑提供 µs 級精度。
             </summary>
         </member>
         <member name="M:OzaLog.Core.TimestampCache.GetCurrentDateTime">
@@ -587,6 +948,18 @@
             <summary>
             記錄檔
             </summary>
+             <summary>
+             LOG 公開 API 之報價(Quote)pipeline 部分。
+             </summary>
+             <remarks>
+             v3.1+ 引入。獨立於主 logger 的非同步寫入管道,專為高頻報價/盤口資料設計。
+            
+             使用前提:必須在 <c>LOG.Configure(...)</c> 時透過
+             <c>opt.ConfigureQuote(q =&gt; q.Enable = true)</c> 啟用(預設 false)。
+             未啟用時呼叫 <c>LOG.Quote(...)</c> 視為 no-op,不會啟動背景執行緒。
+            
+             寫入位置:<c>{baseDir}/{LogPath}/{yyyyMMdd}/{QuotePath}/{Bucket}_{Symbol}_Quote.{ext}</c>
+             </remarks>
         </member>
         <member name="M:OzaLog.LOG.Trace_Log(System.String)">
             <summary>
@@ -772,6 +1145,139 @@
         <member name="M:OzaLog.LOG.GetCurrentOptions">
             <summary>
             取得當前日誌配置
+            </summary>
+        </member>
+        <member name="M:OzaLog.LOG.ValidateQuoteRecord(OzaLog.QuoteRecord@)">
+            <summary>
+            呼叫端驗證:拋例外讓使用者立即發現 programmer error,而不是延遲到 dispatcher 才靜默失敗。
+            </summary>
+        </member>
+        <member name="M:OzaLog.LOG.Quote(OzaLog.QuoteRecord@)">
+            <summary>
+            寫入報價記錄(核心 API)。
+            </summary>
+            <param name="record">完整的 <see cref="T:OzaLog.QuoteRecord"/>,包含必填欄位與選填欄位</param>
+            <remarks>
+            必填:<c>Symbol</c>、<c>Bucket</c>、<c>Ticks</c>、<c>Last</c>
+            違反必填、Extras/ExtrasJson 同時設定、Extras key 撞名 → 立即拋 <see cref="T:System.ArgumentException"/>(同步,呼叫端可 try/catch)
+            </remarks>
+        </member>
+        <member name="M:OzaLog.LOG.Quote(System.String,System.String,System.Int64,System.Decimal)">
+            <summary>
+            寫入最簡報價記錄(僅 last 價格,例如 tick 資料)
+            </summary>
+        </member>
+        <member name="M:OzaLog.LOG.Quote(System.String,System.String,System.Int64,System.Decimal,System.Decimal,System.Decimal)">
+            <summary>
+            寫入含 bid/ask 的報價記錄
+            </summary>
+        </member>
+        <member name="M:OzaLog.LOG.Quote(System.String,System.String,System.Int64,System.Decimal,System.Decimal,System.Decimal,System.Decimal,System.Decimal)">
+            <summary>
+            寫入含 bid/ask + 買賣量的報價記錄
+            </summary>
+        </member>
+        <member name="M:OzaLog.LOG.QuoteTicker(System.String,System.String,System.Int64,System.Decimal,System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal})">
+            <summary>
+            寫入完整 ticker(對齊 Binance REST API 24hr Ticker)。
+            所有欄位都可為 null,只有 symbol/bucket/ticks/last 是必填。
+            </summary>
+        </member>
+        <member name="M:OzaLog.LOG.QuoteTicker(System.String,System.String,System.Int64,System.Decimal,System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal})">
+            <summary>
+            寫入完整 ticker + 自訂欄位字典(Extras)。
+            </summary>
+        </member>
+        <member name="T:OzaLog.QuoteRecord">
+             <summary>
+             報價/盤口資料記錄。欄位命名對齊 Binance REST API 24hr Ticker schema。
+             Quote/ticker record. Field naming aligned with Binance REST API 24hr Ticker schema.
+             </summary>
+             <remarks>
+             v3.1+ 引入。透過 <c>LOG.Quote(in QuoteRecord)</c> 寫入獨立的報價 pipeline。
+            
+             必填欄位:<see cref="F:OzaLog.QuoteRecord.Symbol"/>、<see cref="F:OzaLog.QuoteRecord.Bucket"/>、<see cref="F:OzaLog.QuoteRecord.Ticks"/>、<see cref="F:OzaLog.QuoteRecord.Last"/>
+             選填欄位:其餘 decimal? 全部允許 null,輸出時自動省略(NDJSON)或顯示為空白(尚未支援的格式)
+            
+             自訂欄位:<see cref="F:OzaLog.QuoteRecord.Extras"/> 與 <see cref="F:OzaLog.QuoteRecord.ExtrasJson"/> 二擇一,同時設定將拋 ArgumentException
+             </remarks>
+        </member>
+        <member name="F:OzaLog.QuoteRecord.Symbol">
+            <summary>
+            商品代號(必填)。範例:<c>BTCUSDT</c>、<c>BTC-USDT-SWAP</c>
+            含特殊字元(<c>/ \ : * ? " &lt; &gt; |</c>)會在落檔時自動替換為 <c>-</c>。
+            </summary>
+        </member>
+        <member name="F:OzaLog.QuoteRecord.Bucket">
+            <summary>
+            分桶識別(必填),任意字串。範例:<c>binance_spot</c>、<c>okx_swap</c>
+            用於檔名前綴:<c>{Bucket}_{Symbol}_Quote.{ext}</c>,避免不同來源同名商品撞檔。
+            </summary>
+        </member>
+        <member name="F:OzaLog.QuoteRecord.Ticks">
+            <summary>
+            事件時間 ticks(必填,caller 傳入)。
+            這是「市場事件發生時刻」,不是「寫 log 時刻」 — 對 HFT 場景的時序分析至關重要。
+            </summary>
+        </member>
+        <member name="F:OzaLog.QuoteRecord.Last">
+            <summary>
+            最後成交價(必填)。
+            </summary>
+        </member>
+        <member name="F:OzaLog.QuoteRecord.LastQty">
+            <summary>最後一筆成交數量(對應 Binance lastQty)。選填。</summary>
+        </member>
+        <member name="F:OzaLog.QuoteRecord.Bid">
+            <summary>最佳買價(對應 Binance bidPrice)。選填。</summary>
+        </member>
+        <member name="F:OzaLog.QuoteRecord.BidQty">
+            <summary>最佳買單數量(對應 Binance bidQty)。選填。</summary>
+        </member>
+        <member name="F:OzaLog.QuoteRecord.Ask">
+            <summary>最佳賣價(對應 Binance askPrice)。選填。</summary>
+        </member>
+        <member name="F:OzaLog.QuoteRecord.AskQty">
+            <summary>最佳賣單數量(對應 Binance askQty)。選填。</summary>
+        </member>
+        <member name="F:OzaLog.QuoteRecord.Open">
+            <summary>開盤價。選填。</summary>
+        </member>
+        <member name="F:OzaLog.QuoteRecord.PrevClose">
+            <summary>昨收價。選填。</summary>
+        </member>
+        <member name="F:OzaLog.QuoteRecord.High">
+            <summary>區間最高價。選填。</summary>
+        </member>
+        <member name="F:OzaLog.QuoteRecord.Low">
+            <summary>區間最低價。選填。</summary>
+        </member>
+        <member name="F:OzaLog.QuoteRecord.Volume">
+            <summary>
+            累積成交量(對應 Binance volume,base asset)。選填。
+            區間語意由 caller 決定(24h / 盤中 / tick) — logger 不驗證。
+            </summary>
+        </member>
+        <member name="F:OzaLog.QuoteRecord.QuoteVolume">
+            <summary>
+            累積計價成交額(對應 Binance quoteVolume,quote asset)。選填。
+            </summary>
+        </member>
+        <member name="F:OzaLog.QuoteRecord.Extras">
+            <summary>
+            自訂欄位字典(慢路徑,反射友善)。與 <see cref="F:OzaLog.QuoteRecord.ExtrasJson"/> 二擇一,同時設定拋例外。
+            字典 key 若撞名內建欄位(symbol/bucket/last 等)會拋例外。
+            </summary>
+        </member>
+        <member name="F:OzaLog.QuoteRecord.ExtrasJson">
+            <summary>
+            自訂欄位 JSON 字串(快路徑,使用者已自序列化)。與 <see cref="F:OzaLog.QuoteRecord.Extras"/> 二擇一。
+            應為合法的 JSON 物件字串,例如 <c>{"funding":0.0001}</c>。
+            </summary>
+        </member>
+        <member name="M:OzaLog.QuoteRecord.#ctor(System.String,System.String,System.Int64,System.Decimal,System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Nullable{System.Decimal},System.Collections.Generic.IReadOnlyDictionary{System.String,System.Object},System.String)">
+            <summary>
+            主要建構子。建議優先使用 <c>LOG.Quote(...)</c> 強型別便利多載。
             </summary>
         </member>
     </members>

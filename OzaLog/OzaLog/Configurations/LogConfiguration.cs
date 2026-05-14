@@ -63,6 +63,39 @@ namespace OzaLog
             /// v3.0+ queue 滿時 drop oldest 的通知 callback（純通知，使用者通常只計數）
             /// </summary>
             Action OnDropped { get; }
+
+            /// <summary>
+            /// v3.1+ 主 logger 的輸出格式（Txt / Log / Json，預設 Txt）
+            /// </summary>
+            LogOutputFormat OutputFormat { get; }
+
+            /// <summary>
+            /// v3.1+ 訊息前綴的時間字串格式(自由格式,預設 <c>"HH:mm:ss.fff"</c>)
+            /// JSON 模式下此設定不適用(JSON 走 epoch_ms)
+            /// </summary>
+            string TimeFormat { get; }
+
+            /// <summary>
+            /// v3.1+ 是否在訊息前綴顯示 Thread ID(預設 true)
+            /// </summary>
+            bool ShowThreadId { get; }
+
+            /// <summary>
+            /// v3.1+ 是否在訊息前綴顯示 Thread Name(預設 false)
+            /// 若該執行緒無名稱(Thread.Name == null),thread 區塊整個省略
+            /// </summary>
+            bool ShowThreadName { get; }
+
+            /// <summary>
+            /// v3.1+ 是否啟用高精度時間戳(Stopwatch hybrid,提供 µs 級精度)
+            /// 預設 false;啟用後呼叫端讀 ticks 從 ~5ns 增加到 ~30ns,但能拿到真實 µs 精度
+            /// </summary>
+            bool HighPrecisionTimestamp { get; }
+
+            /// <summary>
+            /// v3.1+ 報價 pipeline 的唯讀設定視圖
+            /// </summary>
+            IQuoteOptions QuoteOptions { get; }
         }
 
         private class ReadOnlyLogOptions : ILogOptions
@@ -85,6 +118,12 @@ namespace OzaLog
             public int MaxOpenFileStreams => _options.MaxOpenFileStreams;
             public int DiskFlushIntervalMs => _options.DiskFlushIntervalMs;
             public Action OnDropped => _options.OnDropped;
+            public LogOutputFormat OutputFormat => _options.OutputFormat;
+            public string TimeFormat => _options.TimeFormat;
+            public bool ShowThreadId => _options.ShowThreadId;
+            public bool ShowThreadName => _options.ShowThreadName;
+            public bool HighPrecisionTimestamp => _options.HighPrecisionTimestamp;
+            public IQuoteOptions QuoteOptions => new ReadOnlyQuoteOptions(_options.QuoteOptions);
         }
 
         public interface ILogTypeDirectories
@@ -324,6 +363,61 @@ namespace OzaLog
             public void ConfigureAsync(Action<AsyncLogOptions> configure)
             {
                 configure?.Invoke(AsyncOptions);
+            }
+
+            /// <summary>
+            /// v3.1+ 主 logger 的輸出格式(全域,只能擇一)
+            /// Txt 與 Log 內容相同只差副檔名;Json 走 NDJSON 結構化輸出
+            /// </summary>
+            public LogOutputFormat OutputFormat { get; set; } = LogOutputFormat.Txt;
+
+            private string _timeFormat = "HH:mm:ss.fff";
+            /// <summary>
+            /// v3.1+ 文字模式下訊息前綴的時間字串格式(自由格式 .NET DateTime format)
+            /// 預設 <c>"HH:mm:ss.fff"</c>;若包含 <c>fffff</c> 以上的精度,須搭配
+            /// <see cref="HighPrecisionTimestamp"/> = true 才能拿到真實精度,否則最後數位是 0
+            /// JSON 模式下此設定不適用(JSON 一律走 epoch_ms 整數時間戳)
+            /// </summary>
+            public string TimeFormat
+            {
+                get => _timeFormat;
+                set => _timeFormat = string.IsNullOrEmpty(value) ? "HH:mm:ss.fff" : value;
+            }
+
+            /// <summary>
+            /// v3.1+ 是否在訊息前綴顯示 Thread ID(預設 true)
+            /// 文字模式:控制 <c>[T:12]</c> 或 <c>[T:12/Name]</c> 區段是否輸出
+            /// JSON 模式:控制 <c>tid</c> 欄位是否輸出
+            /// </summary>
+            public bool ShowThreadId { get; set; } = true;
+
+            /// <summary>
+            /// v3.1+ 是否在訊息前綴顯示 Thread Name(預設 false)
+            /// 若該執行緒無名稱(Thread.Name == null),thread 區塊整個省略
+            /// JSON 模式:控制 <c>tn</c> 欄位是否輸出
+            /// </summary>
+            public bool ShowThreadName { get; set; } = false;
+
+            /// <summary>
+            /// v3.1+ 是否啟用高精度時間戳(Stopwatch hybrid)
+            /// 預設 false;1ms cache 解析度上限
+            /// 啟用後:呼叫端讀 ticks 從 ~5ns 增加到 ~30ns,但能拿到真實 µs 精度
+            /// 適用情境:需要 latency 分析、tick-level 時序排查
+            /// </summary>
+            public bool HighPrecisionTimestamp { get; set; } = false;
+
+            /// <summary>
+            /// v3.1+ 報價 pipeline 設定
+            /// </summary>
+            public QuoteOptions QuoteOptions { get; set; } = new QuoteOptions();
+
+            /// <summary>
+            /// v3.1+ 設定報價 pipeline。預設 <c>QuoteOptions.Enable</c> 為 false,需在此 callback 內明確開啟
+            /// </summary>
+            /// <param name="configure">配置動作</param>
+            public void ConfigureQuote(Action<QuoteOptions> configure)
+            {
+                configure?.Invoke(QuoteOptions);
             }
         }
 

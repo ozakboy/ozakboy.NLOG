@@ -24,13 +24,15 @@ namespace OzaLog
             var escapedMessage = LogFormatter.EscapeMessage(message);
             var hasArgs = args != null && args.Length > 0;
 
+            var currentThread = Thread.CurrentThread;
             var item = new LogItem(
                 level: level,
                 name: name ?? string.Empty,
                 message: escapedMessage,
                 args: hasArgs ? args : null,
                 timestampTicks: TimestampCache.GetCurrentTicks(),
-                threadId: Thread.CurrentThread.ManagedThreadId,
+                threadId: currentThread.ManagedThreadId,
+                threadName: currentThread.Name,
                 requireImmediateFlush: immediateFlush);
 
             if (LogConfiguration.Current.EnableConsoleOutput)

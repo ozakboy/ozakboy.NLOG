@@ -87,13 +87,15 @@ namespace OzaLog.Core
                 body = "(no exception object)";
             }
 
+            var currentThread = Thread.CurrentThread;
             var item = new LogItem(
                 level: LogLevel.Fatal,
                 name: LogName,
                 message: headerMessage + "\n" + body,
                 args: null,
                 timestampTicks: TimestampCache.GetCurrentTicks(),
-                threadId: Thread.CurrentThread.ManagedThreadId,
+                threadId: currentThread.ManagedThreadId,
+                threadName: currentThread.Name,
                 requireImmediateFlush: true);
 
             // 直接走 sync 路徑（不入隊），確保 crash 前已落盤

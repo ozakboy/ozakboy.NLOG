@@ -169,13 +169,15 @@ namespace OzaLog.Core
         // === v2.x 相容入口（保留方法名以利內部 callsite 漸進遷移） ===
         public static void EnqueueLog(LogLevel level, string name, string message, object[] args, bool immediateFlush = false)
         {
+            var currentThread = Thread.CurrentThread;
             var item = new LogItem(
                 level: level,
                 name: name ?? string.Empty,
                 message: message,
                 args: (args != null && args.Length > 0) ? args : null,
                 timestampTicks: TimestampCache.GetCurrentTicks(),
-                threadId: Thread.CurrentThread.ManagedThreadId,
+                threadId: currentThread.ManagedThreadId,
+                threadName: currentThread.Name,
                 requireImmediateFlush: immediateFlush);
             Enqueue(in item);
         }

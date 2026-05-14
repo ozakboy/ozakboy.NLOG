@@ -10,6 +10,8 @@ namespace OzaLog.Core
     /// v3.0 改為 readonly struct，避免高頻 log 時每筆 heap 配置造成 GC 壓力。
     /// 欄位都採 raw 形式（未格式化），格式化動作延遲到 dispatcher 執行緒處理，
     /// 讓呼叫端執行緒以最低成本完成入隊。
+    /// v3.1+ 新增 ThreadName 欄位:因為格式化在 dispatcher 執行緒,讀不到 caller 的 Thread.Name,
+    /// 必須在入隊時 capture。Thread.CurrentThread.Name 通常為 null(未設定),記憶體開銷極低。
     /// </remarks>
     internal readonly struct LogItem
     {
@@ -31,6 +33,9 @@ namespace OzaLog.Core
         /// <summary>入隊瞬間的執行緒 ID</summary>
         public readonly int ThreadId;
 
+        /// <summary>入隊瞬間的執行緒名稱(可能為 null,大部分 thread 未設定 Name)</summary>
+        public readonly string ThreadName;
+
         /// <summary>是否需要立即寫入並 flush 落盤</summary>
         public readonly bool RequireImmediateFlush;
 
@@ -41,6 +46,7 @@ namespace OzaLog.Core
             object[] args,
             long timestampTicks,
             int threadId,
+            string threadName,
             bool requireImmediateFlush)
         {
             Level = level;
@@ -49,6 +55,7 @@ namespace OzaLog.Core
             Args = args;
             TimestampTicks = timestampTicks;
             ThreadId = threadId;
+            ThreadName = threadName;
             RequireImmediateFlush = requireImmediateFlush;
         }
     }

@@ -10,7 +10,7 @@ namespace OzaLog.Tests
         public void Format_ProducesExpectedTimestampLayout()
         {
             var ticks = new DateTime(2026, 5, 8, 9, 7, 5, 123, DateTimeKind.Local).Ticks;
-            var item = new LogItem(LogLevel.Info, "", "hello", null, ticks, 42, false);
+            var item = new LogItem(LogLevel.Info, "", "hello", null, ticks, 42, null, false);
             var line = LogFormatter.Format(in item);
 
             Assert.StartsWith("09:07:05.123[T:42] ", line);
@@ -21,7 +21,7 @@ namespace OzaLog.Tests
         public void Format_AppliesArgsFormatting()
         {
             var ticks = DateTime.Now.Ticks;
-            var item = new LogItem(LogLevel.Info, "", "user {0} did {1}", new object[] { "alice", "login" }, ticks, 1, false);
+            var item = new LogItem(LogLevel.Info, "", "user {0} did {1}", new object[] { "alice", "login" }, ticks, 1, null, false);
             var line = LogFormatter.Format(in item);
 
             Assert.Contains("user alice did login", line);
@@ -32,7 +32,7 @@ namespace OzaLog.Tests
         {
             var ticks = DateTime.Now.Ticks;
             // {2} 超出 args 範圍 → 應 fallback 為原字串而非拋例外
-            var item = new LogItem(LogLevel.Info, "", "broken {2}", new object[] { "x" }, ticks, 1, false);
+            var item = new LogItem(LogLevel.Info, "", "broken {2}", new object[] { "x" }, ticks, 1, null, false);
             var line = LogFormatter.Format(in item);
 
             Assert.Contains("broken {2}", line);

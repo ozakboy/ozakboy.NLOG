@@ -10,6 +10,49 @@ description: OzaLog 所有重要變更紀錄。
 
 ---
 
+## [3.1.0] - 2026-05-14
+
+> 三個新增能力:可自訂時間/執行緒顯示、可選輸出格式(txt/log/json)、以及對齊 Binance schema 的獨立報價(Quote)pipeline。所有新增向下相容 — 預設值維持 v3.0 行為。
+
+### 新增功能
+
+**自訂時間 / 執行緒顯示**
+- `LogOptions.TimeFormat`(預設 `"HH:mm:ss.fff"`)— 自由格式的 .NET DateTime 字串。Parse 失敗時自動 fallback 預設格式。
+- `LogOptions.ShowThreadId`(預設 `true`)與 `LogOptions.ShowThreadName`(預設 `false`)— 獨立切換訊息前綴的 thread ID / name 區段。當 `ShowThreadName=true` 但執行緒無名稱(`Thread.Name == null`)時整個 thread 區段省略。
+- `LogOptions.HighPrecisionTimestamp`(預設 `false`)— opt-in `Stopwatch`-hybrid 模式,從 1ms cache 重建出 µs 級精度;呼叫端 ticks 讀取成本從 ~5ns 增加到 ~30ns。
+
+**多輸出格式**
+- `LogOptions.OutputFormat`(預設 `LogOutputFormat.Txt`)— 全域格式選擇:`Txt` / `Log`(內容相同只差副檔名) / `Json`(NDJSON 固定 schema `{ts, lv, nm, tid?, tn?, msg, data?}`)。
+- JSON 時間戳輸出為 epoch_ms 整數。欄位名採短形式(`lv`、`nm`、`tid`、`tn`)以節省空間。
+
+**報價(Tick/Ticker)pipeline**
+- `LOG.Quote(...)` 與 `LOG.QuoteTicker(...)` 公開 API,欄位命名對齊 **Binance REST 24hr Ticker** schema(`Last`、`LastQty`、`Bid`、`BidQty`、`Ask`、`AskQty`、`Open`、`PrevClose`、`High`、`Low`、`Volume`、`QuoteVolume`)。
+- `QuoteRecord`(公開 `readonly struct`)— A2 核心 API,零配置入隊。A1 便利多載涵蓋常見情境(僅 tick / bid+ask / 完整 ticker / ticker+extras)。
+- `QuoteOptions`(預設 OFF,使用者需在 `opt.ConfigureQuote(q => q.Enable = true)` 內 opt-in)— 獨立非同步 pipeline,自帶 dispatcher、佇列、`FileStreamPool`。可配置 `OutputFormat`(Txt/Log/Json)、`MaxOpenStreams`(預設 500)、`MaxQueueSize`(預設 50000)、`MaxBatchSize`、`FlushIntervalMs`、`OnDropped(long)` callback。
+- `QuoteRecord.Extras`(`IReadOnlyDictionary<string, object>`,反射友善)與 `QuoteRecord.ExtrasJson`(預先序列化的 JSON 字串,零開銷路徑)— 二擇一,同時設定會在呼叫端拋 `ArgumentException`。
+- 檔名規則:`{baseDir}/{LogPath}/{yyyyMMdd}/{QuotePath}/{Bucket}_{Symbol}_Quote.{ext}` — 不分子目錄。
+- Symbol / Bucket sanitize:檔系統非法字元(`/ \ : * ? " < > |`)在檔名中自動替換為 `-`;檔案內容保留原始字串。
+
+**測試**
+- 四個新 xUnit 測試檔案,涵蓋自訂時間格式、NDJSON 格式化、Quote schema / 錯誤情境、檔名 sanitize(總計 48 個測試全通過)。
+- `OzaLog.Test/Program.cs` 重寫為 v3.1 完整 smoke-test,一次線性執行涵蓋所有公開 API 與錯誤情境,並支援 CLI 引數切換格式(`txt` / `log` / `json`)。
+
+### 功能優化
+
+- `LogItem` 加入 `ThreadName` 欄位,dispatcher 執行緒可渲染呼叫端的執行緒名稱(原本入隊後讀不到)。
+- 所有 Quote API 多載統一走 `LOG.Quote(in QuoteRecord)` 集中驗證。錯誤(Symbol / Bucket 為 null 或空、`Extras` 與 `ExtrasJson` 同時設定、`Extras` key 撞名內建欄位)在呼叫端**同步**拋 `ArgumentException`,不會延遲到 dispatcher。
+- `LogFormatter` 保留預設 `HH:mm:ss.fff` 格式的 fast path(手寫,零配置);其他格式走 `DateTime.ToString`,FormatException 時 fallback 預設。
+- `FileStreamPool` 支援動態副檔名(`.txt` / `.log` / `.json`)並對應更新 size-based 檔案分割的 part 偵測邏輯。
+
+### 技術改進
+
+- `System.Text.Json`:`netstandard2.0` / `netstandard2.1` 從 `8.0.5` 升至 `9.0.16`(`net8.0` / `net9.0` / `net10.0` 仍用 BCL 內建,維持零 NuGet 依賴)。
+- `Microsoft.SourceLink.GitHub`:從 `8.0.0` 升至 `10.0.300`(build-only,`PrivateAssets=all`,不影響消費者)。
+- 新增內部類別:`JsonLogFormatter`、`QuoteFormatter`、`QuoteFileStreamPool`、`QuoteLogHandler`。Quote pipeline 與主 `AsyncLogHandler` 完全平行,不共享任何 lock 或 stream pool。
+- 跨 5 個 TargetFrameworks(`netstandard2.0` / `netstandard2.1` / `net8.0` / `net9.0` / `net10.0`)的建置驗證:0 錯誤。
+
+---
+
 ## [3.0.1] - 2026-05-09
 
 > 元資料與 repo 改善版本。**函式庫程式碼無變更** —— OzaLog 組件與 v3.0.0 二進位等同 (Deterministic build)。

@@ -10,6 +10,49 @@ Version numbers follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [3.1.0] - 2026-05-14
+
+> Three new capabilities: customizable time/thread display, configurable output format (txt/log/json), and a dedicated **Quote** pipeline for high-frequency tick/quote data with Binance-aligned schema. All additions are backward compatible — defaults preserve v3.0 behavior.
+
+### Added
+
+**Customizable Time & Thread Display**
+- `LogOptions.TimeFormat` (default `"HH:mm:ss.fff"`) — free-form .NET DateTime format string for the message prefix. Falls back to default on parse failure.
+- `LogOptions.ShowThreadId` (default `true`) and `LogOptions.ShowThreadName` (default `false`) — independently toggle thread ID / name in the prefix. When `ShowThreadName=true` but the calling thread has no name (`Thread.Name == null`), the entire thread segment is omitted.
+- `LogOptions.HighPrecisionTimestamp` (default `false`) — opt-in `Stopwatch`-hybrid mode that reconstructs µs-level precision from the 1ms cache; raises caller-side ticks read cost from ~5ns to ~30ns.
+
+**Multiple Output Formats**
+- `LogOptions.OutputFormat` (default `LogOutputFormat.Txt`) — global format selector: `Txt` / `Log` (same content, different extension) / `Json` (NDJSON with fixed schema `{ts, lv, nm, tid?, tn?, msg, data?}`).
+- JSON timestamps emit as epoch_ms integers. Field names use short forms (`lv`, `nm`, `tid`, `tn`) for compactness.
+
+**Quote (Tick/Ticker) Pipeline**
+- `LOG.Quote(...)` and `LOG.QuoteTicker(...)` — public API for high-frequency quote/ticker data with field names aligned to **Binance REST 24hr Ticker** schema (`Last`, `LastQty`, `Bid`, `BidQty`, `Ask`, `AskQty`, `Open`, `PrevClose`, `High`, `Low`, `Volume`, `QuoteVolume`).
+- `QuoteRecord` (public `readonly struct`) — A2 core API for zero-allocation enqueue. Convenience A1 overloads for the common cases (tick only / bid+ask / full ticker / ticker+extras).
+- `QuoteOptions` (opt-in via `opt.ConfigureQuote(q => q.Enable = true)`, default off) — independent async pipeline with its own dispatcher, queue, and `FileStreamPool`. Configurable `OutputFormat` (Txt/Log/Json), `MaxOpenStreams` (default 500), `MaxQueueSize` (default 50000), `MaxBatchSize`, `FlushIntervalMs`, `OnDropped(long)` callback.
+- `QuoteRecord.Extras` (`IReadOnlyDictionary<string, object>`) for flexible attributes and `QuoteRecord.ExtrasJson` (raw pre-serialized JSON string for the zero-overhead path) — mutually exclusive; setting both throws `ArgumentException` at the call site.
+- File naming: `{baseDir}/{LogPath}/{yyyyMMdd}/{QuotePath}/{Bucket}_{Symbol}_Quote.{ext}` — no nested subdirectories.
+- Symbol/bucket sanitization: file-system-invalid characters (`/ \ : * ? " < > |`) are automatically replaced with `-` in filenames; the original symbol/bucket text is preserved in the file content.
+
+**Tests**
+- Four new xUnit test files covering custom time formats, NDJSON formatting, Quote schema/error scenarios, and filename sanitization (48 tests total, all passing).
+- `OzaLog.Test/Program.cs` rewritten to a comprehensive v3.1 smoke-test covering every API surface and error path in a single linear run, with optional CLI args for format selection (`txt`/`log`/`json`).
+
+### Improved
+
+- `LogItem` carries `ThreadName` so the dispatcher thread can render the calling thread's name (previously unavailable post-enqueue).
+- All Quote API overloads funnel through `LOG.Quote(in QuoteRecord)` for centralized validation. Errors (null/empty Symbol or Bucket, `Extras`/`ExtrasJson` both set, `Extras` key colliding with a reserved field) throw `ArgumentException` **synchronously** on the calling thread — not deferred to the dispatcher.
+- `LogFormatter` retains a fast path for the default `HH:mm:ss.fff` format (hand-written, zero-allocation); other formats route through `DateTime.ToString` with `FormatException` fallback to default.
+- `FileStreamPool` supports per-output extension (`.txt` / `.log` / `.json`) with corresponding part-detection logic for size-based file splitting.
+
+### Technical
+
+- `System.Text.Json`: bumped from `8.0.5` → `9.0.16` for `netstandard2.0` / `netstandard2.1` targets (`net8.0` / `net9.0` / `net10.0` still use the BCL built-in — zero NuGet dependencies).
+- `Microsoft.SourceLink.GitHub`: bumped from `8.0.0` → `10.0.300` (build-only, `PrivateAssets=all`, no consumer impact).
+- New internal types: `JsonLogFormatter`, `QuoteFormatter`, `QuoteFileStreamPool`, `QuoteLogHandler`. Quote pipeline runs entirely in parallel with the main `AsyncLogHandler` — they share no locks or stream pools.
+- Build verified across all 5 TargetFrameworks (`netstandard2.0` / `netstandard2.1` / `net8.0` / `net9.0` / `net10.0`) with 0 errors.
+
+---
+
 ## [3.0.1] - 2026-05-09
 
 > Metadata + repository improvements release. **No library code changes** — the OzaLog assembly is byte-identical to v3.0.0 (Deterministic build).

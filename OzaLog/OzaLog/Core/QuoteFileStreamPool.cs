@@ -7,64 +7,69 @@ using System.Threading;
 namespace OzaLog.Core
 {
     /// <summary>
-    /// 持久化檔案流池 - 維護 per-(level, name) 的 FileStream，
-    /// 配合 LRU 上限自動關閉冷檔、換日自動切換目錄、超過大小自動分割檔案。
-    /// Persistent FileStream pool with LRU eviction, day rollover, and size-based splitting.
+    /// 報價 pipeline 的持久化 FileStream 池。獨立於主 logger 的 FileStreamPool。
+    /// 鍵為 <c>(bucket, symbol)</c>;LRU 上限由 <see cref="QuoteOptions.MaxOpenStreams"/> 控制。
     /// </summary>
     /// <remarks>
-    /// v3.0 引入：取代 v2.x 每批次 open/close 的高 syscall 開銷。
-    /// 單一 dispatcher 執行緒呼叫 AppendLine，不需 lock 細粒度同步，
-    /// 但 periodic flush timer 與 shutdown 路徑會與 dispatcher 競爭，故仍以 lock 保護。
+    /// 與主 FileStreamPool 的差異:
+    /// • 鍵維度不同(bucket+symbol vs level+name)
+    /// • 路徑不同:<c>{baseDir}/{LogPath}/{yyyyMMdd}/{QuotePath}/{bucket}_{symbol}_Quote.{ext}</c>
+    /// • 不分子目錄(使用者拍板的 Q3D-1 a)
+    /// • 檔名特殊字元自動 sanitize(Q4-1)
     /// </remarks>
-    internal static class FileStreamPool
+    internal static class QuoteFileStreamPool
     {
         private sealed class Slot
         {
             public string Key;
-            public string Name;
-            public LogLevel Level;
+            public string Bucket;
+            public string Symbol;
             public StreamWriter Writer;
             public FileStream Stream;
             public string DirectoryPath;
-            public int CurrentDateInt;   // yyyyMMdd as int for cheap compare
+            public int CurrentDateInt;
             public int PartNumber;
             public long CurrentSize;
             public DateTime LastAccess;
         }
 
+        // 檔名禁用字元(Windows 最嚴格集) + 全部會被替換成 '-'
+        private static readonly char[] _invalidFileChars = { '/', '\\', ':', '*', '?', '"', '<', '>', '|' };
+
         private static readonly object _gate = new object();
         private static readonly Dictionary<string, LinkedListNode<Slot>> _index = new Dictionary<string, LinkedListNode<Slot>>(StringComparer.Ordinal);
-        private static readonly LinkedList<Slot> _lru = new LinkedList<Slot>();   // first = newest, last = oldest
+        private static readonly LinkedList<Slot> _lru = new LinkedList<Slot>();
 
         /// <summary>
-        /// 寫入一行至對應檔案，自動處理建立、換日、大小分割、LRU。
+        /// 寫入一行至 (bucket, symbol) 對應檔案,自動處理建立、換日、大小分割、LRU。
         /// </summary>
-        public static void AppendLine(LogLevel level, string name, string formattedLine)
+        public static void AppendLine(string bucket, string symbol, string formattedLine)
         {
-            var nameKey = string.IsNullOrEmpty(name) ? level.ToString() : name;
+            ValidateRequired(bucket, symbol);
+
+            var safeBucket = Sanitize(bucket);
+            var safeSymbol = Sanitize(symbol);
             var nowTicks = TimestampCache.GetCurrentTicks();
             var nowDate = new DateTime(nowTicks);
             var dateInt = nowDate.Year * 10000 + nowDate.Month * 100 + nowDate.Day;
-            var key = ((int)level).ToString() + "|" + nameKey;
+            var key = safeBucket + "|" + safeSymbol;
 
             lock (_gate)
             {
-                var slot = GetOrCreateSlot(key, level, nameKey, dateInt, nowDate);
+                var slot = GetOrCreateSlot(key, safeBucket, safeSymbol, dateInt, nowDate);
 
-                // 換日：dateInt 變了，關閉舊 stream 重開新目錄
                 if (slot.CurrentDateInt != dateInt)
                 {
                     CloseSlot(slot);
-                    slot = OpenSlot(key, level, nameKey, dateInt, nowDate);
+                    slot = OpenSlot(key, safeBucket, safeSymbol, dateInt, nowDate);
                 }
 
-                // 寫入前先用估算大小判斷是否需要分割（避免每寫一行都 .Length 打 syscall）
                 var lineBytes = Encoding.UTF8.GetByteCount(formattedLine) + Environment.NewLine.Length;
                 var maxSize = LogConfiguration.Current.MaxFileSize;
                 if (slot.CurrentSize + lineBytes > maxSize && slot.CurrentSize > 0)
                 {
                     CloseSlot(slot);
-                    slot = OpenSlot(key, level, nameKey, dateInt, nowDate, forcePart: slot.PartNumber + 1);
+                    slot = OpenSlot(key, safeBucket, safeSymbol, dateInt, nowDate, forcePart: slot.PartNumber + 1);
                 }
 
                 slot.Writer.WriteLine(formattedLine);
@@ -76,32 +81,7 @@ namespace OzaLog.Core
         }
 
         /// <summary>
-        /// 強制 flush 指定 (level, name) 的緩衝至磁碟（用於 crash log / immediateFlush）
-        /// </summary>
-        public static void Flush(LogLevel level, string name)
-        {
-            var nameKey = string.IsNullOrEmpty(name) ? level.ToString() : name;
-            var key = ((int)level).ToString() + "|" + nameKey;
-
-            lock (_gate)
-            {
-                if (_index.TryGetValue(key, out var node))
-                {
-                    try
-                    {
-                        node.Value.Writer?.Flush();
-                        node.Value.Stream?.Flush(flushToDisk: true);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"FileStreamPool.Flush 錯誤: {ex.Message}");
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// flush 全部開啟的 stream（由 100ms 定期 timer 呼叫）
+        /// flush 全部開啟的 stream(由 dispatcher 的定期 timer 呼叫)
         /// </summary>
         public static void FlushAll()
         {
@@ -109,22 +89,16 @@ namespace OzaLog.Core
             {
                 foreach (var node in _index.Values)
                 {
-                    try
-                    {
-                        node.Value.Writer?.Flush();
-                        // 不 flushToDisk(true)，讓 OS 決定何時 fsync，效能優先
-                    }
+                    try { node.Value.Writer?.Flush(); }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"FileStreamPool.FlushAll 錯誤: {ex.Message}");
+                        Console.WriteLine($"QuoteFileStreamPool.FlushAll 錯誤: {ex.Message}");
                     }
                 }
             }
         }
 
-        /// <summary>
-        /// shutdown：flush + 關閉所有 stream
-        /// </summary>
+        /// <summary>shutdown:flush + 關閉所有 stream</summary>
         public static void Shutdown()
         {
             lock (_gate)
@@ -138,32 +112,56 @@ namespace OzaLog.Core
             }
         }
 
-        // =========================================================================
+        // =========================================================
 
-        private static Slot GetOrCreateSlot(string key, LogLevel level, string name, int dateInt, DateTime now)
+        private static void ValidateRequired(string bucket, string symbol)
+        {
+            if (string.IsNullOrEmpty(bucket))
+                throw new ArgumentException("QuoteRecord.Bucket 不可為 null 或空字串", nameof(bucket));
+            if (string.IsNullOrEmpty(symbol))
+                throw new ArgumentException("QuoteRecord.Symbol 不可為 null 或空字串", nameof(symbol));
+        }
+
+        /// <summary>
+        /// 把使用者傳入的 bucket / symbol 中含的檔系統非法字元換成 '-'
+        /// </summary>
+        internal static string Sanitize(string input)
+        {
+            if (string.IsNullOrEmpty(input)) return input;
+            if (input.IndexOfAny(_invalidFileChars) < 0) return input;
+
+            var sb = new StringBuilder(input.Length);
+            foreach (var ch in input)
+            {
+                if (Array.IndexOf(_invalidFileChars, ch) >= 0) sb.Append('-');
+                else sb.Append(ch);
+            }
+            return sb.ToString();
+        }
+
+        private static Slot GetOrCreateSlot(string key, string bucket, string symbol, int dateInt, DateTime now)
         {
             if (_index.TryGetValue(key, out var node))
             {
-                // LRU: 移至 first（最新）
                 _lru.Remove(node);
                 _lru.AddFirst(node);
                 return node.Value;
             }
-
-            return OpenSlot(key, level, name, dateInt, now);
+            return OpenSlot(key, bucket, symbol, dateInt, now);
         }
 
-        private static Slot OpenSlot(string key, LogLevel level, string name, int dateInt, DateTime now, int forcePart = -1)
+        private static Slot OpenSlot(string key, string bucket, string symbol, int dateInt, DateTime now, int forcePart = -1)
         {
-            var dirPath = ComputeDirectoryPath(level, now);
+            var dirPath = ComputeDirectoryPath(now);
             if (!Directory.Exists(dirPath))
                 Directory.CreateDirectory(dirPath);
 
-            var ext = GetExtension(LogConfiguration.Current.OutputFormat);
-            var partNumber = forcePart >= 0 ? forcePart : DetectExistingPart(dirPath, name, ext);
+            var ext = GetExtension(LogConfiguration.Current.QuoteOptions.OutputFormat);
+            var partNumber = forcePart >= 0 ? forcePart : DetectExistingPart(dirPath, bucket, symbol, ext);
+            var prefix = bucket + "_" + symbol;
             var fileName = partNumber == 0
-                ? $"{name}_Log.{ext}"
-                : $"{name}_part{partNumber}_Log.{ext}";
+                ? $"{prefix}_Quote.{ext}"
+                : $"{prefix}_part{partNumber}_Quote.{ext}";
             var filePath = Path.Combine(dirPath, fileName);
 
             var existingSize = File.Exists(filePath) ? new FileInfo(filePath).Length : 0L;
@@ -174,8 +172,8 @@ namespace OzaLog.Core
             var slot = new Slot
             {
                 Key = key,
-                Name = name,
-                Level = level,
+                Bucket = bucket,
+                Symbol = symbol,
                 Writer = writer,
                 Stream = fs,
                 DirectoryPath = dirPath,
@@ -192,28 +190,27 @@ namespace OzaLog.Core
             return slot;
         }
 
-        private static int DetectExistingPart(string dirPath, string name, string ext)
+        private static int DetectExistingPart(string dirPath, string bucket, string symbol, string ext)
         {
-            // 沿用 v2.x 的命名慣例：{name}_Log.{ext}（part=0） / {name}_part{N}_Log.{ext}
             try
             {
-                var suffix = "_Log." + ext;
-                var files = Directory.GetFiles(dirPath, name + "*" + suffix);
+                var prefix = bucket + "_" + symbol;
+                var suffix = "_Quote." + ext;
+                var files = Directory.GetFiles(dirPath, prefix + "*" + suffix);
                 int maxPart = 0;
                 bool foundBase = false;
                 foreach (var f in files)
                 {
                     var fileName = Path.GetFileName(f);
-                    if (fileName == name + suffix)
+                    if (fileName == prefix + suffix)
                     {
                         foundBase = true;
                         continue;
                     }
-                    // 解析 {name}_part{N}_Log.{ext}
-                    var prefix = name + "_part";
-                    if (fileName.StartsWith(prefix, StringComparison.Ordinal) && fileName.EndsWith(suffix, StringComparison.Ordinal))
+                    var partPrefix = prefix + "_part";
+                    if (fileName.StartsWith(partPrefix, StringComparison.Ordinal) && fileName.EndsWith(suffix, StringComparison.Ordinal))
                     {
-                        var middle = fileName.Substring(prefix.Length, fileName.Length - prefix.Length - suffix.Length);
+                        var middle = fileName.Substring(partPrefix.Length, fileName.Length - partPrefix.Length - suffix.Length);
                         if (int.TryParse(middle, out var n) && n > maxPart)
                             maxPart = n;
                     }
@@ -228,18 +225,7 @@ namespace OzaLog.Core
             }
         }
 
-        private static string GetExtension(LogOutputFormat format)
-        {
-            switch (format)
-            {
-                case LogOutputFormat.Json: return "json";
-                case LogOutputFormat.Log: return "log";
-                case LogOutputFormat.Txt:
-                default: return "txt";
-            }
-        }
-
-        private static string ComputeDirectoryPath(LogLevel level, DateTime now)
+        private static string ComputeDirectoryPath(DateTime now)
         {
             var current = LogConfiguration.Current;
             var baseDir = AppDomain.CurrentDomain.BaseDirectory;
@@ -247,12 +233,22 @@ namespace OzaLog.Core
                 baseDir,
                 current.LogPath,
                 now.ToString("yyyyMMdd"),
-                current.TypeDirectories.GetPathForType(level));
+                current.QuoteOptions.QuotePath);
+        }
+
+        private static string GetExtension(QuoteOutputFormat format)
+        {
+            switch (format)
+            {
+                case QuoteOutputFormat.Json: return "json";
+                case QuoteOutputFormat.Log: return "log";
+                case QuoteOutputFormat.Txt:
+                default: return "txt";
+            }
         }
 
         private static void CloseSlot(Slot slot)
         {
-            // index/lru 也要清
             if (_index.TryGetValue(slot.Key, out var node))
             {
                 _lru.Remove(node);
@@ -272,7 +268,7 @@ namespace OzaLog.Core
 
         private static void EnforceLruBound()
         {
-            var max = LogConfiguration.Current.MaxOpenFileStreams;
+            var max = LogConfiguration.Current.QuoteOptions.MaxOpenStreams;
             if (max <= 0) return;
             while (_index.Count > max && _lru.Last != null)
             {
