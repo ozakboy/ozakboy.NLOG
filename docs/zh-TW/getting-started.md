@@ -192,6 +192,8 @@ logs/20260514/Quotes/binance_perp_BTCUSDT_Quote.json
 - [配置選項](./configuration.md) — 完整選項表
 - [API 參考](./api.md) — 所有公開方法、struct、enum
 - [HFT 非同步架構](./async-pipeline.md) — 內部 pipeline 設計
-- [Benchmark](./benchmarks.md) — 與 ZLogger / ZeroLog / Serilog 比較
-- [v2.x 升級指南](./migration.md) — 給原 `Ozakboy.NLOG` 使用者
-- [版本歷史](./changelog.md) — 版本變更記錄
+
+頂層頁面(請從網站導覽列進入):
+- **Benchmark** — 與 ZLogger / ZeroLog / Serilog 比較
+- **v2.x 升級指南** — 給原 `Ozakboy.NLOG` 使用者
+- **版本歷史** — 版本變更記錄

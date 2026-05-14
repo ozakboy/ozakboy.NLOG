@@ -192,6 +192,8 @@ Each line is one NDJSON record:
 - [Configuration](./configuration.md) — full options table
 - [API Reference](./api.md) — every public method, struct, and enum
 - [HFT Async Architecture](./async-pipeline.md) — internal pipeline design
-- [Benchmarks](./benchmarks.md) — vs ZLogger / ZeroLog / Serilog
-- [Migration from v2.x](./migration.md) — for upgrading `Ozakboy.NLOG` users
-- [Changelog](./changelog.md) — version history
+
+Top-level pages (use the site navigation):
+- **Benchmarks** — OzaLog vs ZLogger / ZeroLog / Serilog
+- **Migration from v2.x** — for upgrading `Ozakboy.NLOG` users
+- **Changelog** — version history
